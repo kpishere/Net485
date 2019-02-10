@@ -186,7 +186,7 @@ Net485Physical_HardwareSerial::~Net485Physical_HardwareSerial() {
     if(ringbuf) free((void *)ringbuf);
     lastInstance = 0;
 }
-bool Net485Physical_HardwareSerial::readyToSend(Net485Packet *packet) {
+bool Net485Physical_HardwareSerial::readyToSend() {
     return (driveState == DriveStateE::Ready);
 }
 void Net485Physical_HardwareSerial::send(Net485Packet *packet) {

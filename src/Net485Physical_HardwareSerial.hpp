@@ -9,10 +9,8 @@
 #include <Arduino.h>
 
 #if defined(__AVR__)
-// TICKS PER us for MEGA 2560
 #define OUTPUT_DRIVE_ENABLE_PIN 2
 #elif defined(ESP8266)
-// Ticks per us for ESP8266
 #define OUTPUT_DRIVE_ENABLE_PIN D6
 #endif
 
@@ -86,7 +84,7 @@ public:
                                   , HardwareSerial *_hwSerial, int _baudRate = DATARATE_BPS_DEF);
     ~Net485Physical_HardwareSerial();
     
-    bool readyToSend(Net485Packet *packet = NULL);
+    bool readyToSend();
     void send(Net485Packet *packet);
     
     bool hasPacket();
