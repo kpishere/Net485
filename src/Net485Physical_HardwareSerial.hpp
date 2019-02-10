@@ -63,7 +63,7 @@ private:
     static uint8_t ringbufPktCurrent;
     static Net485Packet *packetToSend;
     static DriveState driveState;
-    static int baudRate;
+    static int baudRate, drivePin;
     static HardwareSerial *hwSerial;
     
     static void initTimer();
@@ -81,7 +81,9 @@ public:
     // Interface members
     ////
     Net485Physical_HardwareSerial(uint8_t _ringbufSize
-                                  , HardwareSerial *_hwSerial, int _baudRate = DATARATE_BPS_DEF);
+                                  , HardwareSerial *_hwSerial
+                                  , int _baudRate = DATARATE_BPS_DEF
+                                  , int _drivePin = OUTPUT_DRIVE_ENABLE_PIN);
     ~Net485Physical_HardwareSerial();
     
     bool readyToSend();

@@ -14,8 +14,6 @@
 #define IR_SEND_ADJ 5.008
 #endif
 
-#define DEBUG
-
 #define SERIALBUFFERSIZE 256
 
 #define RINGBUFLOC(loc) ((void *)ringbuf + ( (((uint32_t)loc) % ringbufSize) * sizeof(Net485Packet) ))
@@ -41,6 +39,7 @@ uint8_t Net485Physical_HardwareSerial::ringbufPktCurrent;
 Net485Packet *Net485Physical_HardwareSerial::packetToSend;
 DriveState Net485Physical_HardwareSerial::driveState;
 int Net485Physical_HardwareSerial::baudRate;
+int Net485Physical_HardwareSerial::drivePin;
 HardwareSerial *Net485Physical_HardwareSerial::hwSerial;
 
 void Net485Physical_HardwareSerial::initTimer() {
@@ -95,7 +94,7 @@ void Net485Physical_HardwareSerial::packetSequencer() {
             break;
         case DriveStateE::PreDrive:
             // Set RS485 for writing
-            digitalWrite(OUTPUT_DRIVE_ENABLE_PIN,HIGH);
+            digitalWrite(drivePin,HIGH);
             setTimer(PRE_DRIVE_HOLD_TIME, DriveStateE::Sending);
             break;
         case DriveStateE::Sending:
@@ -107,7 +106,7 @@ void Net485Physical_HardwareSerial::packetSequencer() {
             setTimer(POST_DRIVE_HOLD_TIME, DriveStateE::COUNT_STATES);
             break;
         case DriveStateE::COUNT_STATES:
-            digitalWrite(OUTPUT_DRIVE_ENABLE_PIN,LOW);
+            digitalWrite(drivePin,LOW);
             clearTimer();
             driveState = DriveStateE::Ready;
             break;
@@ -158,7 +157,8 @@ void Net485Physical_HardwareSerial::readData() {
 }
 Net485Physical_HardwareSerial::Net485Physical_HardwareSerial(uint8_t _ringbufSize
                                                              , HardwareSerial *_hwSerial
-                                                             , int _baudRate)
+                                                             , int _baudRate
+                                                             , int _drivePin)
 {
     ringbufSize = _ringbufSize;
     ringbuf = (Net485Packet *)malloc(sizeof(Net485Packet) * _ringbufSize);
@@ -167,10 +167,11 @@ Net485Physical_HardwareSerial::Net485Physical_HardwareSerial(uint8_t _ringbufSiz
     ringbufPktCurrent = 0;
     hwSerial = _hwSerial;
     baudRate = _baudRate;
+    drivePin = _drivePin;
     
     // Set drive enable pin low on RS485 device to set listen mode
-    pinMode(OUTPUT_DRIVE_ENABLE_PIN,OUTPUT);
-    digitalWrite(OUTPUT_DRIVE_ENABLE_PIN,LOW);
+    pinMode(drivePin,OUTPUT);
+    digitalWrite(drivePin,LOW);
     
     hwSerial->setTimeout( DELIMIT_MEASURE_PACKET / 1000 );
 #if defined(__AVR__)
