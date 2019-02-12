@@ -10,6 +10,7 @@ Layer 1:
 - Management of Drive/Receive pin for a minimum inter-packet delay time, a pre-drive, and a post-drive time
 
 Layer 2:
+
 - Declaration of header structure
 - Checksum algorithm for header+data
 
