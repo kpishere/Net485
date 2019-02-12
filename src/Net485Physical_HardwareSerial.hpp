@@ -19,6 +19,7 @@
 #define BITS_STOP 1
 #define BITS_DATA 8
 #define DATARATE_BPS_DEF 9600UL
+#define RINGBUFSIZE_DEF 5
 #define BYTE_FRAME_TIME(bps) ( (1000UL * 1000UL / (bps)) * (BITS_DATA+BITS_START+BITS_STOP)) // useconds
 #define INTER_PACKET_DELAY 100000UL // useconds before each packet
 #define PRE_DRIVE_HOLD_TIME 300UL // useconds (200-500 allowable)
@@ -80,8 +81,8 @@ public:
     ////
     // Interface members
     ////
-    Net485Physical_HardwareSerial(uint8_t _ringbufSize
-                                  , HardwareSerial *_hwSerial
+    Net485Physical_HardwareSerial(HardwareSerial *_hwSerial
+                                  , uint8_t _ringbufSize = RINGBUFSIZE_DEF
                                   , int _baudRate = DATARATE_BPS_DEF
                                   , int _drivePin = OUTPUT_DRIVE_ENABLE_PIN);
     ~Net485Physical_HardwareSerial();

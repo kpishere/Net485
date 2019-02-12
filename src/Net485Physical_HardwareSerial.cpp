@@ -155,8 +155,8 @@ void Net485Physical_HardwareSerial::readData() {
         Net485Physical_HardwareSerial::lastInstance->packetSequencer();
     }
 }
-Net485Physical_HardwareSerial::Net485Physical_HardwareSerial(uint8_t _ringbufSize
-                                                             , HardwareSerial *_hwSerial
+Net485Physical_HardwareSerial::Net485Physical_HardwareSerial(HardwareSerial *_hwSerial
+                                                             , uint8_t _ringbufSize
                                                              , int _baudRate
                                                              , int _drivePin)
 {
