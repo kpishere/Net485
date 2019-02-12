@@ -8,3 +8,8 @@ Layer 1:
 - Packet structure of 10-byte header, 0-240 byte data body, and 2-byte checksum number
 - Ring buffer of N packets on receipt
 - Management of Drive/Receive pin for a minimum inter-packet delay time, a pre-drive, and a post-drive time
+
+Layer 2:
+- Declaration of header structure
+- Checksum algorithm for header+data
+
