@@ -66,6 +66,7 @@ private:
     static DriveState driveState;
     static int baudRate, drivePin;
     static HardwareSerial *hwSerial;
+    static unsigned long loopCount;
     
     static void initTimer();
     static void setTimer(uint32_t usec, DriveState newState);
@@ -93,6 +94,7 @@ public:
     bool hasPacket();
     Net485Packet *getNextPacket();
     
+    inline unsigned long getLoopCount() { return loopCount;}
     void setPacketFilter(); // TODO: to be defined
 };
 

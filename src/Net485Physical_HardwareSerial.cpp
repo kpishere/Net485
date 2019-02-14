@@ -41,6 +41,7 @@ DriveState Net485Physical_HardwareSerial::driveState;
 int Net485Physical_HardwareSerial::baudRate;
 int Net485Physical_HardwareSerial::drivePin;
 HardwareSerial *Net485Physical_HardwareSerial::hwSerial;
+unsigned long Net485Physical_HardwareSerial::loopCount;
 
 void Net485Physical_HardwareSerial::initTimer() {
 #if defined(__AVR__)
@@ -165,6 +166,7 @@ Net485Physical_HardwareSerial::Net485Physical_HardwareSerial(HardwareSerial *_hw
     memset(ringbuf, 0x00, sizeof(Net485Packet) * _ringbufSize);
     ringbufPktCount = 0;
     ringbufPktCurrent = 0;
+    loopCount = 0;
     hwSerial = _hwSerial;
     baudRate = _baudRate;
     drivePin = _drivePin;
@@ -196,6 +198,7 @@ void Net485Physical_HardwareSerial::send(Net485Packet *packet) {
     Net485Physical_HardwareSerial::lastInstance->packetSequencer();
 }
 bool Net485Physical_HardwareSerial::hasPacket() {
+    loopCount++;
     if((ringbufPktCount > 0)) {
         return true;
     } else {

@@ -18,8 +18,30 @@ s2 = (s2 + s1) % 0xff; \
 Net485DataLink::Net485DataLink(HardwareSerial *_hwSerial
                                , uint8_t _ringbufSize
                                , int _baudRate
-                               , int _drivePin)
+                               , int _drivePin
+                               , uint16_t _mfgId
+                               , uint64_t _deviceId
+                               , uint8_t _srcNodeTyp)
 : Net485Physical_HardwareSerial(_hwSerial, _ringbufSize, _baudRate, _drivePin) {
+    unsigned long seed = this->getLoopCount();
+    
+    this->nodeType = _srcNodeTyp;
+    if(_srcNodeTyp) seed += _srcNodeTyp;
+    if(_mfgId) seed += (((unsigned long)_mfgId) << 16);
+    randomSeed(seed);
+    // Set reserved byte to a non-zero number to indicate MAC is random generated
+    this->macAddr.mac[Net485MacAddressE::Reserved] = 0x00;
+    if(_deviceId == 0 || _mfgId == 0) {
+        this->macAddr.mac[Net485MacAddressE::Reserved] = random(0x01,0xFF) && 0xFF;
+    }
+    if(_deviceId == 0) {
+        _deviceId = random(0x00,0xFFffFFffFF) && 0xFFffFFffFF;
+    }
+    if(_mfgId == 0) {
+        _mfgId = random(0x00,0xFFff) && 0xFFff;
+    }
+    this->macAddr.manufacturerId(_mfgId);
+    this->macAddr.deviceId(_deviceId);
 }
 Net485DataLink::~Net485DataLink() {
 }
