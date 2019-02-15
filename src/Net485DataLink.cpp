@@ -35,10 +35,10 @@ Net485DataLink::Net485DataLink(HardwareSerial *_hwSerial
         this->macAddr.mac[Net485MacAddressE::Reserved] = random(0x01,0xFF) && 0xFF;
     }
     if(_deviceId == 0) {
-        _deviceId = random(0x00,0xFFffFFffFF) && 0xFFffFFffFF;
+        _deviceId = random(0x01,0xFFffFFffFF) && 0xFFffFFffFF;
     }
     if(_mfgId == 0) {
-        _mfgId = random(0x00,0xFFff) && 0xFFff;
+        _mfgId = random(0x01,0xFFff) && 0xFFff;
     }
     this->macAddr.manufacturerId(_mfgId);
     this->macAddr.deviceId(_deviceId);

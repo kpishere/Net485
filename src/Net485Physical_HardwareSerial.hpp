@@ -8,6 +8,8 @@
 #include <stdlib.h>
 #include <Arduino.h>
 
+#include "Net485API.hpp"
+
 #if defined(__AVR__)
 #define OUTPUT_DRIVE_ENABLE_PIN 2
 #elif defined(ESP8266)
@@ -24,10 +26,6 @@
 #define INTER_PACKET_DELAY 100000UL // useconds before each packet
 #define PRE_DRIVE_HOLD_TIME 300UL // useconds (200-500 allowable)
 #define POST_DRIVE_HOLD_TIME 300UL // useconds (200-500 allowable)
-#define MTU_HEADER 10UL
-#define MTU_DATA 240UL
-#define MTU_CHECKSUM 2UL
-#define MTU_MAX (MTU_HEADER + MTU_DATA + MTU_CHECKSUM)
 #define MTU_PACKET_TIME(bps,bytes) ( BYTE_FRAME_TIME(bps) * ((bytes)+MTU_HEADER+MTU_CHECKSUM)) // useconds
 #define DELIMIT_MEASURE_PACKET 3500UL //useconds inter-character delay longer than this time, is end of packet
 
@@ -41,20 +39,6 @@ typedef enum DriveStateE {
     PacketReady,
     Ready
 } DriveState;
-
-typedef struct Net485PacketS {
-    uint8_t buffer[MTU_MAX];
-    uint8_t dataSize;
-    uint8_t* header() {
-        return &buffer[0];
-    }
-    uint8_t* data() {
-        return &buffer[MTU_HEADER];
-    }
-    uint8_t* checksum() {
-        return &buffer[MTU_HEADER + dataSize];
-    }
-} Net485Packet;
 
 class Net485Physical_HardwareSerial {
 private:
