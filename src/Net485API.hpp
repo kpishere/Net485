@@ -4,6 +4,7 @@
 
 // Node addresses
 #define NODEADDR_BCAST 0x00
+#define NODEADDR_NARB 0xFE
 #define NODEADDR_COORD 0xFF
 
 // Subnet adresses
@@ -13,6 +14,10 @@
 #define SUBNET_V2SPEC 0x03
 
 // Send methods
+#define SNDMTHD_NOROUTE 0x00
+#define SNDMTHD_PRIORITY 0x01
+#define SNDMTHD_NTYPE 0x02
+#define SNDMTHD_BYSCKT 0x03
 
 // Parameters
 #define PARMBYTEHI(x) ((x)>>8)
@@ -163,5 +168,27 @@ typedef struct Net485MacAddressS {
     }
 } Net485MacAddress;
 
+typedef struct Net485DataVersionS {
+    uint16_t Version;
+    uint16_t Revision;
+    bool isFFD;
+    struct Net485DataVersionS *init(Net485Packet *pkt) {
+        Version = ((uint16_t *)pkt->data())[0];
+        Revision = ((uint16_t *)pkt->data())[sizeof(uint16_t)];
+        isFFD = ((bool *)pkt->data())[sizeof(uint16_t)*2];
+    }
+    Net485Packet *write(Net485Packet *pkt) {
+        memcpy(pkt->data(), &Version, sizeof(uint16_t));
+        memcpy(&(pkt->data()[sizeof(uint16_t)]), &Revision, sizeof(uint16_t));
+        pkt->data()[sizeof(uint16_t)*2] = isFFD;
+        return pkt;
+    }
+    uint8_t comp(struct Net485DataVersionS left, struct Net485DataVersionS right) {
+        if(left.Version > right.Version) return 1;
+        if(left.Version == right.Version && left.Revision > right.Revision) return 1;
+        if(left.Version == right.Version && left.Revision == right.Revision) return 0;
+        return -1;
+    }
+} Net485DataVersion;
 
 #endif Net485API_hpp
