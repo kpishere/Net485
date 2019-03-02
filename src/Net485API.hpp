@@ -4,8 +4,27 @@
 
 // Node addresses
 #define NODEADDR_BCAST 0x00
+#define NODEADDR_PRIMY 0x01
 #define NODEADDR_NARB 0xFE
 #define NODEADDR_COORD 0xFF
+
+// Node address ranges
+#define NODEADDR_V1LO 0x01
+#define NODEADDR_V1HI 0x0E
+
+#define NODEADDR_V2LO 0x10
+#define NODEADDR_V2HI 0x3E
+
+#define NODEADDR_DIAGLO 0x55
+#define NODEADDR_DIAGHI 0x5A
+
+/* // Other addresses
+ {0x0F, Address485Purpose.Reserved}, // Overhead validation
+ {0x3F, Address485Purpose.Reserved}, // Overhead validation, Future Internet access
+ {0x5B, Address485Purpose.Reserved}, // Future Wireless
+ {0xC0, Address485Purpose.Restricted}, // Network Analysis
+ {0xC1, Address485Purpose.Reserved}, // Future system Authentication
+ */
 
 // Subnet adresses
 #define SUBNET_BCAST 0x00
@@ -101,13 +120,19 @@
 #define MSGTYP_GNODEID  0x7B /*Get Node ID*/
 #define MSGTYP_NSDSI    0x7D /*Network Shared Data Sector Image*/
 #define MSGTYP_NENCREQ  0x7E /*Network Encapsulation Request*/
+#define MSGRESP(msg) ((msg) | 0x80) /*Convert # to response code*/
+
 
 // Packet number
 /* Bit 7, the Dataflow bit, is a ‘1’ (one) on all Dataflow packets i.e. all R2Rs and ACKs.
    Bit 6, reserved
    Bit 5, the Version bit, was a ‘1’ in CT-485 V 1.0 to indicate all CT-485 1.0 devices. CT-485 V 2.0 shall use a value of ‘0’ (zero) for the Version. A CT2.0 coordinator shall set the Version bit to a ‘1’ when sending Node Discovery Request messages. A CT2.0 subordinate shall reply with its version bit clear, ‘0’, indicating it is a CT2.0 device. A CT1.0 device shall reply with its version bit set indicating it is a CT1.0 device. The setting of the version bit by the coordinator is required to obtain the expected node discovery response from some older CT1.0 devices which echoed the version bit during the addressing sequence. A coordinator shall ignore this bit except for CT version determination during a node discovery response.
    Bits 4-0, chunk number: CT-485 V 2.0 does not provide streaming or chunking as a service, so the chunk number shall also be ‘0’ (zero) on all packets. */
+#define NETV1 1
+#define NETV2 2
 #define PKTNUMBER(isDataFlow,isVer1) ( 0x00 | (isDataFlow ? 0x80 : 0x00) | (isVer1 ? 0x20 : 0x00) )
+#define PKTVER(pkt) (pkt->header()[HeaderStructureE::PacketNumber]&0x20>0?NETV1:NETV2)
+#define PKTISDATA(pkt) (pkt->header()[HeaderStructureE::PacketNumber]&0x80>0)
 
 enum HeaderStructureE {
     HeaderDestAddr = 0x00,
@@ -165,6 +190,11 @@ typedef struct Net485MacAddressS {
             memcpy((((char *)&devId)+Net485MacAddressE::DeviceId), &mac[Net485MacAddressE::DeviceId], Net485MacAddressE::SIZE - Net485MacAddressE::DeviceId);
         }
         return devId;
+    }
+    bool isSameAs(struct Net485MacAddressS *_mac) {
+        bool match = true;
+        for(int i=0; i<Net485MacAddressE::SIZE; i++) match &= _mac->mac[i] == mac[i];
+        return match;
     }
 } Net485MacAddress;
 

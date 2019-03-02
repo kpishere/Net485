@@ -2,9 +2,6 @@
  *  Net485DataLink.cpp
  *  Net485
  *
- *  Created by Kevin D Peck on 17-09-24.
- *  Copyright 2017 Shea. All rights reserved.
- *
  */
 
 #include "Net485DataLink.hpp"

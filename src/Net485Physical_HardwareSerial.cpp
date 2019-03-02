@@ -211,7 +211,10 @@ Net485Packet *Net485Physical_HardwareSerial::getNextPacket() {
     ringbufPktCount -= 1;
     return retPkt;
 }
-void Net485Physical_HardwareSerial::setPacketFilter() {
+void Net485Physical_HardwareSerial::setPacketFilter(uint8_t *destAddr,
+                                                    uint8_t *subNet,
+                                                    uint8_t *srcNodeTyp,
+                                                    uint8_t *pktMsgTyp) {
     
 }
 

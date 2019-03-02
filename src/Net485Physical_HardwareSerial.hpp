@@ -79,7 +79,12 @@ public:
     Net485Packet *getNextPacket();
     
     inline unsigned long getLoopCount() { return loopCount;}
-    void setPacketFilter(); // TODO: to be defined
+    
+    // A null-terminated list of values to filter by
+    void setPacketFilter(uint8_t *destAddr,
+                         uint8_t *subNet,
+                         uint8_t *srcNodeTyp,
+                         uint8_t *pktMsgTyp);
 };
 
 #endif /*Net485Physical_HardwareSerial_hpp*/

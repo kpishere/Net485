@@ -2,9 +2,6 @@
  *  Net485DataLink.h
  *  Net485
  *
- *  Created by Kevin D Peck on 17-09-24.
- *  Copyright 2017 Shea. All rights reserved.
- *
  */
 #ifndef Net485DataLink_hpp
 #define Net485DataLink_hpp
@@ -54,6 +51,13 @@ public:
     
     inline uint64_t newSessionId() {
         return random(0x01,0xFFFFFFFFffffffff);
+    }
+#define SLOT_LOW 100
+#define SLOT_HIGH 2500
+    inline uint16_t newSlotDelayMicroSecs(unsigned int low = SLOT_LOW, unsigned int hi = SLOT_HIGH) {
+        unsigned long seed = this->getLoopCount() + this->nodeType + this->macAddr.manufacturerId();
+        randomSeed(seed);
+        return random(SLOT_LOW,SLOT_HIGH) * 1000;
     }
     inline uint8_t getNodeType() { return this->nodeType;};
     inline Net485MacAddress getMacAddr() {return this->macAddr;};
