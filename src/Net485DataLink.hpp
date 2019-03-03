@@ -64,7 +64,8 @@ public:
     
     // Calculate checksum and set on packet before sending
     void send(Net485Packet *packet);
-    
+    Net485Packet *getNextPacket();
+
     bool isChecksumValid(Net485Packet *packet);
 };
 

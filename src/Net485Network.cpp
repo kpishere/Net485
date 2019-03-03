@@ -5,6 +5,9 @@
 
 #include "Net485Network.hpp"
 
+#define DEBUG
+uint8_t lastState = 0xff;
+
 Net485Network::Net485Network(Net485DataLink *_net, Net485Subord *_sub, bool _coordinatorCapable
                              , uint16_t _coordVer = 0, uint16_t _coordRev = 0) {
     this->net485dl = _net;
@@ -39,31 +42,57 @@ uint8_t Net485Network::nodeExists(Net485Node *_node) {
 const uint8_t nodeTypeArbFilterList[] = {MSGTYP_ANUCVER,MSGTYP_NDSCVRY, NULL};
 
 void Net485Network::loopClient() {
-    Net485Packet *recvPtr;
+    Net485Packet *recvPtr, sendPkt;
+    bool havePkt;
+    Net485Node *discNode;
     char messageBuffer[160]; // Temp for testing only
     // TODO
     // Listen and write to debug serial for now
     if (net485dl->hasPacket()) {
-        
-        Serial.print("{havemsg");
-        
         recvPtr = net485dl->getNextPacket();
-        
-        if(net485dl->isChecksumValid(recvPtr)) {
-            Serial.println(", valid: true");
-        } else {
-            Serial.println(", valid: false");
-        }
-        
-        // Send ACK
-        this->net485dl->send(this->setACK(&pktToSend));
-        
-        sprintf(messageBuffer,", header: 0x");
-        for(int i=0; i<MTU_HEADER ; i++) sprintf( &(messageBuffer[11+i*2]), "%0X ",recvPtr->header()[i]);
-        sprintf(&(messageBuffer[11+2*MTU_HEADER]),", data: %0X .. (%d), chksum: 0x%0X%0X }", recvPtr->data()[0], recvPtr->dataSize
-                ,recvPtr->checksum()[0], recvPtr->checksum()[1]);
-        Serial.println(messageBuffer);
         this->lasttimeOfMessage = millis();
+        discNode = this->getNodeDiscResp(recvPtr);
+        if(discNode == NULL) {
+            Serial.print("{havemsg");
+            // Request
+            if(net485dl->isChecksumValid(recvPtr)) {
+                Serial.println(", valid: true");
+            } else {
+                Serial.println(", valid: false");
+            }
+            // Send ACK
+            this->net485dl->send(this->setACK(&pktToSend));
+
+            sprintf(messageBuffer,", header: 0x");
+            for(int i=0; i<MTU_HEADER ; i++) sprintf( &(messageBuffer[11+i*2]), "%0X ",recvPtr->header()[i]);
+            sprintf(&(messageBuffer[11+2*MTU_HEADER]),", data: %0X .. (%d), chksum: 0x%0X%0X }", recvPtr->data()[0], recvPtr->dataSize
+                    ,recvPtr->checksum()[0], recvPtr->checksum()[1]);
+            Serial.println(messageBuffer);
+        } else {
+            // A Node discovery request
+            this->sessionId = this->net485dl->newSessionId();
+            this->slotTime = this->net485dl->newSlotDelayMicroSecs(ANET_SLOTLO,ANET_SLOTHI);
+            havePkt = false;
+            while (MILLISECDIFF(millis(),this->lasttimeOfMessage) < this->slotTime && !havePkt) {
+                havePkt = net485dl->hasPacket();
+            }
+            if(!havePkt) {
+                if(discNode->nodeType == NTC_ANY || discNode->nodeType == net485dl->getNodeType()) {
+                    this->net485dl->send(this->setNodeDiscResp(&sendPkt));
+                    this->lasttimeOfMessage = millis();
+                    havePkt = false;
+                    while (MILLISECDIFF(millis(),this->lasttimeOfMessage) < RESPONSE_TIMEOUT && !havePkt) {
+                        havePkt = net485dl->hasPacket();
+                        if(havePkt) {
+                            recvPtr = net485dl->getNextPacket();
+                            if(this->getNodeAddress(recvPtr)) {
+                                this->net485dl->send(this->setACK(&sendPkt));
+                            }
+                        }
+                    }                    
+                }
+            }
+        }
     }
 }
 void Net485Network::loopServer() {
@@ -171,9 +200,20 @@ bool Net485Network::reqRespNodeDiscover(uint8_t _nodeIdFilter) {
 }
 void Net485Network::loop() {
     unsigned long thisTime = millis();
-    Net485Packet *pkt, sendPkt;
-    Net485DataVersion netVer;
-    bool havePkt = false;
+#ifdef DEBUG
+    {
+        char messageBuffer[100]; // Temp for testing only
+        if(lastState != this->state) {
+            sprintf(messageBuffer,"{state: %d, now:%lu}",this->state, thisTime);
+            Serial.println(messageBuffer);
+            lastState = this->state;
+        }
+    }
+#endif
+    // Network silence time
+    if( MILLISECDIFF(thisTime,lasttimeOfMessage) > PROLONGED_SILENCE ) {
+        this->warmStart(thisTime);
+    }
     switch(this->state) {
         case Net485State::ANClient:
             this->loopClient();
@@ -182,85 +222,92 @@ void Net485Network::loop() {
             this->loopServer();
             break;
         default:
-        // Network silence time
-        if( MILLISECDIFF(thisTime,lasttimeOfMessage) > PROLONGED_SILENCE ) {
-            // Pick new random slot time and wait further for specific msg types
-            if(!this->slotTime) {
-                this->slotTime = net485dl->newSlotDelayMicroSecs(ANET_SLOTLO,ANET_SLOTHI);
-                switch (this->state) {
-                    case Net485State::ANServerBecoming:
-                        net485dl->setPacketFilter(NULL,NULL,NULL,NULL);
-                        break;
-                    default:
-                        net485dl->setPacketFilter(NULL,NULL,NULL,nodeTypeArbFilterList);
-                        break;
-                }
-            }
-            if(MILLISECDIFF(thisTime,lasttimeOfMessage) > PROLONGED_SILENCE + this->slotTime) {
-                if( this->ver.isFFD ) {
-                    switch(this->state) {
-                        case Net485State::ANClientBecoming:
-                            if(this->sub != NULL) {
-                                this->state = Net485State::ANClient;
-                            } else {
-                                // otherwise, go quiet - left as client becoming until reset
-                                Serial.print("{clientGoneQuiet1}");
-                                lasttimeOfMessage = millis();
-                            }
-                            break;
-                        case Net485State::ANServerBecoming:
-                            if(net485dl->hasPacket()) {
-                                pkt = net485dl->getNextPacket();
-                                if(pkt->header()[HeaderStructureE::PacketMsgType] == MSGTYP_ANUCVER) {
-                                    netVer.init(pkt);
-                                    this->state = (netVer.comp(this->ver,netVer)>0
-                                                   ? Net485State::ANServerBecoming
-                                                   : Net485State::ANClientBecoming);
-                                }
-                                // If pkt of any type, re-try process
-                                this->lasttimeOfMessage = thisTime + PROLONGED_SILENCE;
-                            } else {
-                                this->net485dl->send(this->setCAVA(&pktToSend));
-                                this->lasttimeOfMessage = millis();
-                                this->state = Net485State::ANServerWaiting;
-                            }
-                            break;
-                        case Net485State::ANServerWaiting:
-                            if(net485dl->hasPacket()) {
-                                this->state = (MILLISECDIFF(thisTime,becomingTime) > RESPONSE_TIMEOUT
-                                               ? Net485State::ANServer
-                                               : Net485State::None);
-                                this->lasttimeOfMessage = thisTime + PROLONGED_SILENCE;
-                            }
-                            break;
-                        default:
-                            becomingTime = thisTime;
-                            if(net485dl->hasPacket()) {
-                                pkt = net485dl->getNextPacket();
-                                if(pkt->header()[HeaderStructureE::PacketMsgType] == MSGTYP_ANUCVER) {
-                                    netVer.init(pkt);
-                                    this->state = (netVer.comp(this->ver,netVer)>0
-                                                   ? Net485State::ANServerBecoming
-                                                   : Net485State::ANClientBecoming);
-                                }
-                                // If pkt = Node discovery re-try process
-                                this->lasttimeOfMessage = thisTime + PROLONGED_SILENCE;
-                            } else {
-                                this->state = Net485State::ANServerBecoming;
-                            }
-                            break;
-                    }
-                } else {
+            this->warmStart(thisTime);
+            break;
+    }
+}
+
+void Net485Network::warmStart(unsigned long _thisTime) {
+    Net485Packet *pkt, sendPkt;
+    Net485DataVersion netVer;
+    bool havePkt = false;
+
+    // Pick new random slot time and wait further for specific msg types
+    if(!this->slotTime) {
+        this->slotTime = net485dl->newSlotDelayMicroSecs(ANET_SLOTLO,ANET_SLOTHI);
+        switch (this->state) {
+            case Net485State::ANServerBecoming:
+                net485dl->setPacketFilter(NULL,NULL,NULL,NULL);
+                break;
+            default:
+                net485dl->setPacketFilter(NULL,NULL,NULL,nodeTypeArbFilterList);
+                break;
+        }
+    }
+    if(MILLISECDIFF(_thisTime,lasttimeOfMessage) > this->slotTime)
+    {
+        if( this->ver.isFFD ) {
+            switch(this->state) {
+                case Net485State::ANClientBecoming:
                     if(this->sub != NULL) {
                         this->state = Net485State::ANClient;
                     } else {
                         // otherwise, go quiet - left as client becoming until reset
-                        Serial.print("{clientGoneQuiet}");
+                        Serial.print("{clientGoneQuiet1}");
                         lasttimeOfMessage = millis();
                     }
-                }
-                this->slotTime = 0; // Finished with slot time, clear it
+                    break;
+                case Net485State::ANServerBecoming:
+                    if(net485dl->hasPacket()) {
+                        pkt = net485dl->getNextPacket();
+                        if(pkt->header()[HeaderStructureE::PacketMsgType] == MSGTYP_ANUCVER) {
+                            netVer.init(pkt);
+                            this->state = (netVer.comp(this->ver,netVer)>0
+                                           ? Net485State::ANServerBecoming
+                                           : Net485State::ANClientBecoming);
+                        }
+                        // If pkt of any type, re-try process
+                        this->lasttimeOfMessage = _thisTime + PROLONGED_SILENCE;
+                    } else {
+                        this->net485dl->send(this->setCAVA(&pktToSend));
+                        this->lasttimeOfMessage = millis();
+                        this->state = Net485State::ANServerWaiting;
+                    }
+                    break;
+                case Net485State::ANServerWaiting:
+                    if(net485dl->hasPacket()) {
+                        this->state = (MILLISECDIFF(_thisTime,becomingTime) > RESPONSE_TIMEOUT
+                                       ? Net485State::ANServer
+                                       : Net485State::None);
+                        this->lasttimeOfMessage = _thisTime + PROLONGED_SILENCE;
+                    }
+                    break;
+                default:
+                    becomingTime = _thisTime;
+                    if(net485dl->hasPacket()) {
+                        pkt = net485dl->getNextPacket();
+                        if(pkt->header()[HeaderStructureE::PacketMsgType] == MSGTYP_ANUCVER) {
+                            netVer.init(pkt);
+                            this->state = (netVer.comp(this->ver,netVer)>0
+                                           ? Net485State::ANServerBecoming
+                                           : Net485State::ANClientBecoming);
+                        }
+                        // If pkt = Node discovery re-try process
+                        this->lasttimeOfMessage = _thisTime + PROLONGED_SILENCE;
+                    } else {
+                        this->state = Net485State::ANServerBecoming;
+                    }
+                    break;
+            }
+        } else {
+            if(this->sub != NULL) {
+                this->state = Net485State::ANClient;
+            } else {
+                // otherwise, go quiet - left as client becoming until reset
+                Serial.println("{client without subordinate, gone quiet}");
+                lasttimeOfMessage = millis();
             }
         }
+        this->slotTime = 0; // Finished with slot time, clear it
     }
 }

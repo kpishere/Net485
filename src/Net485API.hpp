@@ -43,6 +43,7 @@
 #define PARMBYTELO(x) ((x)&0xff)
 
 // Node Type codes
+#define NTC_ANY         0x00 /*Wild card for any Node Type*/
 #define NTC_THERM       0x01 /*Thermostat*/
 #define NTC_FURNGAS     0x02 /*Gas Furnace*/
 #define NTC_AHNDLR      0x03 /*Air Handler*/

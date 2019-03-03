@@ -44,11 +44,22 @@ typedef struct Net485NodeS {
             memcpy(&sessionId, pkt->data()[Net485MacAddressE::SIZE+2], sizeof(uint64_t));
             nodeStatus = Net485NodeStatE::Unverified;
         }
+        if(pkt->header()[HeaderStructureE::PacketMsgType] == MSGTYP_SADDR) {
+            nodeType = NTC_ANY;
+            version = pkt->data()[1];
+            memcpy(&macAddr, pkt->data()[2], Net485MacAddressE::SIZE);
+            memcpy(&sessionId, pkt->data()[Net485MacAddressE::SIZE+2], sizeof(uint64_t));
+            nodeStatus = (pkt->data()[sizeof(uint64_t)+Net485MacAddressE::SIZE+2] == 0x01
+                          ? Net485NodeStatE::Verified
+                          : Net485NodeStatE::Unverified);
+        }
         lastExchange = millis();
     };
     bool isSameAs(struct Net485NodeS *_node) {
         return _node->macAddr.isSameAs(&macAddr) && _node->sessionId == sessionId
-        && _node->nodeType == nodeType && _node->version == version;
+        && (_node->nodeType == nodeType
+            || _node->nodeType == NTC_ANY
+            || nodeType == NTC_ANY) && _node->version == version;
     };
     uint8_t nextNodeLocation(uint8_t netNodeList[MTU_DATA]) {
         int i;
@@ -76,21 +87,29 @@ typedef struct Net485NodeS {
 } Net485Node;
 
 enum Net485State {
-    None,
-    ANClientBecoming,
-    ANClient,
-    ANServerBecoming,
-    ANServerWaiting,
-    ANServer,
-    ANServerPollNodes,
-    ANServerDiscover
+    None = 0,
+    ANClientBecoming = 1,
+    ANClient = 2,
+    ANServerBecoming = 3,
+    ANServerWaiting = 4,
+    ANServer = 5,
+    ANServerPollNodes = 6,
+    ANServerDiscover = 7
 };
 
 class Net485Network {
 private:
     Net485DataLink *net485dl;
+
+    // Network status
+    unsigned long lasttimeOfMessage, lastNodeListPoll;
+    unsigned int slotTime, becomingTime;
+    Net485State state;
+
     Net485DataVersion ver;
     uint64_t sessionId;
+    uint8_t nodeId;
+    
     uint8_t netNodeList[MTU_DATA];
     uint8_t netNodeListCount;
     Net485Node *nodes[MTU_DATA];
@@ -103,11 +122,7 @@ private:
     // For FFD - Coordinator
     Net485Node *netNodes;
 
-    // Network status
-    unsigned long lasttimeOfMessage, lastNodeListPoll;
-    unsigned int slotTime, becomingTime;
-    Net485State state;
-
+    void warmStart(unsigned long _thisTime);
     void loopClient();
     void loopServer();
     bool reqRespNodeId(uint8_t _node, uint8_t _subnet, bool _validateOnly = false);
@@ -132,9 +147,18 @@ public:
                , &sessionId, sizeof(uint64_t));
         return _pkt;
     }
-    inline Net485Packet *setACK(Net485Packet *_pkt) {
+    inline Net485Packet *setACK(Net485Packet *_pkt, uint8_t _destNodeId = NODEADDR_COORD, uint8_t _subNet = SUBNET_V2SPEC ) {
 #define ACK_CODE 0x06
+        _pkt->header()[HeaderStructureE::HeaderDestAddr] = _destNodeId;
+        _pkt->header()[HeaderStructureE::HeaderSrcAddr] = this->nodeId;
+        _pkt->header()[HeaderStructureE::HeaderSubnet] = _subNet;
+        _pkt->header()[HeaderStructureE::HeaderSndMethd] = SNDMTHD_NOROUTE;
+        _pkt->header()[HeaderStructureE::HeaderSndParam] = 0x00;
+        _pkt->header()[HeaderStructureE::HeaderSndParam1] = 0x00;
         _pkt->header()[HeaderStructureE::HeaderSrcNodeType] = net485dl->getNodeType();
+        _pkt->header()[HeaderStructureE::PacketMsgType] = MSGTYP_R2R;
+        _pkt->header()[HeaderStructureE::PacketNumber] = PKTNUMBER(true,false);
+        _pkt->header()[HeaderStructureE::PacketLength] = 17;
         _pkt->data()[0] = ACK_CODE;
         memcpy((void *)&(_pkt->data()[1]), net485dl->getMacAddr().mac, Net485MacAddressE::SIZE);
         memcpy((void *)&(_pkt->data()[1+Net485MacAddressE::SIZE])
@@ -142,7 +166,6 @@ public:
         return _pkt;
     }
     inline Net485Packet *setCAVA(Net485Packet *_pkt) {
-#define ACK_CODE 0x06
         _pkt->header()[HeaderStructureE::HeaderDestAddr] = NODEADDR_NARB;
         _pkt->header()[HeaderStructureE::HeaderSrcAddr] = NODEADDR_COORD;
         _pkt->header()[HeaderStructureE::HeaderSubnet] = SUBNET_BCAST;
@@ -240,6 +263,23 @@ public:
         _pkt->data()[2+Net485MacAddressE::SIZE+sizeof(uint64_t)] = 0x01;
         return _pkt;
     }
+    inline bool getNodeAddress(Net485Packet *_pkt) {
+        Net485Node tmpNode;
+        bool result = false;
+        if(_pkt->header()[HeaderStructureE::PacketMsgType] == MSGTYP_SADDR ) {
+            tmpNode.init(_pkt);
+            result = net485dl->getMacAddr().isSameAs(&(tmpNode.macAddr))
+                && tmpNode.sessionId == this->sessionId
+                && tmpNode.nodeStatus == Net485NodeStatE::Verified;
+            if(result) {
+                this->nodeId = _pkt->data()[0];
+                // Don't set subnet as we only code for V2
+            }
+        }
+        return result;
+    }
+    inline Net485Packet *setRespNodeAddress(Net485Packet *_pkt) {
+    }
     inline Net485Packet *getRespNodeAddress(Net485Packet *_pkt) {
         if(_pkt->header()[HeaderStructureE::PacketMsgType] == MSGRESP(MSGTYP_NDSCVRY) ) {
             return _pkt;
@@ -258,6 +298,24 @@ public:
         _pkt->header()[HeaderStructureE::PacketNumber] = PKTNUMBER(true,false);
         _pkt->header()[HeaderStructureE::PacketLength] = 1;
         _pkt->data()[0] = _nodeIdFilter;
+        return _pkt;
+    }
+    inline Net485Packet *setNodeDiscResp(Net485Packet *_pkt, uint8_t _nodeId = NODEADDR_BCAST) {
+        _pkt->header()[HeaderStructureE::HeaderDestAddr] = NODEADDR_COORD;
+        _pkt->header()[HeaderStructureE::HeaderSrcAddr] = _nodeId;
+        _pkt->header()[HeaderStructureE::HeaderSubnet] = SUBNET_V2SPEC;
+        _pkt->header()[HeaderStructureE::HeaderSndMethd] = SNDMTHD_NOROUTE;
+        _pkt->header()[HeaderStructureE::HeaderSndParam] = 0x00;
+        _pkt->header()[HeaderStructureE::HeaderSndParam1] = 0x00;
+        _pkt->header()[HeaderStructureE::HeaderSrcNodeType] = net485dl->getNodeType();
+        _pkt->header()[HeaderStructureE::PacketMsgType] = MSGRESP(MSGTYP_NDSCVRY);
+        _pkt->header()[HeaderStructureE::PacketNumber] = PKTNUMBER(true,false);
+        _pkt->header()[HeaderStructureE::PacketLength] = 18;
+        _pkt->data()[0] = net485dl->getNodeType();
+        _pkt->data()[1] = 0x00;
+        memcpy((void *)&(_pkt->data()[2]), net485dl->getMacAddr().mac, Net485MacAddressE::SIZE);
+        memcpy((void *)&(_pkt->data()[2+Net485MacAddressE::SIZE])
+               , &sessionId, sizeof(uint64_t));
         return _pkt;
     }
     inline Net485Node *getNodeDiscResp(Net485Packet *_pkt) {

@@ -17,7 +17,7 @@
 #define FW_VERSION __DATE__
 
 #define NETVER 1
-#define NETREV 1
+#define NETREV 3
 
 Net485DataLink *device485;
 Net485Network *net485;
@@ -98,7 +98,7 @@ void loop() {
   loopCommandSerial();
 
   net485->loop();
-  
+
 #elif defined(ESP8266)
 #endif
 }
