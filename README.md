@@ -14,3 +14,6 @@ Layer 2:
 - Declaration of header structure
 - Checksum algorithm for header+data
 
+Layers 3-5:
+
+- The bulk of the work is here.  Version announcemnt and network coordination of who is master (coordinator) is working.  Still nothing usefull ... a work in progress
