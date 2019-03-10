@@ -6,7 +6,15 @@
 #include "Net485Network.hpp"
 
 #define DEBUG
+
+#ifdef DEBUG
 uint8_t lastState = 0xff;
+#endif
+
+#define ANET_SLOTLO 6000
+#define ANET_SLOTHI 30000
+const uint8_t nodeTypeArbFilterList[] = {MSGTYP_ANUCVER,MSGTYP_NDSCVRY, NULL};
+
 
 Net485Network::Net485Network(Net485DataLink *_net, Net485Subord *_sub, bool _coordinatorCapable
                              , uint16_t _coordVer = 0, uint16_t _coordRev = 0) {
@@ -35,11 +43,6 @@ uint8_t Net485Network::nodeExists(Net485Node *_node) {
     }
     return 0;
 }
-
-
-#define ANET_SLOTLO 6000
-#define ANET_SLOTHI 30000
-const uint8_t nodeTypeArbFilterList[] = {MSGTYP_ANUCVER,MSGTYP_NDSCVRY, NULL};
 
 void Net485Network::loopClient() {
     Net485Packet *recvPtr, sendPkt;
@@ -275,15 +278,15 @@ void Net485Network::warmStart(unsigned long _thisTime) {
                     }
                     break;
                 case Net485State::ANServerWaiting:
+                    if( MILLISECDIFF(_thisTime,this->lasttimeOfMessage) > RESPONSE_TIMEOUT ) {
+                        this->state = Net485State::ANServer;
+                    }
                     if(net485dl->hasPacket()) {
-                        this->state = (MILLISECDIFF(_thisTime,becomingTime) > RESPONSE_TIMEOUT
-                                       ? Net485State::ANServer
-                                       : Net485State::None);
-                        this->lasttimeOfMessage = _thisTime + PROLONGED_SILENCE;
+                        this->state = Net485State::None;
+                        this->lasttimeOfMessage = _thisTime;
                     }
                     break;
                 default:
-                    becomingTime = _thisTime;
                     if(net485dl->hasPacket()) {
                         pkt = net485dl->getNextPacket();
                         if(pkt->header()[HeaderStructureE::PacketMsgType] == MSGTYP_ANUCVER) {
@@ -291,9 +294,11 @@ void Net485Network::warmStart(unsigned long _thisTime) {
                             this->state = (netVer.comp(this->ver,netVer)>0
                                            ? Net485State::ANServerBecoming
                                            : Net485State::ANClientBecoming);
+                        } else {
+                            this->state = Net485State::ANClientBecoming;
                         }
                         // If pkt = Node discovery re-try process
-                        this->lasttimeOfMessage = _thisTime + PROLONGED_SILENCE;
+                        this->lasttimeOfMessage = _thisTime;
                     } else {
                         this->state = Net485State::ANServerBecoming;
                     }

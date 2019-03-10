@@ -55,7 +55,7 @@ public:
 #define SLOT_LOW 100
 #define SLOT_HIGH 2500
     inline uint16_t newSlotDelayMicroSecs(unsigned int low = SLOT_LOW, unsigned int hi = SLOT_HIGH) {
-        unsigned long seed = this->getLoopCount() + this->nodeType + this->macAddr.manufacturerId();
+        unsigned long seed = this->getLoopCount() + this->nodeType + this->macAddr.manufacturerId() + analogRead(0);
         randomSeed(seed);
         return random(SLOT_LOW,SLOT_HIGH) * 1000;
     }
