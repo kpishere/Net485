@@ -10,7 +10,7 @@
 #include "Net485API.hpp"
 #include "Net485Subord.hpp"
 
-#define NODELIST_REPOLLTIME 120000 /* milli-sconds  ?correct? */
+#define NODELIST_REPOLLTIME 110000 /* milli-sconds  ?correct? */
 #define RESPONSE_TIMEOUT 3000 /* milli-sconds */
 #define PROLONGED_SILENCE 120000 /* milli-sconds */
 #define MILLISECDIFF(future,past) ((future < past)? (0xffffffffUL-past)+future : future - past )
@@ -318,10 +318,11 @@ public:
                , &sessionId, sizeof(uint64_t));
         return _pkt;
     }
-    inline Net485Node *getNodeDiscResp(Net485Packet *_pkt) {
+    inline Net485Node *getNodeDiscResp(Net485Packet *_pkt, bool isResponse = false) {
         Net485Node tmpNode;
         uint8_t nodeIndex = 0;
-        if(_pkt->header()[HeaderStructureE::PacketMsgType] == MSGRESP(MSGTYP_NDSCVRY) ) {
+        if( (!isResponse && _pkt->header()[HeaderStructureE::PacketMsgType] == MSGTYP_NDSCVRY)
+           || (isResponse && _pkt->header()[HeaderStructureE::PacketMsgType] == MSGRESP(MSGTYP_NDSCVRY)) ) {
             tmpNode.init(_pkt);
             nodeIndex = nodeExists(&tmpNode);
             if(nodeIndex == 0) {

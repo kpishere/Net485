@@ -51,50 +51,66 @@ void Net485Network::loopClient() {
     char messageBuffer[160]; // Temp for testing only
     // TODO
     // Listen and write to debug serial for now
-    if (net485dl->hasPacket()) {
+    if (net485dl->hasPacket())
+    {
         recvPtr = net485dl->getNextPacket();
         this->lasttimeOfMessage = millis();
         discNode = this->getNodeDiscResp(recvPtr);
-        if(discNode == NULL) {
-            Serial.print("{havemsg");
-            // Request
-            if(net485dl->isChecksumValid(recvPtr)) {
-                Serial.println(", valid: true");
-            } else {
-                Serial.println(", valid: false");
+        switch(recvPtr->header()[HeaderStructureE::PacketMsgType]) {
+            case MSGTYP_ANUCVER: break; // Ignore these requests, we are client unless there is timeout
+            case MSGTYP_NDSCVRY:
+                // A Node discovery request
+                this->sessionId = this->net485dl->newSessionId();
+                this->slotTime = this->net485dl->newSlotDelayMicroSecs(ANET_SLOTLO,ANET_SLOTHI);
+#ifdef DEBUG
+            {
+                char messageBuffer[100]; // Temp for testing only
+                sprintf(messageBuffer,"{sessionId: %lu, slotTime:%d, msgType:%0x}",this->sessionId, this->slotTime,recvPtr->header()[(int)HeaderStructureE::PacketMsgType]);
+                Serial.println(messageBuffer);
             }
-            // Send ACK
-            this->net485dl->send(this->setACK(&pktToSend));
+#endif
 
-            sprintf(messageBuffer,", header: 0x");
-            for(int i=0; i<MTU_HEADER ; i++) sprintf( &(messageBuffer[11+i*2]), "%0X ",recvPtr->header()[i]);
-            sprintf(&(messageBuffer[11+2*MTU_HEADER]),", data: %0X .. (%d), chksum: 0x%0X%0X }", recvPtr->data()[0], recvPtr->dataSize
-                    ,recvPtr->checksum()[0], recvPtr->checksum()[1]);
-            Serial.println(messageBuffer);
-        } else {
-            // A Node discovery request
-            this->sessionId = this->net485dl->newSessionId();
-            this->slotTime = this->net485dl->newSlotDelayMicroSecs(ANET_SLOTLO,ANET_SLOTHI);
-            havePkt = false;
-            while (MILLISECDIFF(millis(),this->lasttimeOfMessage) < this->slotTime && !havePkt) {
-                havePkt = net485dl->hasPacket();
-            }
-            if(!havePkt) {
-                if(discNode->nodeType == NTC_ANY || discNode->nodeType == net485dl->getNodeType()) {
-                    this->net485dl->send(this->setNodeDiscResp(&sendPkt));
-                    this->lasttimeOfMessage = millis();
-                    havePkt = false;
-                    while (MILLISECDIFF(millis(),this->lasttimeOfMessage) < RESPONSE_TIMEOUT && !havePkt) {
-                        havePkt = net485dl->hasPacket();
-                        if(havePkt) {
-                            recvPtr = net485dl->getNextPacket();
-                            if(this->getNodeAddress(recvPtr)) {
-                                this->net485dl->send(this->setACK(&sendPkt));
+                havePkt = false;
+                while (MILLISECDIFF(millis(),this->lasttimeOfMessage) < this->slotTime && !havePkt) {
+                    havePkt = net485dl->hasPacket();
+                }
+                if(!havePkt) {
+                    if(discNode->nodeType == NTC_ANY || discNode->nodeType == net485dl->getNodeType())
+                    {
+                        this->net485dl->send(this->setNodeDiscResp(&sendPkt));
+                        this->lasttimeOfMessage = millis();
+                        havePkt = false;
+                        while (MILLISECDIFF(millis(),this->lasttimeOfMessage) < RESPONSE_TIMEOUT && !havePkt) {
+                            havePkt = net485dl->hasPacket();
+                            if(havePkt) {
+                                recvPtr = net485dl->getNextPacket();
+                                if(this->getNodeAddress(recvPtr)) {
+                                    this->net485dl->send(this->setACK(&sendPkt));
+                                }
                             }
                         }
-                    }                    
+                    }
                 }
-            }
+                break;
+            default:
+                if(discNode == NULL) {
+                    Serial.print("{havemsg");
+                    // Request
+                    if(net485dl->isChecksumValid(recvPtr)) {
+                        Serial.println(", valid: true}");
+                        
+                        // Send ACK
+                        this->net485dl->send(this->setACK(&pktToSend));
+                        
+                        sprintf(messageBuffer,", header: 0x");
+                        for(int i=0; i<MTU_HEADER ; i++) sprintf( &(messageBuffer[11+i*2]), "%0X ",recvPtr->header()[i]);
+                        sprintf(&(messageBuffer[11+2*MTU_HEADER]),", data: %0X .. (%d), chksum: 0x%0X%0X }", recvPtr->data()[0], recvPtr->dataSize
+                                ,recvPtr->checksum()[0], recvPtr->checksum()[1]);
+                        Serial.println(messageBuffer);
+                    } else {
+                        Serial.println(", valid: false}");
+                    }
+                }
         }
     }
 }
@@ -102,7 +118,7 @@ void Net485Network::loopServer() {
     Net485Packet *pkt, sendPkt;
     Net485DataVersion netVer;
     bool havePkt = false;
-    if(lastNodeListPoll == 0 ||  MILLISECDIFF(this->lasttimeOfMessage,this->lastNodeListPoll) > NODELIST_REPOLLTIME)
+    if(lastNodeListPoll == 0 ||  MILLISECDIFF(millis(),this->lastNodeListPoll) > NODELIST_REPOLLTIME)
     {
         if(Net485Network::reqRespNodeDiscover()) {
             // Loop over Nodes
@@ -134,7 +150,7 @@ void Net485Network::loopServer() {
                                : Net485State::ANClientBecoming);
             } else {
                 // TODO: Process packet as server
-                Serial.print("{serverToFlowData}");
+                Serial.println("{serverToFlowData}");
             }
             this->lasttimeOfMessage = millis();
         }
@@ -165,7 +181,7 @@ bool Net485Network::reqRespSetAddress(uint8_t _node, uint8_t _subnet) {
 bool Net485Network::reqRespNodeId(uint8_t _node, uint8_t _subnet, bool _validateOnly) {
     Net485Packet *pkt, sendPkt;
     bool havePkt = false;
-
+    
     this->net485dl->send(this->setNodeId(&sendPkt,_node,_subnet));
     this->lasttimeOfMessage = millis();
     while(MILLISECDIFF(millis(),lasttimeOfMessage) < RESPONSE_TIMEOUT && !havePkt) {
@@ -185,12 +201,13 @@ bool Net485Network::reqRespNodeDiscover(uint8_t _nodeIdFilter) {
     
     this->net485dl->send(this->setNodeDisc(&sendPkt,_nodeIdFilter));
     this->lasttimeOfMessage = millis();
+    this->lastNodeListPoll = millis();
     while(MILLISECDIFF(millis(),lasttimeOfMessage) < SLOT_HIGH && !havePkt) {
         havePkt = net485dl->hasPacket();
         if(havePkt) {
             pkt = net485dl->getNextPacket();
             this->lasttimeOfMessage = millis();
-            if(this->getNodeDiscResp(pkt) == NULL) {
+            if(this->getNodeDiscResp(pkt, true) == NULL) {
                 if(pkt->header()[HeaderStructureE::PacketMsgType] == MSGTYP_ANUCVER) {
                     this->state = Net485State::ANServerWaiting;
                     return false;
@@ -207,7 +224,7 @@ void Net485Network::loop() {
     {
         char messageBuffer[100]; // Temp for testing only
         if(lastState != this->state) {
-            sprintf(messageBuffer,"{state: %d, now:%lu}",this->state, thisTime);
+            sprintf(messageBuffer,"{state: %d, now:%lu, deltaLasttimeOfMessage:%lu}",this->state, thisTime, MILLISECDIFF(thisTime,lasttimeOfMessage));
             Serial.println(messageBuffer);
             lastState = this->state;
         }
@@ -234,7 +251,7 @@ void Net485Network::warmStart(unsigned long _thisTime) {
     Net485Packet *pkt, sendPkt;
     Net485DataVersion netVer;
     bool havePkt = false;
-
+    
     // Pick new random slot time and wait further for specific msg types
     if(!this->slotTime) {
         this->slotTime = net485dl->newSlotDelayMicroSecs(ANET_SLOTLO,ANET_SLOTHI);
@@ -253,6 +270,7 @@ void Net485Network::warmStart(unsigned long _thisTime) {
             switch(this->state) {
                 case Net485State::ANClientBecoming:
                     if(this->sub != NULL) {
+                        net485dl->setPacketFilter(NULL,NULL,NULL,NULL);
                         this->state = Net485State::ANClient;
                     } else {
                         // otherwise, go quiet - left as client becoming until reset
@@ -306,6 +324,7 @@ void Net485Network::warmStart(unsigned long _thisTime) {
             }
         } else {
             if(this->sub != NULL) {
+                net485dl->setPacketFilter(NULL,NULL,NULL,NULL);
                 this->state = Net485State::ANClient;
             } else {
                 // otherwise, go quiet - left as client becoming until reset
