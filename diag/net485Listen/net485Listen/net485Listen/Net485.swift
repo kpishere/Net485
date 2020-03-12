@@ -1,0 +1,126 @@
+//
+//  Net485.swift
+//  net485Listen
+//
+//  Created by Kevin Peck on 2020-03-11.
+//  Copyright © 2020 Kevin Peck. All rights reserved.
+//
+
+import Foundation
+
+enum MsgType:UInt8 {
+    case R2R = 0x00 //Request to Receive (R2R)
+    // ...
+    case NWKSTREQ = 0x75 //Network State Request
+    case NWKSTREQACK = 0xF5
+    case ADDRCNF = 0x76 //Address Confirmation
+    case ADDRCNFACK = 0xF6
+    case TKNOFR = 0x77 //Token Offer
+    case TKNOFRACK = 0xF7
+    case VRANNC = 0x78 //Version Announcement
+    case VRANNCACK = 0xF8
+    case NDDSCVR = 0x79 //Node Discovery
+    case NDDSCVRACK = 0xF9
+    case SETADDR = 0x7A //Set Address
+    case SETADDRACK = 0xFA
+    case GETNDID = 0x7B //Get Node ID
+    case GETNDIDACK = 0xFB
+    case RSVD_7C = 0x7C //Reserved
+    case RSVD_7CACK = 0xFC
+    case NWKSDSI = 0x7D //Network Shared Data Sector Image
+    case NWKSDSIACK = 0xFD
+    case NWKECREQ = 0x7E //Network Encapsulation Request
+    case NWKECREQACK = 0xFE
+    case RSVD_DEFAULT = 0x7F //Reserved
+    case RSVD_DEFAULTACK = 0xFF
+}
+enum SendMethod: UInt8 {
+    case NONROUTED = 0x00 //Sent directly to device, is not routed
+    case PRIORITYROUTING = 0x01 //Routing by Priority Control Command Device
+    case NODETYPROUTING = 0x02 //Routing by Priority Node Type
+    case SOCKETROUTING = 0x03 //Routing by Socket
+}
+enum R2RCode: UInt8 {
+    case REQ = 0x00
+    case ACK = 0x06
+}
+struct net485Packet {
+    let msgType: MsgType
+    let pktNumber: UInt8
+    let pktLength: UInt8
+    let data: Data
+    
+    init(_ data:Data) {
+        self.msgType = MsgType(rawValue:data[7]) ?? .RSVD_DEFAULT
+        self.pktNumber = data[8]
+        self.pktLength = data[9]
+        self.data =  data.subdata(in: 10..<data.count-2)
+    }
+    var isDataFlow: Bool { return self.pktNumber & 0x80 != 0}
+    var version: UInt8 { return self.pktNumber & 0x20 == 0 ? 2 : 1 }
+    var chunk: UInt8 { return self.pktNumber & 0x1F }
+    var description: String {
+        return "\(self.msgType) isDataFlow:\(self.isDataFlow) Ver:\(self.version) Chunk:\(self.chunk) len:\(self.pktLength)"
+    }
+}
+struct net485MsgHeader {
+    let addrDestination: UInt8
+    let addrSource: UInt8
+    let subnet: UInt8
+    let sendMethod: SendMethod
+    let sendParameter: (UInt8, UInt8)
+    let nodeTypeSource: UInt8
+    let packet: net485Packet
+    
+    init(_ data:Data) {
+        self.addrDestination = data[0]
+        self.addrSource = data[1]
+        self.subnet = data[2]
+        self.sendMethod = SendMethod( rawValue:data[3] ) ?? .NODETYPROUTING
+        self.sendParameter.0 = data[4]
+        self.sendParameter.1 = data[5]
+        self.nodeTypeSource = data[6]
+        self.packet = net485Packet.init(data)
+    }
+    var description: String {
+        return "Dest:\(self.addrDestination) Src:\(self.addrSource) Sub:\(self.subnet) SendMethd:\(self.sendMethod) Params:\(self.sendParameter) SrcNodeType:\(self.nodeTypeSource) :: \(self.packet.description)"
+    }
+}
+
+
+class PacketProcessor : NSObject, ORSSerialPortDelegate {
+
+    convenience init(_ port: ORSSerialPort) {
+        self.init()
+        port.delegate = self
+    }
+    
+    func serialPortWasRemovedFromSystem(_ serialPort: ORSSerialPort) {
+        exit(2)
+    }
+    
+    func serialPort(_ serialPort: ORSSerialPort, didReceive data: Data) {
+        let isOK = self.passCRC(data: data)
+        print("\nBytes:\(data.count) Pkt:\(data.asHexString) \(isOK ? "CRCOK":"CRCERR")")
+        if isOK {
+            let msg = net485MsgHeader.init(data)
+            print(msg.description)
+            let msgOfType = CT485MessageCreator.shared.create(msg)
+            msgOfType?.description()
+        }
+    }
+    
+    func passCRC(data: Data) -> Bool {
+        var isOK: Bool = true
+        var lrc1: Int = 0xAA
+        var lrc2: Int = 0
+        for b in data {
+            lrc1 += Int(b)
+            if(lrc1 >= 255) {lrc1 -= 255 }
+            lrc2 += lrc1
+            if(lrc2 >= 255) {lrc2 -= 255 }
+        }
+        isOK = (lrc1 == 0)
+        return isOK
+    }
+}
