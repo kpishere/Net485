@@ -57,7 +57,7 @@ private:
     static void clearTimer();
 public:
     ////
-    // These properties are public but are only used by clobal functions in module
+    // These properties are public but are only used by global functions in module
     ////
     static Net485Physical_HardwareSerial *lastInstance;
     void packetSequencer();

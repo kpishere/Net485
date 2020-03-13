@@ -87,7 +87,9 @@
 #define NTC_NETCTRL     0xA6 /*Network Coordinator*/
 
 // Message Types
-#define MSGTYP_R2R      0x00 /*Request to Receive (R2R)*/
+//
+// CT-CIM Application message types
+//
 #define MSGTYP_GCONF    0x01 /*Get Configuration*/
 #define MSGTYP_GSTAT    0x02 /*Get Status*/
 #define MSGTYP_CCMD     0x03 /*Control Command*/
@@ -104,23 +106,26 @@
 #define MSGTYP_SNETLIST 0x14 /*Set Network Node List */
 #define MSGTYP_DMAR     0x1D /*Direct Memory Access Read*/
 #define MSGTYP_DMAW     0x1E /*Direct Memory Access Write*/
-#define MSGTYP_SMFGGDAT 0x1F /*Set Manufacturer Generic Data */
+#define MSGTYP_SMFGGDAT 0x1F /*Set Manufacturer Generic Data*/
 #define MSGTYP_GMSGGDAT 0x20 /*Get Manufacturer Generic Data*/
-#define MSGTYP_MFGGRPLY 0x21 /*Manufacturer Generic Reply */
 #define MSGTYP_GUMENU   0x41 /*Get User Menu*/
 #define MSGTYP_UUMENU   0x42 /*Update User Menu*/
 #define MSGTYP_SFAPPDATA 0x43 /*Factory Set Application Shared Data*/
 #define MSGTYP_GAPPDATA 0x44 /*Get Shared Data from Application*/
 #define MSGTYP_ECHO     0x5A /*Echo*/
+//
+// CT-485 Dataflow message types
+//
+#define MSGTYP_R2R      0x00 /*Request to Receive (R2R)*/
 #define MSGTYP_NETSTATE 0x75 /*Network State Request*/
-#define MSGTYP_ADDRCNFM 0x76 /*Address Confirmation*/
-#define MSGTYP_TOKEN    0x77 /*Token Offer*/
+#define MSGTYP_ADDRCNFM 0x76 /*Address Confirmation*/ //TODO
+#define MSGTYP_TOKEN    0x77 /*Token Offer*/ //TODO
 #define MSGTYP_ANUCVER  0x78 /*Version Announcement */
 #define MSGTYP_NDSCVRY  0x79 /*Node Discovery*/
-#define MSGTYP_SADDR    0x7A /*Set Address*/
+#define MSGTYP_SADDR    0x7A /*Set Address*/ //TODO
 #define MSGTYP_GNODEID  0x7B /*Get Node ID*/
-#define MSGTYP_NSDSI    0x7D /*Network Shared Data Sector Image*/
-#define MSGTYP_NENCREQ  0x7E /*Network Encapsulation Request*/
+#define MSGTYP_NSDSI    0x7D /*Network Shared Data Sector Image*/ //TODO
+#define MSGTYP_NENCREQ  0x7E /*Network Encapsulation Request*/ //TODO
 #define MSGRESP(msg) ((msg) | 0x80) /*Convert # to response code*/
 
 

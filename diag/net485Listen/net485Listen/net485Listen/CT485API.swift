@@ -182,4 +182,13 @@ class CT485Message_NetEncap :CT485Message, CT485DeclareMessageTypes, CustomLeafR
     }
     static func getMsgTypes() -> NSArray { return [MsgType.NWKECREQ, MsgType.NWKECREQACK] }
 }
+class CT485Message_data :CT485Message, CT485DeclareMessageTypes, CustomLeafReflectable
+{
+    var netEncapData : [UInt8]? { return [UInt8](self.data!.packet.data.subdata(in:(0..<self.data!.packet.data.count)).reversed()) }
+    
+    var customMirror: Mirror {
+        return Mirror(self, children: ["netEncapData":netEncapData ?? []])
+    }
+    static func getMsgTypes() -> NSArray { return [MsgType.ECHO, MsgType.NWKECREQACK] }
+}
 

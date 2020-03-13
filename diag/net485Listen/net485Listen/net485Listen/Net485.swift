@@ -9,30 +9,81 @@
 import Foundation
 
 enum MsgType:UInt8 {
-    case R2R = 0x00 //Request to Receive (R2R)
-    // ...
-    case NWKSTREQ = 0x75 //Network State Request
-    case NWKSTREQACK = 0xF5
+    //
+    // CT-CIM Application message types
+    //
+    case CCMD = 0x03 //Control Command
+    case CCMDACK = 0x83
+    case DMAR = 0x1D //Direct Memory Access Read
+    case DMARACK = 0x9D
+    case DMAW = 0x1E //Direct Memory Access Write
+    case DMAWACK = 0x9E
+    case ECHO = 0x5A //Echo
+    case ECHOACK = 0xDA
+    case GAPPDATA = 0x45 //Get Shared Data from Application
+    case GAPPDATAACK = 0xC5
+    case GCONF = 0x01 //Get Configuration
+    case GCONFACK = 0x81
+    case GDEVDATA = 0x11 //Application Get Shared Device Data
+    case GDEVDATAACK = 0x91
+    case GDIAG = 0x06 //Get Diagnostics
+    case GDIAGACK = 0x86
+    case GIDENT = 0x0E //Get Identification Data
+    case GIDENTACK = 0x8E
+    case GMFGDAT = 0x13 //Get Manufacturer Device Data
+    case GMFGDATACK = 0x93
+    case GMSGGDAT = 0x20 //Get Manufacturer Generic Data
+    case GMSGGDATACK = 0xA0
+    case GSENSR = 0x07 //Get Sensor Data
+    case GSENSRACK = 0x87
+    case GSTAT = 0x02 //Get Status
+    case GSTATACK = 0x82
+    case GUMENU = 0x41 //Get User Menu
+    case GUMENUACK = 0xC1
+    case SDEVDATA = 0x10 //Application Set Network Shared Data
+    case SDEVDATAACK = 0x90
+    case SDIAG = 0x05 //Set Diagnostics
+    case SDIAGACK = 0x85
+    case SDMSG = 0x04 //Set Display Message
+    case SDMSGACK = 0x84
+    case SFAPPDATA = 0x43 //Factory Set Application Shared Data
+    case SFAPPDATAACK = 0xC3
+    case SIDENT = 0x0D //Set Identification Data
+    case SIDENTACK = 0x8D
+    case SMFGDAT = 0x12 //Set Manufacturer Device Data
+    case SMFGDATACK = 0x92
+    case SMFGGDAT = 0x1F //Set Manufacturer Generic Data
+    case SMFGGDATACK = 0x9F
+    case SNETLIST = 0x14 //Set Network Node List
+    case SNETLISTACK = 0x94
+    case UUMENU = 0x42 //Update User Menu
+    case UUMENUACK = 0xC2
+    //
+    // CT-485 Dataflow message types
+    //
     case ADDRCNF = 0x76 //Address Confirmation
     case ADDRCNFACK = 0xF6
+    case GETNDID = 0x7B //Get Node ID
+    case GETNDIDACK = 0xFB
+    case NDDSCVR = 0x79 //Node Discovery
+    case NDDSCVRACK = 0xF9
+    case NWKECREQ = 0x7E //Network Encapsulation Request
+    case NWKECREQACK = 0xFE
+    case NWKSDSI = 0x7D //Network Shared Data Sector Image
+    case NWKSDSIACK = 0xFD
+    case NWKSTREQ = 0x75 //Network State Request
+    case NWKSTREQACK = 0xF5
+    case R2R = 0x00 //Request to Receive (R2R)
+    case RSVD_7C = 0x7C //Reserved
+    case RSVD_7CACK = 0xFC
+    case RSVD_DEFAULT = 0x7F //Reserved
+    case RSVD_DEFAULTACK = 0xFF
+    case SETADDR = 0x7A //Set Address
+    case SETADDRACK = 0xFA
     case TKNOFR = 0x77 //Token Offer
     case TKNOFRACK = 0xF7
     case VRANNC = 0x78 //Version Announcement
     case VRANNCACK = 0xF8
-    case NDDSCVR = 0x79 //Node Discovery
-    case NDDSCVRACK = 0xF9
-    case SETADDR = 0x7A //Set Address
-    case SETADDRACK = 0xFA
-    case GETNDID = 0x7B //Get Node ID
-    case GETNDIDACK = 0xFB
-    case RSVD_7C = 0x7C //Reserved
-    case RSVD_7CACK = 0xFC
-    case NWKSDSI = 0x7D //Network Shared Data Sector Image
-    case NWKSDSIACK = 0xFD
-    case NWKECREQ = 0x7E //Network Encapsulation Request
-    case NWKECREQACK = 0xFE
-    case RSVD_DEFAULT = 0x7F //Reserved
-    case RSVD_DEFAULTACK = 0xFF
 }
 enum SendMethod: UInt8 {
     case NONROUTED = 0x00 //Sent directly to device, is not routed
