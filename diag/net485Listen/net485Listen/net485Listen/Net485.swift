@@ -12,7 +12,7 @@ enum MsgType:UInt8 {
     //
     // CT-CIM Application message types
     //
-    case CCMD = 0x03 //Control Command
+    case CCMD = 0x03 //Control Command 
     case CCMDACK = 0x83
     case DMAR = 0x1D //Direct Memory Access Read
     case DMARACK = 0x9D
@@ -20,8 +20,8 @@ enum MsgType:UInt8 {
     case DMAWACK = 0x9E
     case ECHO = 0x5A //Echo
     case ECHOACK = 0xDA
-    case GAPPDATA = 0x45 //Get Shared Data from Application
-    case GAPPDATAACK = 0xC5
+    case GAPPDATA = 0x44 //Get Shared Data from Application
+    case GAPPDATAACK = 0xC4
     case GCONF = 0x01 //Get Configuration
     case GCONFACK = 0x81
     case GDEVDATA = 0x11 //Application Get Shared Device Data
@@ -30,7 +30,7 @@ enum MsgType:UInt8 {
     case GDIAGACK = 0x86
     case GIDENT = 0x0E //Get Identification Data
     case GIDENTACK = 0x8E
-    case GMFGDAT = 0x13 //Get Manufacturer Device Data
+    case GMFGDAT = 0x13 //Get Manufacturer Device Data 
     case GMFGDATACK = 0x93
     case GMSGGDAT = 0x20 //Get Manufacturer Generic Data
     case GMSGGDATACK = 0xA0
@@ -42,13 +42,13 @@ enum MsgType:UInt8 {
     case GUMENUACK = 0xC1
     case SDEVDATA = 0x10 //Application Set Network Shared Data
     case SDEVDATAACK = 0x90
-    case SDIAG = 0x05 //Set Diagnostics
+    case SDIAG = 0x05 //Set Diagnostics 
     case SDIAGACK = 0x85
-    case SDMSG = 0x04 //Set Display Message
+    case SDMSG = 0x04 //Set Display Message 
     case SDMSGACK = 0x84
     case SFAPPDATA = 0x43 //Factory Set Application Shared Data
     case SFAPPDATAACK = 0xC3
-    case SIDENT = 0x0D //Set Identification Data
+    case SIDENT = 0x0D //Set Identification Data 
     case SIDENTACK = 0x8D
     case SMFGDAT = 0x12 //Set Manufacturer Device Data
     case SMFGDATACK = 0x92
