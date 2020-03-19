@@ -146,7 +146,7 @@ void Net485Network::loopServer() {
             if(pkt->header()[HeaderStructureE::PacketMsgType] == MSGTYP_ANUCVER) {
                 netVer.init(pkt);
                 this->state = (netVer.comp(this->ver,netVer)>0
-                               ? Net485State::ANServerBecoming
+                               ? Net485State::ANServerBecomingA
                                : Net485State::ANClientBecoming);
             } else {
                 // TODO: Process packet as server
@@ -230,7 +230,7 @@ void Net485Network::loop() {
         }
     }
 #endif
-    // Network silence time
+    // Network silence time - device warm starts if this silence is exceeded
     if( MILLISECDIFF(thisTime,lasttimeOfMessage) > PROLONGED_SILENCE ) {
         this->warmStart(thisTime);
     }
@@ -256,7 +256,8 @@ void Net485Network::warmStart(unsigned long _thisTime) {
     if(!this->slotTime) {
         this->slotTime = net485dl->newSlotDelayMicroSecs(ANET_SLOTLO,ANET_SLOTHI);
         switch (this->state) {
-            case Net485State::ANServerBecoming:
+            case Net485State::ANServerBecomingA:
+            case Net485State::ANServerBecomingB:
                 net485dl->setPacketFilter(NULL,NULL,NULL,NULL);
                 break;
             default:
@@ -269,56 +270,166 @@ void Net485Network::warmStart(unsigned long _thisTime) {
         if( this->ver.isFFD ) {
             switch(this->state) {
                 case Net485State::ANClientBecoming:
-                    if(this->sub != NULL) {
-                        net485dl->setPacketFilter(NULL,NULL,NULL,NULL);
-                        this->state = Net485State::ANClient;
-                    } else {
-                        // otherwise, go quiet - left as client becoming until reset
-                        Serial.print("{clientGoneQuiet1}");
-                        lasttimeOfMessage = millis();
-                    }
-                    break;
-                case Net485State::ANServerBecoming:
                     if(net485dl->hasPacket()) {
                         pkt = net485dl->getNextPacket();
                         if(pkt->header()[HeaderStructureE::PacketMsgType] == MSGTYP_ANUCVER) {
                             netVer.init(pkt);
-                            this->state = (netVer.comp(this->ver,netVer)>0
-                                           ? Net485State::ANServerBecoming
-                                           : Net485State::ANClientBecoming);
+                            if( netVer.comp(this->ver,netVer)>0 ) {
+                                // Is Net CAVA < own CAVA 1.2 Yes
+                                this->state = Net485State::ANClientWaiting;
+                                this->slotTime = 0; // Set for recalc of slot time
+                                this->lasttimeOfMessage = _thisTime;
+                            } else {
+                                // Become client 1.1 No
+                                if(this->sub != NULL) {
+                                    net485dl->setPacketFilter(NULL,NULL,NULL,NULL);
+                                    this->state = Net485State::ANClient;
+                                } else {
+                                    // otherwise, go quiet - left as client becoming until reset
+                                    Serial.println("{client without subordinate, gone quiet}");
+                                    if(net485dl->hasPacket()) {
+                                        lasttimeOfMessage = millis();
+                                    }
+                                }
+                            }
                         }
-                        // If pkt of any type, re-try process
-                        this->lasttimeOfMessage = _thisTime + PROLONGED_SILENCE;
                     } else {
+                        // Timeout - switch back to server 1.2.1 Yes
                         this->net485dl->send(this->setCAVA(&pktToSend));
-                        this->lasttimeOfMessage = millis();
+                        this->lasttimeOfMessage = millis() - this->slotTime + RESPONSE_TIMEOUT;
+                        this->state = Net485State::ANClientWaiting;
+                    }
+                    break;
+                case Net485State::ANClientWaiting:
+                    if(net485dl->hasPacket()) {
+                        pkt = net485dl->getNextPacket();
+                        if(pkt->header()[HeaderStructureE::PacketMsgType] == MSGTYP_ANUCVER) {
+                            // 1.2.1.1 Yes
+                            netVer.init(pkt);
+                            if( netVer.comp(this->ver,netVer)==0 ) {
+                                // Become client
+                                if(this->sub != NULL) {
+                                    net485dl->setPacketFilter(NULL,NULL,NULL,NULL);
+                                    this->state = Net485State::ANClient;
+                                } else {
+                                    // otherwise, go quiet - left as client becoming until reset
+                                    Serial.println("{client without subordinate, gone quiet}");
+                                    if(net485dl->hasPacket()) {
+                                        lasttimeOfMessage = millis();
+                                    }
+                                }
+                            }
+                        }
+                    } else {
+                        // Restart warmStart process 1.2.1.2 Yes
+                        this->state = Net485State::None;
+                        this->slotTime = 0; // Set for recalc of slot time
+                        this->lasttimeOfMessage = _thisTime;
+                    }
+                    break;
+                case Net485State::ANServerBecomingA:
+                    if(net485dl->hasPacket()) {
+                        pkt = net485dl->getNextPacket();
+                        if(pkt->header()[HeaderStructureE::PacketMsgType] == MSGTYP_ANUCVER) {
+                            // 1.2.1 Yes
+                            netVer.init(pkt);
+                            if( netVer.comp(this->ver,netVer)==0 ) {
+                                // Is own CAVA 1.1.2 Yes
+                                this->state = Net485State::ANServerBecomingB;
+                                this->slotTime = 0; // Set for recalc of slot time
+                                this->lasttimeOfMessage = _thisTime;
+                            } else {
+                                // 1.1.1 No
+                                this->state = Net485State::ANClientBecoming;
+                                this->lasttimeOfMessage = millis() - this->slotTime;
+                            }
+                        } else if(pkt->header()[HeaderStructureE::PacketMsgType] == MSGTYP_NDSCVRY) {
+                            // Restart warmStart process 1.2.2 Yes
+                            this->state = Net485State::None;
+                            this->slotTime = 0; // Set for recalc of slot time
+                            this->lasttimeOfMessage = _thisTime;
+                        }
+                    } else {
+                        // Timeout 1.2.3 Yes
+                        this->net485dl->send(this->setCAVA(&pktToSend));
+                        this->lasttimeOfMessage = millis() - this->slotTime + RESPONSE_TIMEOUT;
+                        this->state = Net485State::ANServerWaiting;
+                    }
+                    break;
+                case Net485State::ANServerBecomingB:
+                    if(net485dl->hasPacket()) {
+                        pkt = net485dl->getNextPacket();
+                        if(pkt->header()[HeaderStructureE::PacketMsgType] == MSGTYP_ANUCVER) {
+                            // 1.1.2.1 Yes
+                            netVer.init(pkt);
+                            if( netVer.comp(this->ver,netVer)==0 ) {
+                                // Is own CAVA 1.1.2 Yes
+                                this->state = Net485State::ANServerBecomingB;
+                                this->slotTime = 0; // Set for recalc of slot time
+                                this->lasttimeOfMessage = _thisTime;
+                            } else {
+                                // 1.1.1 Yes
+                                this->state = Net485State::ANClientBecoming;
+                                this->lasttimeOfMessage = millis() - this->slotTime;
+                            }
+                        } else {
+                            // Restart warmStart process 1.1.2.2 Yers
+                            this->state = Net485State::None;
+                            this->slotTime = 0; // Set for recalc of slot time
+                            this->lasttimeOfMessage = _thisTime;
+                        }
+                    } else {
+                        // Timeout 1.1.2.3 Yes
+                        this->net485dl->send(this->setCAVA(&pktToSend));
+                        this->lasttimeOfMessage = millis() - this->slotTime + RESPONSE_TIMEOUT;
                         this->state = Net485State::ANServerWaiting;
                     }
                     break;
                 case Net485State::ANServerWaiting:
-                    if( MILLISECDIFF(_thisTime,this->lasttimeOfMessage) > RESPONSE_TIMEOUT ) {
+                    if(pkt->header()[HeaderStructureE::PacketMsgType] == MSGTYP_ANUCVER) {
+                        // 1.1.2.3.1 Yes
+                        netVer.init(pkt);
+                        if( netVer.comp(this->ver,netVer)==0 ) {
+                            // Is own CAVA 1.1.2 Yes
+                            this->state = Net485State::ANServerBecomingB;
+                            this->slotTime = 0; // Set for recalc of slot time
+                            this->lasttimeOfMessage = _thisTime;
+                        } else {
+                            // 1.1.1 Yes
+                            this->state = Net485State::ANClientBecoming;
+                            this->lasttimeOfMessage = millis() - this->slotTime;
+                        }
+                    } else if( MILLISECDIFF(_thisTime,this->lasttimeOfMessage) > RESPONSE_TIMEOUT ) {
+                        // 1.1.2.3.2 Yes
                         this->state = Net485State::ANServer;
-                    }
-                    if(net485dl->hasPacket()) {
-                        this->state = Net485State::None;
-                        this->lasttimeOfMessage = _thisTime;
                     }
                     break;
                 default:
                     if(net485dl->hasPacket()) {
                         pkt = net485dl->getNextPacket();
                         if(pkt->header()[HeaderStructureE::PacketMsgType] == MSGTYP_ANUCVER) {
+                        // 1.1 Yes
                             netVer.init(pkt);
-                            this->state = (netVer.comp(this->ver,netVer)>0
-                                           ? Net485State::ANServerBecoming
-                                           : Net485State::ANClientBecoming);
+                            if( netVer.comp(this->ver,netVer)==0 ) {
+                                // Is own CAVA 1.1.2 Yes
+                                this->state = Net485State::ANServerBecomingB;
+                                this->slotTime = 0; // Set for recalc of slot time
+                                this->lasttimeOfMessage = _thisTime;
+                            } else {
+                                // 1.1.1 No
+                                this->state = Net485State::ANClientBecoming;
+                                this->slotTime = 0; // Set for recalc of slot time
+                                this->lasttimeOfMessage = _thisTime;
+                            }
                         } else {
-                            this->state = Net485State::ANClientBecoming;
+                            // It is Node Discovery (see filter above for default state) 1.2 Yes
+                            this->state = Net485State::ANServerBecomingA;
+                            this->slotTime = 0; // Set for recalc of slot time
+                            this->lasttimeOfMessage = _thisTime;
                         }
-                        // If pkt = Node discovery re-try process
-                        this->lasttimeOfMessage = _thisTime;
                     } else {
-                        this->state = Net485State::ANServerBecoming;
+                        // Timeout 2. Yes
+                        this->state = Net485State::ANServerBecomingB;
                     }
                     break;
             }
@@ -329,9 +440,10 @@ void Net485Network::warmStart(unsigned long _thisTime) {
             } else {
                 // otherwise, go quiet - left as client becoming until reset
                 Serial.println("{client without subordinate, gone quiet}");
-                lasttimeOfMessage = millis();
+                if(net485dl->hasPacket()) {
+                    lasttimeOfMessage = millis();
+                }
             }
         }
-        this->slotTime = 0; // Finished with slot time, clear it
     }
 }

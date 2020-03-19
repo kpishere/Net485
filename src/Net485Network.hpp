@@ -89,12 +89,14 @@ typedef struct Net485NodeS {
 enum Net485State {
     None = 0,
     ANClientBecoming = 1,
-    ANClient = 2,
-    ANServerBecoming = 3,
-    ANServerWaiting = 4,
-    ANServer = 5,
-    ANServerPollNodes = 6,
-    ANServerDiscover = 7
+    ANClientWaiting = 2,
+    ANClient = 3,
+    ANServerBecomingA = 4,
+    ANServerBecomingB = 5,
+    ANServerWaiting = 6,
+    ANServer = 7,
+    ANServerPollNodes = 8,
+    ANServerDiscover = 9
 };
 
 class Net485Network {
