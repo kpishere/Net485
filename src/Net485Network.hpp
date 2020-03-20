@@ -88,8 +88,6 @@ typedef struct Net485NodeS {
 
 enum Net485State {
     None = 0,
-    ANClientBecoming = 1,
-    ANClientWaiting = 2,
     ANClient = 3,
     ANServerBecomingA = 4,
     ANServerBecomingB = 5,
@@ -125,12 +123,14 @@ private:
     Net485Node *netNodes;
 
     void warmStart(unsigned long _thisTime);
-    void loopClient();
-    void loopServer();
+    void loopClient(unsigned long _thisTime);
+    void loopServer(unsigned long _thisTime);
     bool reqRespNodeId(uint8_t _node, uint8_t _subnet, bool _validateOnly = false);
     bool reqRespNodeDiscover(uint8_t _nodeIdFilter = 0x00);
     bool reqRespSetAddress(uint8_t _node, uint8_t _subnet);
     uint8_t nodeExists(Net485Node *_node);
+    bool becomeClient(Net485Packet *pkt, unsigned long _thisTime);
+
 public:
     Net485Network(Net485DataLink *_net, Net485Subord *_sub = NULL, bool _coordinatorCapable = true, uint16_t _coordVer = 0, uint16_t _coordRev = 0);
     ~Net485Network();

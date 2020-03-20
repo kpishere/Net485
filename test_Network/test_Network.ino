@@ -17,7 +17,7 @@
 #define FW_VERSION __DATE__
 
 #define NETVER 1
-#define NETREV 3
+#define NETREV 4
 
 Net485DataLink *device485;
 Net485Network *net485;

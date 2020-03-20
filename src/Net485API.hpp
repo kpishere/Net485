@@ -209,9 +209,9 @@ typedef struct Net485DataVersionS {
     uint16_t Revision;
     bool isFFD;
     struct Net485DataVersionS *init(Net485Packet *pkt) {
-        Version = ((uint16_t *)pkt->data())[0];
-        Revision = ((uint16_t *)pkt->data())[sizeof(uint16_t)];
-        isFFD = ((bool *)pkt->data())[sizeof(uint16_t)*2];
+        Version = ((uint8_t *)(pkt->data()))[0];
+        Revision = ((uint8_t *)(pkt->data()))[sizeof(uint16_t)];
+        isFFD = ((uint8_t *)(pkt->data()))[sizeof(uint16_t)*2];
     }
     Net485Packet *write(Net485Packet *pkt) {
         memcpy(pkt->data(), &Version, sizeof(uint16_t));
