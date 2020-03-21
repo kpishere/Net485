@@ -63,11 +63,13 @@ void Net485Network::loopClient(unsigned long _thisTime) {
                 this->sessionId = this->net485dl->newSessionId();
                 this->slotTime = this->net485dl->newSlotDelayMicroSecs(ANET_SLOTLO,ANET_SLOTHI);
 #ifdef DEBUG
-            {
-                char messageBuffer[100]; // Temp for testing only
-                sprintf(messageBuffer,"{sessionId: %lu, slotTime:%d, msgType:%0x}",this->sessionId, this->slotTime,recvPtr->header()[(int)HeaderStructureE::PacketMsgType]);
-                Serial.println(messageBuffer);
-            }
+                {
+                    Serial.print("{sessionId: ");
+                    Serial.print((long unsigned int)this->sessionId);
+                    Serial.print(", msgType: ");
+                    Serial.print((uint8_t)recvPtr->header()[(int)HeaderStructureE::PacketMsgType] );
+                    Serial.println("}");
+                }
 #endif
 
                 havePkt = false;

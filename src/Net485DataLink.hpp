@@ -50,6 +50,8 @@ public:
     }
     
     inline uint64_t newSessionId() {
+        unsigned long seed = this->getLoopCount() + this->nodeType + this->macAddr.manufacturerId() + analogRead(0);
+        randomSeed(seed);
         return random(0x01,0xFFFFFFFFffffffff);
     }
 #define SLOT_LOW 100
