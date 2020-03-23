@@ -202,6 +202,26 @@ typedef struct Net485MacAddressS {
         for(int i=0; i<Net485MacAddressE::SIZE; i++) match &= _mac->mac[i] == mac[i];
         return match;
     }
+    void clear() {
+        for( int i=0; i<Net485MacAddressE::SIZE; i++ ) mac[i] = 0;
+    }
+    void setRandom(unsigned long _seed) {
+        unsigned long seed = _seed + analogRead(0);
+        randomSeed(seed);
+        for(int i=Net485MacAddressE::DeviceId; i<Net485MacAddressE::SIZE; i++)
+            mac[i] = random(0x00, 0xFF);
+        mac[Net485MacAddressE::Reserved] = 0xFF; // Non-zero value flags a random MAC
+    }
+    void display() {
+#ifdef DEBUG
+    Serial.print("{mac:");
+    for(int i=0; i<Net485MacAddressE::SIZE;i++) {
+        Serial.print(mac[i],HEX);
+        Serial.print(" ");
+    }
+    Serial.print("}");
+#endif
+    }
 } Net485MacAddress;
 
 typedef struct Net485DataVersionS {

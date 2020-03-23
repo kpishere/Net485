@@ -6,6 +6,8 @@
 #ifndef Net485Network_hpp
 #define Net485Network_hpp
 
+#define DEBUG
+
 #include "Net485DataLink.hpp"
 #include "Net485API.hpp"
 #include "Net485Subord.hpp"
@@ -37,9 +39,17 @@ typedef struct Net485NodeS {
             memcpy(&sessionId, pkt->data()[Net485MacAddressE::SIZE+1], sizeof(uint64_t));
             nodeStatus = Net485NodeStatE::Unverified;
         }
+        // Init Node values from Node Discovery request
+        if(pkt->header()[HeaderStructureE::PacketMsgType] == MSGTYP_NDSCVRY) {
+            nodeType = pkt->data()[0];
+            // Initialize other values to zero
+            macAddr.clear();
+            sessionId = 0;
+            lastExchange = 0;
+            nodeStatus = Net485NodeStatE::Unverified;
+        }
         if(pkt->header()[HeaderStructureE::PacketMsgType] == MSGRESP(MSGTYP_NDSCVRY)) {
             nodeType = pkt->data()[0];
-            // Reserved byte at [1]
             memcpy(&macAddr, pkt->data()[2], Net485MacAddressE::SIZE);
             memcpy(&sessionId, pkt->data()[Net485MacAddressE::SIZE+2], sizeof(uint64_t));
             nodeStatus = Net485NodeStatE::Unverified;
@@ -53,6 +63,9 @@ typedef struct Net485NodeS {
                           ? Net485NodeStatE::Verified
                           : Net485NodeStatE::Unverified);
         }
+#ifdef DEBUG
+        Serial.print("Net485Node.init(): "); display();
+#endif
         lastExchange = millis();
     };
     bool isSameAs(struct Net485NodeS *_node) {
@@ -84,17 +97,36 @@ typedef struct Net485NodeS {
         if(version == NETV2 && _nodeId >= NODEADDR_V2LO && _nodeId <= NODEADDR_V2HI) return true;
         return false;
     };
+    void display() {
+#ifdef DEBUG
+        Serial.print("{Node sessionid:");
+        Serial.print((unsigned long)sessionId >> 32,HEX);
+        Serial.print(" ");
+        Serial.print((unsigned long)sessionId & 0xffffffff,HEX);
+        Serial.print(" nodeType:");
+        Serial.print(nodeType,HEX);
+        Serial.print(" nodeStatus:");
+        Serial.print(nodeStatus,HEX);
+        Serial.print(" version:");
+        Serial.print(version,HEX);
+        Serial.print(" lastExchange:");
+        Serial.print(lastExchange);
+        Serial.print(" macAddr:");
+        macAddr.display();
+        Serial.println("}");
+#endif
+    }
 } Net485Node;
 
 enum Net485State {
-    None = 0,
-    ANClient = 3,
-    ANServerBecomingA = 4,
-    ANServerBecomingB = 5,
-    ANServerWaiting = 6,
-    ANServer = 7,
-    ANServerPollNodes = 8,
-    ANServerDiscover = 9
+    None,
+    ANClient, /* 1 */
+    ANServerBecomingA,
+    ANServerBecomingB,
+    ANServerWaiting,
+    ANServer, /* 5 */
+    ANServerPollNodes,
+    ANServerDiscover
 };
 
 class Net485Network {
@@ -125,12 +157,14 @@ private:
     void warmStart(unsigned long _thisTime);
     void loopClient(unsigned long _thisTime);
     void loopServer(unsigned long _thisTime);
+    bool becomeClient(Net485Packet *pkt, unsigned long _thisTime);
+
     bool reqRespNodeId(uint8_t _node, uint8_t _subnet, bool _validateOnly = false);
     bool reqRespNodeDiscover(uint8_t _nodeIdFilter = 0x00);
     bool reqRespSetAddress(uint8_t _node, uint8_t _subnet);
-    uint8_t nodeExists(Net485Node *_node);
-    bool becomeClient(Net485Packet *pkt, unsigned long _thisTime);
 
+    uint8_t nodeExists(Net485Node *_node, bool firstNodeTypeSearch = false);
+    uint8_t addNode(Net485Node *_node, uint8_t _nodeId = 0);
 public:
     Net485Network(Net485DataLink *_net, Net485Subord *_sub = NULL, bool _coordinatorCapable = true, uint16_t _coordVer = 0, uint16_t _coordRev = 0);
     ~Net485Network();
@@ -201,7 +235,7 @@ public:
             return _pkt->header()[HeaderStructureE::PacketLength];
         } else return 0;
     }
-
+    
     inline Net485Packet *setNodeId(Net485Packet *_pkt, uint8_t _destAddr, uint8_t _subNet = SUBNET_BCAST) {
         _pkt->header()[HeaderStructureE::HeaderDestAddr] = _destAddr;
         _pkt->header()[HeaderStructureE::HeaderSrcAddr] = NODEADDR_COORD;
@@ -215,21 +249,23 @@ public:
         _pkt->header()[HeaderStructureE::PacketLength] = 0;
         return _pkt;
     }
+    // Add node to node list at specified node Id OR test and compare node at node list
+    // location with node provided.  Specified node will have status either OffLine or Verified.
+    // _pkt: packet with node to add or compare to what is in node list
+    // _validateOnly: flag for adding or validating
+    //
+    // Returns: Null if not get node id packet type, node at node id provided
     inline Net485Node *getNodeId(Net485Packet *_pkt, uint8_t _node, bool _validateOnly = false) {
+        Net485Node tmpNode;
+        uint8_t nodeIndex;
         if(_pkt->header()[HeaderStructureE::PacketMsgType] == MSGRESP(MSGTYP_GNODEID) ) {
+            tmpNode.init(_pkt);
             if(_validateOnly) {
                 // Compares with what is in node list, if pass then change status
-                Net485Node tmpNode;
-                uint8_t nodeIndex;
-                tmpNode.init(_pkt);
                 if(tmpNode.isNodeIdValid(_node)) {
                     nodeIndex = _node;
                     if(!this->nodes[_node]->isSameAs(&tmpNode)) {
-                        nodeIndex = tmpNode.nextNodeLocation(this->netNodeList);
-                        this->netNodeList[nodeIndex] = tmpNode.nodeType;
-                        this->nodes[nodeIndex] = malloc(sizeof(Net485Node));
-                        memcpy(&(this->nodes[nodeIndex]),&tmpNode,sizeof(Net485Node));
-                        this->netNodeListCount++;
+                        nodeIndex = this->addNode(&tmpNode);
                     }
                     this->nodes[nodeIndex]->nodeStatus = Net485NodeStatE::Verified;
                 } else {
@@ -237,11 +273,7 @@ public:
                     this->nodes[_node]->lastExchange = millis();
                 }
             } else {
-                // Adds to node list
-                this->nodes[_node] = malloc(sizeof(Net485Node));
-                this->nodes[_node]->init(_pkt);
-                this->netNodeList[_node] = this->nodes[_node]->nodeType;
-                this->netNodeListCount++;
+                this->addNode(&tmpNode, _node);
             }
             return this->nodes[_node];
         } else return NULL;
@@ -265,6 +297,9 @@ public:
         _pkt->data()[2+Net485MacAddressE::SIZE+sizeof(uint64_t)] = 0x01;
         return _pkt;
     }
+    // Set the node ID from the message if MAC, Session, and Node status is verified
+    //
+    // Return true if set, false otherwise
     inline bool getNodeAddress(Net485Packet *_pkt) {
         Net485Node tmpNode;
         bool result = false;
@@ -278,6 +313,11 @@ public:
                 // Don't set subnet as we only code for V2
             }
         }
+#ifdef DEBUG
+        Serial.print('NodeAddress set: ');
+        Serial.print((result?'true ':'false '));
+        Serial.println(this->nodeId);
+#endif
         return result;
     }
     inline Net485Packet *setRespNodeAddress(Net485Packet *_pkt) {
@@ -320,22 +360,26 @@ public:
                , &sessionId, sizeof(uint64_t));
         return _pkt;
     }
+    // Evaluate Node Discovery Message response or create Node discovery message and add to list.
+    // _pkt : The package to search
+    // isResponse : true = Test for a Node discovery response message
+    //              false = Test for Node discovery message
+    // Returns: Pointer to node in node list if found or created, NULL if not node discovery message or node list is full
     inline Net485Node *getNodeDiscResp(Net485Packet *_pkt, bool isResponse = false) {
         Net485Node tmpNode;
         uint8_t nodeIndex = 0;
+#ifdef DEBUG
+            Serial.print("getNodeDiscResp: noteTypePkt:"); Serial.print(_pkt->header()[HeaderStructureE::PacketMsgType],HEX); Serial.print(" isRespose:"); Serial.println(isResponse,HEX);
+#endif
         if( (!isResponse && _pkt->header()[HeaderStructureE::PacketMsgType] == MSGTYP_NDSCVRY)
            || (isResponse && _pkt->header()[HeaderStructureE::PacketMsgType] == MSGRESP(MSGTYP_NDSCVRY)) ) {
             tmpNode.init(_pkt);
-            nodeIndex = nodeExists(&tmpNode);
-            if(nodeIndex == 0) {
-                // add new node
-                nodeIndex = tmpNode.nextNodeLocation(this->netNodeList);
-                this->netNodeList[nodeIndex] = tmpNode.nodeType;
-                this->nodes[nodeIndex] = malloc(sizeof(Net485Node));
-                memcpy(&(this->nodes[nodeIndex]),&tmpNode,sizeof(Net485Node));
-                this->netNodeListCount++;
-            }
-            return this->nodes[nodeIndex];
+            nodeIndex = nodeExists(&tmpNode, true);
+#ifdef DEBUG
+            Serial.print("getNodeDiscResp: nodeIndex:"); Serial.print(nodeIndex,HEX); Serial.print(" ");  tmpNode.display();
+#endif
+            if(nodeIndex == 0) nodeIndex = this->addNode(&tmpNode);
+            return (nodeIndex > 0 ? this->nodes[nodeIndex] : NULL);
         } else return NULL;
     }
 };

@@ -4,8 +4,7 @@
  */
 
 #include "Net485Network.hpp"
-
-#define DEBUG
+#include <assert.h>
 
 #ifdef DEBUG
 uint8_t lastState = 0xff;
@@ -18,6 +17,7 @@ const uint8_t nodeTypeArbFilterList[] = {MSGTYP_ANUCVER,MSGTYP_NDSCVRY, NULL};
 
 Net485Network::Net485Network(Net485DataLink *_net, Net485Subord *_sub, bool _coordinatorCapable
                              , uint16_t _coordVer = 0, uint16_t _coordRev = 0) {
+    assert(_net != NULL && _net->getNodeType() != NTC_ANY); // Node type must be defined
     this->net485dl = _net;
     this->sessionId = this->net485dl->newSessionId();
     this->ver.Version = _coordVer;
@@ -35,20 +35,44 @@ Net485Network::Net485Network(Net485DataLink *_net, Net485Subord *_sub, bool _coo
     this->netNodeListCount = 0;
 }
 
-uint8_t Net485Network::nodeExists(Net485Node *_node) {
-    for(int i = NODEADDR_PRIMY; i< NODEADDR_NARB; i++) {
-        if(this->netNodeList[i] > 0) {
-            if(_node->isSameAs(this->nodes[i])) return i;
+// Search from Primary Node Address location up to Note Address Request broker
+// for matching node in node list.
+// firstNodeTypeSearch: true - match first nodeType, false - match node type, sessionId, and MAC
+// Returns: index in node list if found, zero otherwise
+uint8_t Net485Network::nodeExists(Net485Node *_node, bool firstNodeTypeSearch) {
+    for(int i = NODEADDR_PRIMY; i< MTU_DATA; i++) {
+        if(this->netNodeList[i] > 0) { // A node location is used
+            if(firstNodeTypeSearch && _node->nodeType == this->netNodeList[i] ) {
+                return i;
+            } else {
+                if(_node->isSameAs(this->nodes[i])) // If node is same, return location
+                    return i;
+            }
         }
     }
     return 0;
 }
 
+// Add new node to the node list in the next available location
+// _node: Node to add to list
+// _nodeId: Optional, specifiy node location
+// Returns: Node index of new node or zero of out of locations
+// TODO: Is there memory leak with updater?  Should free first?
+uint8_t Net485Network::addNode(Net485Node *_node, uint8_t _nodeId) {
+    uint8_t nodeIndex = (_nodeId > 0 ? _nodeId : _node->nextNodeLocation(this->netNodeList));
+
+    if(nodeIndex > 0) {
+        this->netNodeList[nodeIndex] = _node->nodeType;
+        this->nodes[nodeIndex] = malloc(sizeof(Net485Node));
+        memcpy(&(this->nodes[nodeIndex]),_node,sizeof(Net485Node));
+        this->netNodeListCount++;
+    }
+    return nodeIndex;
+}
 void Net485Network::loopClient(unsigned long _thisTime) {
     Net485Packet *recvPtr, sendPkt;
     bool havePkt;
     Net485Node *discNode;
-    char messageBuffer[160]; // Temp for testing only
     // TODO
     // Listen and write to debug serial for now
     if (net485dl->hasPacket())
@@ -58,31 +82,33 @@ void Net485Network::loopClient(unsigned long _thisTime) {
         discNode = this->getNodeDiscResp(recvPtr);
         switch(recvPtr->header()[HeaderStructureE::PacketMsgType]) {
             case MSGTYP_ANUCVER: break; // Ignore these requests, we are client unless there is timeout
-            case MSGTYP_NDSCVRY:
-                // A Node discovery request
-                this->sessionId = this->net485dl->newSessionId();
+            case MSGTYP_NDSCVRY: // A Node discovery request
                 this->slotTime = this->net485dl->newSlotDelayMicroSecs(ANET_SLOTLO,ANET_SLOTHI);
 #ifdef DEBUG
-                {
-                    Serial.print("{sessionId: ");
-                    Serial.print((long unsigned int)this->sessionId);
-                    Serial.print(", msgType: ");
-                    Serial.print((uint8_t)recvPtr->header()[(int)HeaderStructureE::PacketMsgType] );
-                    Serial.println("}");
-                }
+                Serial.print("delay ... "); Serial.print(this->slotTime);
 #endif
-
+                // Slot delay before responding to broadcast message
                 havePkt = false;
-                while (MILLISECDIFF(_thisTime,this->lasttimeOfMessage) < this->slotTime && !havePkt) {
+                while (MILLISECDIFF(millis(),this->lasttimeOfMessage) < this->slotTime && !havePkt) {
                     havePkt = net485dl->hasPacket();
                 }
+#ifdef DEBUG
+                Serial.print(" havePkt:"); Serial.print(havePkt,HEX); Serial.print(" ptrPkt:"); Serial.print((unsigned long)discNode,HEX);
+                discNode->display();
+#endif
                 if(!havePkt) {
+#ifdef DEBUG
+                Serial.print("clientNodeType:"); Serial.print(net485dl->getNodeType(),HEX); Serial.print(" discoverNodeType:"); Serial.println(discNode->nodeType,HEX);
+#endif
+                    // Nobody else responded, continue
                     if(discNode->nodeType == NTC_ANY || discNode->nodeType == net485dl->getNodeType())
                     {
+                        // Message is for any node or this node's nodeType
                         this->net485dl->send(this->setNodeDiscResp(&sendPkt));
-                        this->lasttimeOfMessage = _thisTime;
+                        this->lasttimeOfMessage = millis();
                         havePkt = false;
-                        while (MILLISECDIFF(_thisTime,this->lasttimeOfMessage) < RESPONSE_TIMEOUT && !havePkt) {
+                        // Wait for address assignment of this node
+                        while (MILLISECDIFF(millis(),this->lasttimeOfMessage) < RESPONSE_TIMEOUT && !havePkt) {
                             havePkt = net485dl->hasPacket();
                             if(havePkt) {
                                 recvPtr = net485dl->getNextPacket();
@@ -96,22 +122,18 @@ void Net485Network::loopClient(unsigned long _thisTime) {
                 break;
             default:
                 if(discNode == NULL) {
-                    Serial.print("{havemsg");
-                    // Request
-                    if(net485dl->isChecksumValid(recvPtr)) {
-                        Serial.println(", valid: true}");
-                        
-                        // Send ACK
-                        this->net485dl->send(this->setACK(&pktToSend));
-                        
-                        sprintf(messageBuffer,", header: 0x");
+                    // Send ACK
+                    this->net485dl->send(this->setACK(&pktToSend));
+#ifdef DEBUG
+                    {
+                        char messageBuffer[160]; // Temp for testing only
+                        sprintf(messageBuffer,"{header: 0x");
                         for(int i=0; i<MTU_HEADER ; i++) sprintf( &(messageBuffer[11+i*2]), "%0X ",recvPtr->header()[i]);
                         sprintf(&(messageBuffer[11+2*MTU_HEADER]),", data: %0X .. (%d), chksum: 0x%0X%0X }", recvPtr->data()[0], recvPtr->dataSize
                                 ,recvPtr->checksum()[0], recvPtr->checksum()[1]);
                         Serial.println(messageBuffer);
-                    } else {
-                        Serial.println(", valid: false}");
                     }
+#endif
                 }
         }
     }
@@ -125,31 +147,36 @@ void Net485Network::loopServer(unsigned long _thisTime) {
         if(Net485Network::reqRespNodeDiscover()) {
             // Loop over Nodes
             for(int i =NODEADDR_PRIMY; i<MTU_DATA; i++) {
-                if(this->netNodeList[i]>0) {
+                if(this->netNodeList[i]>0) { // For each node in current list
                     havePkt = false;
-                    if(i==NODEADDR_PRIMY) {
+                    if(i==NODEADDR_PRIMY) { // For thermostat node type
                         havePkt = Net485Network::reqRespNodeId(this->netNodeList[i], SUBNET_V1SPEC, true);
                     }
-                    if(!havePkt) {
+                    if(!havePkt) { // Any other device from thermostat
                         havePkt = Net485Network::reqRespNodeId(this->netNodeList[i], SUBNET_BCAST, true);
                     }
-                    if(!havePkt) {
+                    if(!havePkt) { // Assign next node ID location
                         havePkt = Net485Network::reqRespSetAddress(i, NODEADDR_BCAST);
                     }
-                    if(havePkt) {
+                    if(havePkt) { // Set verified if node Id set/confirmed
                         this->nodes[i]->nodeStatus = Net485NodeStatE::Verified;
                     }
                 }
             }
         }
     } else {
+        // If out-if process message is ever received by server, it should attempt to yield and become client
         if(net485dl->hasPacket()) {
             pkt = net485dl->getNextPacket();
             this->becomeClient(pkt, _thisTime);
             this->lasttimeOfMessage = _thisTime;
         }
     }
+    // TODO: The server relates stuff should go here
 }
+// Set the device's nodeId.  If no valid response, put node offline
+//
+// Returns: true if value set, false otherwise
 bool Net485Network::reqRespSetAddress(uint8_t _node, uint8_t _subnet) {
     Net485Packet *pkt, sendPkt;
     bool havePkt = false;
@@ -172,6 +199,9 @@ bool Net485Network::reqRespSetAddress(uint8_t _node, uint8_t _subnet) {
     }
     return havePkt;
 }
+// Create and send a Set NodeID message, receive and conditionaly validate receipt.
+//
+// Return: true if node Id set and validated, otherwise false
 bool Net485Network::reqRespNodeId(uint8_t _node, uint8_t _subnet, bool _validateOnly) {
     Net485Packet *pkt, sendPkt;
     bool havePkt = false;
@@ -189,6 +219,10 @@ bool Net485Network::reqRespNodeId(uint8_t _node, uint8_t _subnet, bool _validate
     }
     return havePkt;
 }
+// Send broadcast for node response, if non response received, go to coordinator arbitration state
+// otherwise, add to node list.
+//
+// Return true if received response on node discovery request
 bool Net485Network::reqRespNodeDiscover(uint8_t _nodeIdFilter) {
     Net485Packet *pkt, sendPkt;
     bool havePkt = false, anyPkt = false;

@@ -206,9 +206,14 @@ bool Net485Physical_HardwareSerial::hasPacket() {
     }
     return false;
 }
-Net485Packet *Net485Physical_HardwareSerial::getNextPacket() {
+// Return pointer to next packet in ring buffer and optionally decrement unread packet count
+// peek: false (default) - will adjust pointer for next packet after accessing this pointer,
+//       true - allows read before consuming packet
+//
+// Returns: pointer to next packet
+Net485Packet *Net485Physical_HardwareSerial::getNextPacket(bool peek) {
     Net485Packet *retPkt = (Net485Packet *)RINGBUFLOC(ringbufPktCurrent - ringbufPktCount + 1);
-    ringbufPktCount -= 1;
+    if(!peek) ringbufPktCount -= 1;
     return retPkt;
 }
 void Net485Physical_HardwareSerial::setPacketFilter(uint8_t *destAddr,

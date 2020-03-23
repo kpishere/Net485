@@ -16,12 +16,12 @@ private:
     uint8_t nodeType;
 public:
     Net485DataLink(HardwareSerial *_hwSerial
-                   , uint8_t _ringbufSize = RINGBUFSIZE_DEF
-                   , int _baudRate = DATARATE_BPS_DEF
-                   , int _drivePin = OUTPUT_DRIVE_ENABLE_PIN
+                   , uint8_t _srcNodeTyp = 0
                    , uint16_t _mfgId = 0
                    , uint64_t _deviceId = 0
-                   , uint8_t _srcNodeTyp = 0
+                   , int _baudRate = DATARATE_BPS_DEF
+                   , int _drivePin = OUTPUT_DRIVE_ENABLE_PIN
+                   , uint8_t _ringbufSize = RINGBUFSIZE_DEF
                    );
     ~Net485DataLink();
     
@@ -50,9 +50,12 @@ public:
     }
     
     inline uint64_t newSessionId() {
+        unsigned long long v;
         unsigned long seed = this->getLoopCount() + this->nodeType + this->macAddr.manufacturerId() + analogRead(0);
         randomSeed(seed);
-        return random(0x01,0xFFFFFFFFffffffff);
+        v = random(-2^31,2^31-1);
+        v = v * random(-2^31,2^31-1);
+        return v;
     }
 #define SLOT_LOW 100
 #define SLOT_HIGH 2500
@@ -67,6 +70,7 @@ public:
     // Calculate checksum and set on packet before sending
     void send(Net485Packet *packet);
     Net485Packet *getNextPacket();
+    bool hasPacket() override;
 
     bool isChecksumValid(Net485Packet *packet);
 };

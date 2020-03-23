@@ -75,8 +75,8 @@ public:
     bool readyToSend();
     void send(Net485Packet *packet);
     
-    bool hasPacket();
-    Net485Packet *getNextPacket();
+    virtual bool hasPacket();
+    Net485Packet *getNextPacket(bool peek = false);
     
     inline unsigned long getLoopCount() { return loopCount;}
     

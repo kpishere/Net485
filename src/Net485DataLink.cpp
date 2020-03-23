@@ -3,10 +3,9 @@
  *  Net485
  *
  */
+#define DEBUG
 
 #include "Net485DataLink.hpp"
-
-#define DEBUG
 
 #define ACCUMULATE_FLETCHER(s1,s2,len,ptr) \
 for(short i = 0; i < (len); i++) { \
@@ -15,32 +14,28 @@ s2 = (s2 + s1) % 0xff; \
 }
 
 Net485DataLink::Net485DataLink(HardwareSerial *_hwSerial
-                               , uint8_t _ringbufSize
-                               , int _baudRate
-                               , int _drivePin
-                               , uint16_t _mfgId
-                               , uint64_t _deviceId
-                               , uint8_t _srcNodeTyp)
+                   , uint8_t _srcNodeTyp
+                   , uint16_t _mfgId
+                   , uint64_t _deviceId
+                   , int _baudRate
+                   , int _drivePin
+                   , uint8_t _ringbufSize )
 : Net485Physical_HardwareSerial(_hwSerial, _ringbufSize, _baudRate, _drivePin) {
     unsigned long seed = this->getLoopCount();
     
     this->nodeType = _srcNodeTyp;
     if(_srcNodeTyp) seed += _srcNodeTyp;
     if(_mfgId) seed += (((unsigned long)_mfgId) << 16);
-    randomSeed(seed);
     // Set reserved byte to a non-zero number to indicate MAC is random generated
     this->macAddr.mac[Net485MacAddressE::Reserved] = 0x00;
     if(_deviceId == 0 || _mfgId == 0) {
-        this->macAddr.mac[Net485MacAddressE::Reserved] = random(0x01,0xFF) && 0xFF;
+        this->macAddr.setRandom(seed);
     }
-    if(_deviceId == 0) {
-        _deviceId = random(0x01,0xFFffFFffFF) && 0xFFffFFffFF;
-    }
-    if(_mfgId == 0) {
-        _mfgId = random(0x01,0xFFff) && 0xFFff;
-    }
-    this->macAddr.manufacturerId(_mfgId);
-    this->macAddr.deviceId(_deviceId);
+#ifdef DEBUG
+    Serial.print("DataLink.init(): {macAddr:"); this->macAddr.display();
+    Serial.print(" nodeType:"); Serial.print((unsigned char)this->nodeType,HEX);
+    Serial.println("}");
+#endif
 }
 Net485DataLink::~Net485DataLink() {
 }
@@ -78,8 +73,12 @@ void Net485DataLink::send(Net485Packet *packet) {
 #endif
     Net485Physical_HardwareSerial::send(packet);
 }
+// Get pointer to next packet in ring buffer
+//
+// Return pointer to next packet
 Net485Packet *Net485DataLink::getNextPacket() {
     Net485Packet *retPkt = Net485Physical_HardwareSerial::getNextPacket();
+
     // Copy bytes received into structure location
     retPkt->dataSize = retPkt->header()[HeaderStructureE::PacketLength];
 #ifdef DEBUG
@@ -102,6 +101,23 @@ Net485Packet *Net485DataLink::getNextPacket() {
     }
 #endif
    return retPkt;
+}
+// Base class checks for packet, we apply CRC check and ignore if not valid
+//
+// Returns: true for CRC valid packet, false if no packet or not valid
+bool Net485DataLink::hasPacket() {
+    bool retVal = Net485Physical_HardwareSerial::hasPacket();
+    if(retVal) {
+#ifdef DEBUG
+    Serial.print("Net485DataLink::hasPacket(): yes isValid:");
+#endif
+        Net485Packet *pkt = Net485Physical_HardwareSerial::getNextPacket(true);
+        retVal = this->isChecksumValid(pkt); // If not CRC valid, will return false and ignore packat
+#ifdef DEBUG
+    Serial.println(retVal);
+#endif
+        if(!retVal) Net485Physical_HardwareSerial::getNextPacket(); // Read bad packet and ignore
+    }
 }
 
 // Fletcher Checksum calculation
