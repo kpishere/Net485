@@ -1,0 +1,3 @@
+[submodule "diag/net485Listen/net485Listen/Frameworks/ORSSerialPort"]
+	path = diag/net485Listen/net485Listen/Frameworks/ORSSerialPort
+	url = https://github.com/armadsen/ORSSerialPort.git

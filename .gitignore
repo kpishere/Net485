@@ -4,3 +4,4 @@ Thermostat/
 *.bin
 *.xcodeproj
 *.json
+.build
