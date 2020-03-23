@@ -72,14 +72,12 @@ uint8_t Net485Network::addNode(Net485Node *_node, uint8_t _nodeId) {
 void Net485Network::loopClient(unsigned long _thisTime) {
     Net485Packet *recvPtr, sendPkt;
     bool havePkt;
-    Net485Node *discNode;
     // TODO
     // Listen and write to debug serial for now
     if (net485dl->hasPacket())
     {
         recvPtr = net485dl->getNextPacket();
         this->lasttimeOfMessage = _thisTime;
-        discNode = this->getNodeDiscResp(recvPtr);
         switch(recvPtr->header()[HeaderStructureE::PacketMsgType]) {
             case MSGTYP_ANUCVER: break; // Ignore these requests, we are client unless there is timeout
             case MSGTYP_NDSCVRY: // A Node discovery request
@@ -93,48 +91,57 @@ void Net485Network::loopClient(unsigned long _thisTime) {
                     havePkt = net485dl->hasPacket();
                 }
 #ifdef DEBUG
-                Serial.print(" havePkt:"); Serial.print(havePkt,HEX); Serial.print(" ptrPkt:"); Serial.print((unsigned long)discNode,HEX);
-                discNode->display();
+                Serial.print(" havePkt:"); Serial.println(havePkt,HEX);
 #endif
                 if(!havePkt) {
+                    uint8_t nodeTypeFilter = getNodeDiscNodeTypeFilter(recvPtr);
 #ifdef DEBUG
-                Serial.print("clientNodeType:"); Serial.print(net485dl->getNodeType(),HEX); Serial.print(" discoverNodeType:"); Serial.println(discNode->nodeType,HEX);
+                    Serial.print("clientNodeType:"); Serial.print(net485dl->getNodeType(),HEX); Serial.print(" discoverNodeType:"); Serial.println(nodeTypeFilter,HEX);
 #endif
                     // Nobody else responded, continue
-                    if(discNode->nodeType == NTC_ANY || discNode->nodeType == net485dl->getNodeType())
+                    if(nodeTypeFilter == NTC_ANY || nodeTypeFilter == net485dl->getNodeType())
                     {
                         // Message is for any node or this node's nodeType
                         this->net485dl->send(this->setNodeDiscResp(&sendPkt));
                         this->lasttimeOfMessage = millis();
                         havePkt = false;
                         // Wait for address assignment of this node
+#ifdef DEBUG
+                    Serial.print("wait ... ");
+#endif
                         while (MILLISECDIFF(millis(),this->lasttimeOfMessage) < RESPONSE_TIMEOUT && !havePkt) {
                             havePkt = net485dl->hasPacket();
                             if(havePkt) {
+#ifdef DEBUG
+                                Serial.println(" received assignment from coordinator!");
+#endif
                                 recvPtr = net485dl->getNextPacket();
                                 if(this->getNodeAddress(recvPtr)) {
                                     this->net485dl->send(this->setACK(&sendPkt));
                                 }
                             }
                         }
+#ifdef DEBUG
+                        if(!havePkt) {
+                            Serial.println(" no assignment from coordinator!");
+                        }
+#endif
                     }
                 }
                 break;
             default:
-                if(discNode == NULL) {
-                    // Send ACK
-                    this->net485dl->send(this->setACK(&pktToSend));
+                // Send ACK
+                this->net485dl->send(this->setACK(&pktToSend));
 #ifdef DEBUG
-                    {
-                        char messageBuffer[160]; // Temp for testing only
-                        sprintf(messageBuffer,"{header: 0x");
-                        for(int i=0; i<MTU_HEADER ; i++) sprintf( &(messageBuffer[11+i*2]), "%0X ",recvPtr->header()[i]);
-                        sprintf(&(messageBuffer[11+2*MTU_HEADER]),", data: %0X .. (%d), chksum: 0x%0X%0X }", recvPtr->data()[0], recvPtr->dataSize
-                                ,recvPtr->checksum()[0], recvPtr->checksum()[1]);
-                        Serial.println(messageBuffer);
-                    }
-#endif
+                {
+                    char messageBuffer[160]; // Temp for testing only
+                    sprintf(messageBuffer,"{header: 0x");
+                    for(int i=0; i<MTU_HEADER ; i++) sprintf( &(messageBuffer[11+i*2]), "%0X ",recvPtr->header()[i]);
+                    sprintf(&(messageBuffer[11+2*MTU_HEADER]),", data: %0X .. (%d), chksum: 0x%0X%0X }", recvPtr->data()[0], recvPtr->dataSize
+                            ,recvPtr->checksum()[0], recvPtr->checksum()[1]);
+                    Serial.println(messageBuffer);
                 }
+#endif
         }
     }
 }
@@ -235,7 +242,7 @@ bool Net485Network::reqRespNodeDiscover(uint8_t _nodeIdFilter) {
         if(havePkt) {
             pkt = net485dl->getNextPacket();
             this->lasttimeOfMessage = millis();
-            if(this->getNodeDiscResp(pkt, true) == NULL) {
+            if(this->getNodeDiscResp(pkt) == NULL) {
                 if(pkt->header()[HeaderStructureE::PacketMsgType] == MSGTYP_ANUCVER) {
                     this->state = Net485State::ANServerWaiting;
                     return false;

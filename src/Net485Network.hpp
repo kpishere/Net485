@@ -45,6 +45,7 @@ typedef struct Net485NodeS {
             // Initialize other values to zero
             macAddr.clear();
             sessionId = 0;
+            version = 0;
             lastExchange = 0;
             nodeStatus = Net485NodeStatE::Unverified;
         }
@@ -72,7 +73,7 @@ typedef struct Net485NodeS {
         return _node->macAddr.isSameAs(&macAddr) && _node->sessionId == sessionId
         && (_node->nodeType == nodeType
             || _node->nodeType == NTC_ANY
-            || nodeType == NTC_ANY) && _node->version == version;
+            || nodeType == NTC_ANY) && (_node->version == version || _node->version == 0 || version == 0 );
     };
     uint8_t nextNodeLocation(uint8_t netNodeList[MTU_DATA]) {
         int i;
@@ -342,6 +343,9 @@ public:
         _pkt->data()[0] = _nodeIdFilter;
         return _pkt;
     }
+    //  Create a new response.  Side effect is creation of new sessionId.
+    //
+    //
     inline Net485Packet *setNodeDiscResp(Net485Packet *_pkt, uint8_t _nodeId = NODEADDR_BCAST) {
         _pkt->header()[HeaderStructureE::HeaderDestAddr] = NODEADDR_COORD;
         _pkt->header()[HeaderStructureE::HeaderSrcAddr] = _nodeId;
@@ -355,32 +359,38 @@ public:
         _pkt->header()[HeaderStructureE::PacketLength] = 18;
         _pkt->data()[0] = net485dl->getNodeType();
         _pkt->data()[1] = 0x00;
+
+        this->sessionId = this->net485dl->newSessionId();
+
         memcpy((void *)&(_pkt->data()[2]), net485dl->getMacAddr().mac, Net485MacAddressE::SIZE);
         memcpy((void *)&(_pkt->data()[2+Net485MacAddressE::SIZE])
-               , &sessionId, sizeof(uint64_t));
+               , &(this->sessionId), sizeof(uint64_t));
         return _pkt;
     }
-    // Evaluate Node Discovery Message response or create Node discovery message and add to list.
+    // Evaluate Node Discovery Message response and add to list.
     // _pkt : The package to search
-    // isResponse : true = Test for a Node discovery response message
-    //              false = Test for Node discovery message
     // Returns: Pointer to node in node list if found or created, NULL if not node discovery message or node list is full
-    inline Net485Node *getNodeDiscResp(Net485Packet *_pkt, bool isResponse = false) {
+    inline Net485Node *getNodeDiscResp(Net485Packet *_pkt) {
         Net485Node tmpNode;
         uint8_t nodeIndex = 0;
-#ifdef DEBUG
-            Serial.print("getNodeDiscResp: noteTypePkt:"); Serial.print(_pkt->header()[HeaderStructureE::PacketMsgType],HEX); Serial.print(" isRespose:"); Serial.println(isResponse,HEX);
-#endif
-        if( (!isResponse && _pkt->header()[HeaderStructureE::PacketMsgType] == MSGTYP_NDSCVRY)
-           || (isResponse && _pkt->header()[HeaderStructureE::PacketMsgType] == MSGRESP(MSGTYP_NDSCVRY)) ) {
+        if(_pkt->header()[HeaderStructureE::PacketMsgType] == MSGRESP(MSGTYP_NDSCVRY)) {
             tmpNode.init(_pkt);
-            nodeIndex = nodeExists(&tmpNode, true);
+            if(tmpNode.nodeType == NTC_ANY) return NULL;
+            nodeIndex = nodeExists(&tmpNode);
+            if(nodeIndex == 0) nodeIndex = this->addNode(&tmpNode);
 #ifdef DEBUG
             Serial.print("getNodeDiscResp: nodeIndex:"); Serial.print(nodeIndex,HEX); Serial.print(" ");  tmpNode.display();
 #endif
-            if(nodeIndex == 0) nodeIndex = this->addNode(&tmpNode);
             return (nodeIndex > 0 ? this->nodes[nodeIndex] : NULL);
         } else return NULL;
+    }
+    // Evaluate Node Discovery Message.
+    // _pkt : The package to search
+    // Returns: Node Type filter value
+    inline uint8_t getNodeDiscNodeTypeFilter(Net485Packet *_pkt) {
+        Net485Node n;
+        n.init(_pkt);
+        return n.nodeType;
     }
 };
 
