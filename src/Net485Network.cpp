@@ -10,7 +10,7 @@
 uint8_t lastState = 0xff;
 #endif
 
-#define ANET_SLOTLO 6000
+#define ANET_SLOTLO  6000
 #define ANET_SLOTHI 30000
 const uint8_t nodeTypeArbFilterList[] = {MSGTYP_ANUCVER,MSGTYP_NDSCVRY, NULL};
 
@@ -81,7 +81,7 @@ void Net485Network::loopClient(unsigned long _thisTime) {
         switch(recvPtr->header()[HeaderStructureE::PacketMsgType]) {
             case MSGTYP_ANUCVER: break; // Ignore these requests, we are client unless there is timeout
             case MSGTYP_NDSCVRY: // A Node discovery request
-                this->slotTime = this->net485dl->newSlotDelayMicroSecs(ANET_SLOTLO,ANET_SLOTHI);
+                this->slotTime = this->net485dl->newSlotDelay(ANET_SLOTLO,ANET_SLOTHI);
 #ifdef DEBUG
                 Serial.print("delay ... "); Serial.print(this->slotTime);
 #endif
@@ -151,6 +151,9 @@ void Net485Network::loopServer(unsigned long _thisTime) {
     bool havePkt = false;
     if(lastNodeListPoll == 0 ||  MILLISECDIFF(_thisTime,this->lastNodeListPoll) > NODELIST_REPOLLTIME)
     {
+#ifdef DEBUG
+    Serial.print(".1.");
+#endif
         if(Net485Network::reqRespNodeDiscover()) {
             // Loop over Nodes
             for(int i =NODEADDR_PRIMY; i<MTU_DATA; i++) {
@@ -158,28 +161,36 @@ void Net485Network::loopServer(unsigned long _thisTime) {
                     havePkt = false;
                     if(i==NODEADDR_PRIMY) { // For thermostat node type
                         havePkt = Net485Network::reqRespNodeId(this->netNodeList[i], SUBNET_V1SPEC, true);
+#ifdef DEBUG
+                        Serial.print("nodeDisc: {isV1SPECThermostat:"); Serial.print(havePkt);
+#endif
                     }
                     if(!havePkt) { // Any other device from thermostat
                         havePkt = Net485Network::reqRespNodeId(this->netNodeList[i], SUBNET_BCAST, true);
+#ifdef DEBUG
+                        Serial.print("nodeDisc: {isAnyThermostat:"); Serial.print(havePkt);
+#endif
                     }
-                    if(!havePkt) { // Assign next node ID location
-                        havePkt = Net485Network::reqRespSetAddress(i, NODEADDR_BCAST);
-                    }
-                    if(havePkt) { // Set verified if node Id set/confirmed
-                        this->nodes[i]->nodeStatus = Net485NodeStatE::Verified;
-                    }
+                    // Assign next node ID location
+                    havePkt = Net485Network::reqRespSetAddress(i, NODEADDR_BCAST);
+#ifdef DEBUG
+                    Serial.print("nodeDisc: {isAnyOtherDevice:"); Serial.print(havePkt);
+                    Serial.print(" nodeId:"); Serial.print(i);
+                    Serial.print(" verified:"); Serial.print(this->nodes[i]->nodeStatus);
+                    Serial.println("}");
+#endif
                 }
             }
         }
     } else {
-        // If out-if process message is ever received by server, it should attempt to yield and become client
+        // If out-of process message is ever received by server, it should attempt to yield and become client
         if(net485dl->hasPacket()) {
             pkt = net485dl->getNextPacket();
             this->becomeClient(pkt, _thisTime);
             this->lasttimeOfMessage = _thisTime;
         }
     }
-    // TODO: The server relates stuff should go here
+    // TODO: The server related stuff should go here
 }
 // Set the device's nodeId.  If no valid response, put node offline
 //
@@ -187,8 +198,21 @@ void Net485Network::loopServer(unsigned long _thisTime) {
 bool Net485Network::reqRespSetAddress(uint8_t _node, uint8_t _subnet) {
     Net485Packet *pkt, sendPkt;
     bool havePkt = false;
+    uint8_t setNode = _node;
+    uint8_t setSubnet = _subnet;
     
-    this->net485dl->send(this->setNodeAddress(&sendPkt,_node,_subnet));
+    // Unassign this device if not verified by this point
+    if(this->nodes[_node]->nodeStatus != Net485NodeStatE::Verified) {
+        setNode = 0;
+        setSubnet = 0;
+#ifdef DEBUG
+        Serial.print("nodeUnassigned: {nodeId:"); Serial.print(_node);
+        Serial.print(" subnet:"); Serial.print(_subnet);
+        Serial.println("}");
+#endif
+    }
+    
+    this->net485dl->send(this->setNodeAddress(&sendPkt,setNode,setSubnet));
     this->lasttimeOfMessage = millis();
     while(MILLISECDIFF(millis(),lasttimeOfMessage) < RESPONSE_TIMEOUT && !havePkt) {
         havePkt = net485dl->hasPacket();
@@ -232,25 +256,37 @@ bool Net485Network::reqRespNodeId(uint8_t _node, uint8_t _subnet, bool _validate
 // Return true if received response on node discovery request
 bool Net485Network::reqRespNodeDiscover(uint8_t _nodeIdFilter) {
     Net485Packet *pkt, sendPkt;
-    bool havePkt = false, anyPkt = false;
+    bool anyPkt = false;
     
     this->net485dl->send(this->setNodeDisc(&sendPkt,_nodeIdFilter));
     this->lasttimeOfMessage = millis();
     this->lastNodeListPoll = millis();
-    while(MILLISECDIFF(millis(),lasttimeOfMessage) < SLOT_HIGH && !havePkt) {
-        havePkt = net485dl->hasPacket();
-        if(havePkt) {
-            pkt = net485dl->getNextPacket();
-            this->lasttimeOfMessage = millis();
-            if(this->getNodeDiscResp(pkt) == NULL) {
-                if(pkt->header()[HeaderStructureE::PacketMsgType] == MSGTYP_ANUCVER) {
-                    this->state = Net485State::ANServerWaiting;
-                    return false;
-                }
+#ifdef DEBUG
+                    Serial.print("wait ... "); Serial.print(ANET_SLOTHI);
+#endif
+    while(MILLISECDIFF(millis(),this->lasttimeOfMessage) < ANET_SLOTHI && !anyPkt) {
+        anyPkt = net485dl->hasPacket();
+    }
+    if(anyPkt) {
+#ifdef DEBUG
+        Serial.print(" "); Serial.print(pkt->header()[HeaderStructureE::PacketMsgType], HEX);
+#endif
+        pkt = net485dl->getNextPacket();
+        this->lasttimeOfMessage = millis();
+        if(this->getNodeDiscResp(pkt) == NULL) {
+            if(pkt->header()[HeaderStructureE::PacketMsgType] == MSGTYP_ANUCVER) {
+                this->state = Net485State::ANClient;
+#ifdef DEBUG
+                Serial.println(" got version accouncement!");
+#endif
+                return false;
             }
-            anyPkt = true;
         }
     }
+#ifdef DEBUG
+    Serial.print("got response: "); Serial.println(anyPkt);
+#endif
+
     return anyPkt;
 }
 void Net485Network::loop() {
@@ -329,7 +365,7 @@ void Net485Network::warmStart(unsigned long _thisTime) {
     
     // Pick new random slot time and wait further for specific msg types
     if(!this->slotTime) {
-        this->slotTime = net485dl->newSlotDelayMicroSecs(ANET_SLOTLO,ANET_SLOTHI);
+        this->slotTime = net485dl->newSlotDelay(ANET_SLOTLO,ANET_SLOTHI);
         switch (this->state) {
             case Net485State::ANServerBecomingA:
             case Net485State::ANServerBecomingB:

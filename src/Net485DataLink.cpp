@@ -105,20 +105,17 @@ Net485Packet *Net485DataLink::getNextPacket() {
 // Base class checks for packet, we apply CRC check and ignore if not valid
 //
 // Returns: true for CRC valid packet, false if no packet or not valid
+/*
 bool Net485DataLink::hasPacket() {
-    bool retVal = Net485Physical_HardwareSerial::hasPacket();
+    bool retVal = false;
+    retVal = Net485Physical_HardwareSerial::hasPacket();
     if(retVal) {
-#ifdef DEBUG
-    Serial.print("Net485DataLink::hasPacket(): yes isValid:");
-#endif
         Net485Packet *pkt = Net485Physical_HardwareSerial::getNextPacket(true);
         retVal = this->isChecksumValid(pkt); // If not CRC valid, will return false and ignore packat
-#ifdef DEBUG
-    Serial.println(retVal);
-#endif
         if(!retVal) Net485Physical_HardwareSerial::getNextPacket(); // Read bad packet and ignore
     }
 }
+*/
 
 // Fletcher Checksum calculation
 bool Net485DataLink::isChecksumValid(Net485Packet *packet) {

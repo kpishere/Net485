@@ -57,12 +57,12 @@ public:
         v = v * random(-2^31,2^31-1);
         return v;
     }
-#define SLOT_LOW 100
-#define SLOT_HIGH 2500
-    inline uint16_t newSlotDelayMicroSecs(unsigned int low = SLOT_LOW, unsigned int hi = SLOT_HIGH) {
+#define SLOT_LOW 100000
+#define SLOT_HIGH 2500000
+    inline uint16_t newSlotDelay(unsigned int low = SLOT_LOW, unsigned int hi = SLOT_HIGH) {
         unsigned long seed = this->getLoopCount() + this->nodeType + this->macAddr.manufacturerId() + analogRead(0);
         randomSeed(seed);
-        return random(SLOT_LOW,SLOT_HIGH) * 1000;
+        return random(low,hi);
     }
     inline uint8_t getNodeType() { return this->nodeType;};
     inline Net485MacAddress getMacAddr() {return this->macAddr;};
@@ -70,7 +70,7 @@ public:
     // Calculate checksum and set on packet before sending
     void send(Net485Packet *packet);
     Net485Packet *getNextPacket();
-    bool hasPacket() override;
+    //bool hasPacket() override;
 
     bool isChecksumValid(Net485Packet *packet);
 };
