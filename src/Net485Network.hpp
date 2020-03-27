@@ -35,8 +35,8 @@ typedef struct Net485NodeS {
         version = PKTVER(pkt);
         if(pkt->header()[HeaderStructureE::PacketMsgType] == MSGRESP(MSGTYP_GNODEID)) {
             nodeType = pkt->data()[0];
-            memcpy(&macAddr, pkt->data()[1], Net485MacAddressE::SIZE);
-            memcpy(&sessionId, pkt->data()[Net485MacAddressE::SIZE+1], sizeof(uint64_t));
+            memcpy(&macAddr, &(pkt->data()[1]), Net485MacAddressE::SIZE);
+            memcpy(&sessionId, &(pkt->data()[Net485MacAddressE::SIZE+1]), sizeof(uint64_t));
             nodeStatus = Net485NodeStatE::Unverified;
         }
         // Init Node values from Node Discovery request
@@ -51,15 +51,15 @@ typedef struct Net485NodeS {
         }
         if(pkt->header()[HeaderStructureE::PacketMsgType] == MSGRESP(MSGTYP_NDSCVRY)) {
             nodeType = pkt->data()[0];
-            memcpy(&macAddr, pkt->data()[2], Net485MacAddressE::SIZE);
-            memcpy(&sessionId, pkt->data()[Net485MacAddressE::SIZE+2], sizeof(uint64_t));
+            memcpy(&macAddr, &(pkt->data()[2]), Net485MacAddressE::SIZE);
+            memcpy(&sessionId, &(pkt->data()[Net485MacAddressE::SIZE+2]), sizeof(uint64_t));
             nodeStatus = Net485NodeStatE::Unverified;
         }
         if(pkt->header()[HeaderStructureE::PacketMsgType] == MSGTYP_SADDR) {
             nodeType = NTC_ANY;
             version = pkt->data()[1];
-            memcpy(&macAddr, pkt->data()[2], Net485MacAddressE::SIZE);
-            memcpy(&sessionId, pkt->data()[Net485MacAddressE::SIZE+2], sizeof(uint64_t));
+            memcpy(&macAddr, &(pkt->data()[2]), Net485MacAddressE::SIZE);
+            memcpy(&sessionId, &(pkt->data()[Net485MacAddressE::SIZE+2]), sizeof(uint64_t));
             nodeStatus = (pkt->data()[sizeof(uint64_t)+Net485MacAddressE::SIZE+2] == 0x01
                           ? Net485NodeStatE::Verified
                           : Net485NodeStatE::Unverified);
@@ -93,9 +93,30 @@ typedef struct Net485NodeS {
         return i;
     };
     bool isNodeIdValid(uint8_t _nodeId) {
-        if((nodeType == NTC_THERM || nodeType == NTC_ZCTRL) && _nodeId == 1 ) return true;
+        if((nodeType == NTC_THERM || nodeType == NTC_ZCTRL) && _nodeId == 1 )
+        {
+#ifdef DEBUG
+            Serial.println("nodeId is valid - nodeType == NTC_THERM || nodeType == NTC_ZCTRL");
+#endif
+            return true;
+        }
         if(version == NETV1 && _nodeId > NODEADDR_V1LO && _nodeId <= NODEADDR_V1HI) return true;
+        {
+#ifdef DEBUG
+            Serial.println("nodeId is valid - version == NETV1 && _nodeId > NODEADDR_V1LO && _nodeId <= NODEADDR_V1HI");
+#endif
+            return true;
+        }
         if(version == NETV2 && _nodeId >= NODEADDR_V2LO && _nodeId <= NODEADDR_V2HI) return true;
+        {
+#ifdef DEBUG
+            Serial.println("nodeId is valid - NETV2 && _nodeId >= NODEADDR_V2LO && _nodeId <= NODEADDR_V2HI");
+#endif
+            return true;
+        }
+#ifdef DEBUG
+            Serial.println("nodeId is NOT valid ");
+#endif
         return false;
     };
     void display() {

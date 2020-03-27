@@ -151,9 +151,6 @@ void Net485Network::loopServer(unsigned long _thisTime) {
     bool havePkt = false;
     if(lastNodeListPoll == 0 ||  MILLISECDIFF(_thisTime,this->lastNodeListPoll) > NODELIST_REPOLLTIME)
     {
-#ifdef DEBUG
-    Serial.print(".1.");
-#endif
         if(Net485Network::reqRespNodeDiscover()) {
             // Loop over Nodes
             for(int i =NODEADDR_PRIMY; i<MTU_DATA; i++) {
@@ -169,6 +166,7 @@ void Net485Network::loopServer(unsigned long _thisTime) {
                         havePkt = Net485Network::reqRespNodeId(this->netNodeList[i], SUBNET_BCAST, true);
 #ifdef DEBUG
                         Serial.print("nodeDisc: {isAnyThermostat:"); Serial.print(havePkt);
+                        Serial.println("}");
 #endif
                     }
                     // Assign next node ID location
@@ -218,7 +216,6 @@ bool Net485Network::reqRespSetAddress(uint8_t _node, uint8_t _subnet) {
         havePkt = net485dl->hasPacket();
         if(havePkt) {
             pkt = net485dl->getNextPacket();
-            this->getRespNodeAddress(pkt);
             this->lasttimeOfMessage = millis();
             this->nodes[_node]->lastExchange = this->lasttimeOfMessage;
             
@@ -261,32 +258,19 @@ bool Net485Network::reqRespNodeDiscover(uint8_t _nodeIdFilter) {
     this->net485dl->send(this->setNodeDisc(&sendPkt,_nodeIdFilter));
     this->lasttimeOfMessage = millis();
     this->lastNodeListPoll = millis();
-#ifdef DEBUG
-                    Serial.print("wait ... "); Serial.print(ANET_SLOTHI);
-#endif
     while(MILLISECDIFF(millis(),this->lasttimeOfMessage) < ANET_SLOTHI && !anyPkt) {
         anyPkt = net485dl->hasPacket();
     }
     if(anyPkt) {
-#ifdef DEBUG
-        Serial.print(" "); Serial.print(pkt->header()[HeaderStructureE::PacketMsgType], HEX);
-#endif
         pkt = net485dl->getNextPacket();
         this->lasttimeOfMessage = millis();
         if(this->getNodeDiscResp(pkt) == NULL) {
             if(pkt->header()[HeaderStructureE::PacketMsgType] == MSGTYP_ANUCVER) {
                 this->state = Net485State::ANClient;
-#ifdef DEBUG
-                Serial.println(" got version accouncement!");
-#endif
                 return false;
             }
         }
     }
-#ifdef DEBUG
-    Serial.print("got response: "); Serial.println(anyPkt);
-#endif
-
     return anyPkt;
 }
 void Net485Network::loop() {
