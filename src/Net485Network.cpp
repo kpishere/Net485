@@ -12,7 +12,8 @@ uint8_t lastState = 0xff;
 
 #define ANET_SLOTLO  6000
 #define ANET_SLOTHI 30000
-const uint8_t nodeTypeArbFilterList[] = {MSGTYP_ANUCVER,MSGTYP_NDSCVRY, NULL};
+const uint8_t msgTypeVerDiscFilterList[] = {MSGTYP_ANUCVER,MSGTYP_NDSCVRY, NULL};
+const uint8_t msgTypeAssignNodeFilterList[] = {MSGTYP_SADDR, NULL};
 
 
 Net485Network::Net485Network(Net485DataLink *_net, Net485Subord *_sub, bool _coordinatorCapable
@@ -87,6 +88,7 @@ void Net485Network::loopClient(unsigned long _thisTime) {
 #endif
                 // Slot delay before responding to broadcast message
                 havePkt = false;
+                this->lasttimeOfMessage = millis();
                 while (MILLISECDIFF(millis(),this->lasttimeOfMessage) < this->slotTime && !havePkt) {
                     havePkt = net485dl->hasPacket();
                 }
@@ -109,18 +111,24 @@ void Net485Network::loopClient(unsigned long _thisTime) {
 #ifdef DEBUG
                     Serial.print("wait ... ");
 #endif
-                        while (MILLISECDIFF(millis(),this->lasttimeOfMessage) < RESPONSE_TIMEOUT && !havePkt) {
-                            havePkt = net485dl->hasPacket();
+                        this->lasttimeOfMessage = millis();
+                        net485dl->setPacketFilter(NULL,NULL,NULL,msgTypeAssignNodeFilterList);
+                        while (MILLISECDIFF(millis(),this->lasttimeOfMessage)
+                            < RESPONSE_TIMEOUT * 1.2 /* This factor is a divergance from specification which is 1.0 */
+                                && !havePkt) {
+                            havePkt = net485dl->hasPacket(&(this->lasttimeOfMessage));
                             if(havePkt) {
-#ifdef DEBUG
-                                Serial.println(" received assignment from coordinator!");
-#endif
                                 recvPtr = net485dl->getNextPacket();
+#ifdef DEBUG
+                                Serial.print(" received msgType:");
+                                Serial.println(recvPtr->header()[HeaderStructureE::PacketMsgType]);
+#endif
                                 if(this->getNodeAddress(recvPtr)) {
                                     this->net485dl->send(this->setACK(&sendPkt));
                                 }
                             }
                         }
+                        net485dl->setPacketFilter(NULL,NULL,NULL,NULL);
 #ifdef DEBUG
                         if(!havePkt) {
                             Serial.println(" no assignment from coordinator!");
@@ -160,6 +168,7 @@ void Net485Network::loopServer(unsigned long _thisTime) {
                         havePkt = Net485Network::reqRespNodeId(this->netNodeList[i], SUBNET_V1SPEC, true);
 #ifdef DEBUG
                         Serial.print("nodeDisc: {isV1SPECThermostat:"); Serial.print(havePkt);
+                        Serial.println("}");
 #endif
                     }
                     if(!havePkt) { // Any other device from thermostat
@@ -169,8 +178,12 @@ void Net485Network::loopServer(unsigned long _thisTime) {
                         Serial.println("}");
 #endif
                     }
-                    // Assign next node ID location
-                    havePkt = Net485Network::reqRespSetAddress(i, NODEADDR_BCAST);
+                    if(!havePkt) { // Assign next node ID location
+                        havePkt = Net485Network::reqRespSetAddress(i, NODEADDR_BCAST);
+                    }
+                    if(havePkt) { // Set verified if node Id set/confirmed
+                        this->nodes[i]->nodeStatus = Net485NodeStatE::Verified;
+                    }
 #ifdef DEBUG
                     Serial.print("nodeDisc: {isAnyOtherDevice:"); Serial.print(havePkt);
                     Serial.print(" nodeId:"); Serial.print(i);
@@ -213,7 +226,7 @@ bool Net485Network::reqRespSetAddress(uint8_t _node, uint8_t _subnet) {
     this->net485dl->send(this->setNodeAddress(&sendPkt,setNode,setSubnet));
     this->lasttimeOfMessage = millis();
     while(MILLISECDIFF(millis(),lasttimeOfMessage) < RESPONSE_TIMEOUT && !havePkt) {
-        havePkt = net485dl->hasPacket();
+        havePkt = net485dl->hasPacket(&(this->lasttimeOfMessage));
         if(havePkt) {
             pkt = net485dl->getNextPacket();
             this->lasttimeOfMessage = millis();
@@ -237,7 +250,7 @@ bool Net485Network::reqRespNodeId(uint8_t _node, uint8_t _subnet, bool _validate
     this->net485dl->send(this->setNodeId(&sendPkt,_node,_subnet));
     this->lasttimeOfMessage = millis();
     while(MILLISECDIFF(millis(),lasttimeOfMessage) < RESPONSE_TIMEOUT && !havePkt) {
-        havePkt = net485dl->hasPacket();
+        havePkt = net485dl->hasPacket(&(this->lasttimeOfMessage));
         if(havePkt) {
             pkt = net485dl->getNextPacket();
             this->getNodeId(pkt,_node, _validateOnly);
@@ -356,7 +369,7 @@ void Net485Network::warmStart(unsigned long _thisTime) {
                 net485dl->setPacketFilter(NULL,NULL,NULL,NULL);
                 break;
             default:
-                net485dl->setPacketFilter(NULL,NULL,NULL,nodeTypeArbFilterList);
+                net485dl->setPacketFilter(NULL,NULL,NULL,msgTypeVerDiscFilterList);
                 break;
         }
     }

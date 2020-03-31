@@ -329,15 +329,18 @@ public:
             tmpNode.init(_pkt);
             result = net485dl->getMacAddr().isSameAs(&(tmpNode.macAddr))
                 && tmpNode.sessionId == this->sessionId
-                && tmpNode.nodeStatus == Net485NodeStatE::Verified;
+                && _pkt->data()[2+Net485MacAddressE::SIZE+sizeof(uint64_t)] == 0x01;
             if(result) {
                 this->nodeId = _pkt->data()[0];
                 // Don't set subnet as we only code for V2
             }
         }
 #ifdef DEBUG
-        Serial.print('NodeAddress set: ');
-        Serial.print((result?'true ':'false '));
+        Serial.print("NodeAddress set: ");
+        Serial.print(result);
+        Serial.print(" thisDevice:");
+        net485dl->getMacAddr().display();
+        Serial.print(" nodeId: ");
         Serial.println(this->nodeId);
 #endif
         return result;

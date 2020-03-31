@@ -55,6 +55,8 @@ private:
     static void initTimer();
     static void setTimer(uint32_t usec, DriveState newState);
     static void clearTimer();
+    
+    static uint8_t *msgTypeFilterList;
 public:
     ////
     // These properties are public but are only used by global functions in module
@@ -75,7 +77,7 @@ public:
     bool readyToSend();
     void send(Net485Packet *packet);
     
-    virtual bool hasPacket();
+    virtual bool hasPacket(unsigned long *millisLastRead = NULL);
     Net485Packet *getNextPacket(bool peek = false);
     
     inline unsigned long getLoopCount() { return loopCount;}

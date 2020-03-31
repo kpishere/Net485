@@ -42,6 +42,7 @@ int Net485Physical_HardwareSerial::baudRate;
 int Net485Physical_HardwareSerial::drivePin;
 HardwareSerial *Net485Physical_HardwareSerial::hwSerial;
 unsigned long Net485Physical_HardwareSerial::loopCount;
+uint8_t *Net485Physical_HardwareSerial::msgTypeFilterList;
 
 void Net485Physical_HardwareSerial::initTimer() {
 #if defined(__AVR__)
@@ -85,6 +86,13 @@ void Net485Physical_HardwareSerial::clearTimer() {
     timer1_disable();
 #endif
 }
+bool valueInVector(uint8_t val, uint8_t *ptrNullTerm) {
+    bool found = false;
+    for( int i = 0; ptrNullTerm[i] != NULL && !found; i++) {
+        found = found || ptrNullTerm[i] == val;
+    }
+    return found;
+}
 
 void Net485Physical_HardwareSerial::packetSequencer() {
     switch(driveState) {
@@ -123,15 +131,11 @@ void Net485Physical_HardwareSerial::packetSequencer() {
 
             // Packet ignored if less than minimum expected size
             if( ((Net485Packet *)buffer)->dataSize >= (MTU_HEADER + MTU_CHECKSUM)) {
-                //
-                // TODO: Add filter conditions here?
-                //
                 ((Net485Packet *)buffer)->dataSize -= (MTU_HEADER + MTU_CHECKSUM);
                 // roll pointer forward
                 ringbufPktCurrent += 1;
                 // clear dataSize of next packet location
                 buffer = RINGBUFLOC(ringbufPktCurrent+1);
-                //ringbuf + ( ((ringbufPktCurrent+1) % ringbufSize) * sizeof(Net485Packet) );
                 ((Net485Packet *)buffer)->dataSize = 0;
                 // increment count of buffers ready for reading
                 ringbufPktCount += 1;
@@ -170,6 +174,7 @@ Net485Physical_HardwareSerial::Net485Physical_HardwareSerial(HardwareSerial *_hw
     hwSerial = _hwSerial;
     baudRate = _baudRate;
     drivePin = _drivePin;
+    msgTypeFilterList = NULL;
     
     // Set drive enable pin low on RS485 device to set listen mode
     pinMode(drivePin,OUTPUT);
@@ -197,10 +202,24 @@ void Net485Physical_HardwareSerial::send(Net485Packet *packet) {
     driveState = DriveStateE::InterPktDelay;
     Net485Physical_HardwareSerial::lastInstance->packetSequencer();
 }
-bool Net485Physical_HardwareSerial::hasPacket() {
+// Check for any packets newly added in ring buffer.  Optionately update a pointer to
+// current milisecond time -- usefull for resetting timeout after a packet is filtered out
+// If packet received and filtered out, packet is read to effectively ignore it.
+//
+// Returns true if there is packet to read, false if no packets ready or packet is filtered
+bool Net485Physical_HardwareSerial::hasPacket(unsigned long *millisLastRead) {
     loopCount++;
     if((ringbufPktCount > 0)) {
-        return true;
+        if(millisLastRead != NULL) millisLastRead[0] = millis();
+        Net485Packet *peekPkt = this->getNextPacket(true);
+        if(
+            (msgTypeFilterList == NULL || valueInVector(peekPkt->header()[HeaderStructureE::PacketMsgType], msgTypeFilterList) )
+        ) {
+            return true;
+        } else {
+            // Read this packet and advance buffer to ignore it
+            this->getNextPacket();
+        }
     } else {
         this->readData();
     }
@@ -216,10 +235,14 @@ Net485Packet *Net485Physical_HardwareSerial::getNextPacket(bool peek) {
     if(!peek) ringbufPktCount -= 1;
     return retPkt;
 }
+// Update filter on packets to ignore
+//
+//
+//
 void Net485Physical_HardwareSerial::setPacketFilter(uint8_t *destAddr,
                                                     uint8_t *subNet,
                                                     uint8_t *srcNodeTyp,
                                                     uint8_t *pktMsgTyp) {
-    
+    msgTypeFilterList = pktMsgTyp;
 }
 
