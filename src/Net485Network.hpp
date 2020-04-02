@@ -181,8 +181,8 @@ private:
     void loopServer(unsigned long _thisTime);
     bool becomeClient(Net485Packet *pkt, unsigned long _thisTime);
 
-    bool reqRespNodeId(uint8_t _node, uint8_t _subnet, bool _validateOnly = false);
-    bool reqRespNodeDiscover(uint8_t _nodeIdFilter = 0x00);
+    uint8_t reqRespNodeId(uint8_t _node, uint8_t _subnet, bool _validateOnly = false);
+    uint8_t reqRespNodeDiscover(uint8_t _nodeIdFilter = 0x00);
     bool reqRespSetAddress(uint8_t _node, uint8_t _subnet);
 
     uint8_t nodeExists(Net485Node *_node, bool firstNodeTypeSearch = false);
@@ -258,7 +258,7 @@ public:
         } else return 0;
     }
     
-    inline Net485Packet *setNodeId(Net485Packet *_pkt, uint8_t _destAddr, uint8_t _subNet = SUBNET_BCAST) {
+    inline Net485Packet *getNodeId(Net485Packet *_pkt, uint8_t _destAddr, uint8_t _subNet = SUBNET_BCAST) {
         _pkt->header()[HeaderStructureE::HeaderDestAddr] = _destAddr;
         _pkt->header()[HeaderStructureE::HeaderSrcAddr] = NODEADDR_COORD;
         _pkt->header()[HeaderStructureE::HeaderSubnet] = _subNet;
@@ -276,34 +276,37 @@ public:
     // _pkt: packet with node to add or compare to what is in node list
     // _validateOnly: flag for adding or validating
     //
-    // Returns: Null if not get node id packet type, node at node id provided
-    inline Net485Node *getNodeId(Net485Packet *_pkt, uint8_t _node, bool _validateOnly = false) {
+    // Returns: zero if packet is not MSGRESP(MSGTYP_GNODEID), nodeId if verified packet OR next nodeId if
+    //   verification fails
+    inline uint8_t addNodeId(Net485Packet *_pkt, uint8_t _node, bool _validateOnly = false) {
         Net485Node tmpNode;
-        uint8_t nodeIndex;
+        uint8_t nodeId = 0;
         if(_pkt->header()[HeaderStructureE::PacketMsgType] == MSGRESP(MSGTYP_GNODEID) ) {
             tmpNode.init(_pkt);
             if(_validateOnly) {
                 // Compares with what is in node list, if pass then change status
                 if(tmpNode.isNodeIdValid(_node)) {
-                    nodeIndex = _node;
-                    if(!this->nodes[_node]->isSameAs(&tmpNode)) {
-                        nodeIndex = this->addNode(&tmpNode);
+                    if(this->nodes[_node]->isSameAs(&tmpNode)) {
+                        this->nodes[nodeId]->nodeStatus = Net485NodeStatE::Verified;
+                        nodeId = _node;
+                    } else {
+                        nodeId = tmpNode.nextNodeLocation(this->netNodeList);
                     }
-                    this->nodes[nodeIndex]->nodeStatus = Net485NodeStatE::Verified;
                 } else {
                     this->nodes[_node]->nodeStatus = Net485NodeStatE::OffLine;
                     this->nodes[_node]->lastExchange = millis();
+                    nodeId = tmpNode.nextNodeLocation(this->netNodeList);
                 }
             } else {
-                this->addNode(&tmpNode, _node);
+                nodeId = this->addNode(&tmpNode, _node);
             }
-            return this->nodes[_node];
-        } else return NULL;
+        }
+        return nodeId;
     }
-    inline Net485Packet *setNodeAddress(Net485Packet *_pkt, uint8_t _destAddr, uint8_t _subNet = SUBNET_BCAST, uint8_t _newAddr = NODEADDR_BCAST, uint8_t _newSubNet = SUBNET_BCAST) {
-        _pkt->header()[HeaderStructureE::HeaderDestAddr] = _destAddr;
+    inline Net485Packet *setNodeAddress(Net485Packet *_pkt, uint8_t _newAddr, uint8_t _newSubNet, Net485Node *_node) {
+        _pkt->header()[HeaderStructureE::HeaderDestAddr] = NODEADDR_BCAST;
         _pkt->header()[HeaderStructureE::HeaderSrcAddr] = NODEADDR_COORD;
-        _pkt->header()[HeaderStructureE::HeaderSubnet] = _subNet;
+        _pkt->header()[HeaderStructureE::HeaderSubnet] = SUBNET_BCAST;
         _pkt->header()[HeaderStructureE::HeaderSndMethd] = SNDMTHD_NOROUTE;
         _pkt->header()[HeaderStructureE::HeaderSndParam] = 0x00;
         _pkt->header()[HeaderStructureE::HeaderSndParam1] = 0x00;
@@ -313,9 +316,9 @@ public:
         _pkt->header()[HeaderStructureE::PacketLength] = 19;
         _pkt->data()[0] = _newAddr;
         _pkt->data()[1] = _newSubNet;
-        memcpy((void *)&(_pkt->data()[2]), net485dl->getMacAddr().mac, Net485MacAddressE::SIZE);
+        memcpy((void *)&(_pkt->data()[2]), _node->macAddr.mac, Net485MacAddressE::SIZE);
         memcpy((void *)&(_pkt->data()[2+Net485MacAddressE::SIZE])
-               , &sessionId, sizeof(uint64_t));
+               , &(_node->sessionId), sizeof(uint64_t));
         _pkt->data()[2+Net485MacAddressE::SIZE+sizeof(uint64_t)] = 0x01;
         return _pkt;
     }
@@ -393,20 +396,21 @@ public:
     }
     // Evaluate Node Discovery Message response and add to list.
     // _pkt : The package to search
-    // Returns: Pointer to node in node list if found or created, NULL if not node discovery message or node list is full
-    inline Net485Node *getNodeDiscResp(Net485Packet *_pkt) {
+    // Returns: index to node in node list if found or created,
+    //  zero if not node discovery message or node list is full
+    inline uint8_t getNodeDiscResp(Net485Packet *_pkt) {
         Net485Node tmpNode;
         uint8_t nodeIndex = 0;
         if(_pkt->header()[HeaderStructureE::PacketMsgType] == MSGRESP(MSGTYP_NDSCVRY)) {
             tmpNode.init(_pkt);
-            if(tmpNode.nodeType == NTC_ANY) return NULL;
+            if(tmpNode.nodeType == NTC_ANY) return 0;
             nodeIndex = nodeExists(&tmpNode);
             if(nodeIndex == 0) nodeIndex = this->addNode(&tmpNode);
 #ifdef DEBUG
             Serial.print("getNodeDiscResp: nodeIndex:"); Serial.print(nodeIndex,HEX); Serial.print(" ");  tmpNode.display();
 #endif
-            return (nodeIndex > 0 ? this->nodes[nodeIndex] : NULL);
-        } else return NULL;
+        }
+        return nodeIndex;
     }
     // Evaluate Node Discovery Message.
     // _pkt : The package to search

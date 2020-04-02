@@ -63,9 +63,11 @@ uint8_t Net485Network::addNode(Net485Node *_node, uint8_t _nodeId) {
     uint8_t nodeIndex = (_nodeId > 0 ? _nodeId : _node->nextNodeLocation(this->netNodeList));
 
     if(nodeIndex > 0) {
+        if(this->nodes[nodeIndex] == NULL) {
+            this->nodes[nodeIndex] = malloc(sizeof(Net485Node));
+        }
         this->netNodeList[nodeIndex] = _node->nodeType;
-        this->nodes[nodeIndex] = malloc(sizeof(Net485Node));
-        memcpy(&(this->nodes[nodeIndex]),_node,sizeof(Net485Node));
+        memcpy(this->nodes[nodeIndex],_node,sizeof(Net485Node));
         this->netNodeListCount++;
     }
     return nodeIndex;
@@ -156,43 +158,51 @@ void Net485Network::loopClient(unsigned long _thisTime) {
 void Net485Network::loopServer(unsigned long _thisTime) {
     Net485Packet *pkt, sendPkt;
     Net485DataVersion netVer;
-    bool havePkt = false;
+    
     if(lastNodeListPoll == 0 ||  MILLISECDIFF(_thisTime,this->lastNodeListPoll) > NODELIST_REPOLLTIME)
     {
-        if(Net485Network::reqRespNodeDiscover()) {
-            // Loop over Nodes
-            for(int i =NODEADDR_PRIMY; i<MTU_DATA; i++) {
-                if(this->netNodeList[i]>0) { // For each node in current list
-                    havePkt = false;
-                    if(i==NODEADDR_PRIMY) { // For thermostat node type
-                        havePkt = Net485Network::reqRespNodeId(this->netNodeList[i], SUBNET_V1SPEC, true);
+        uint8_t nodeId = Net485Network::reqRespNodeDiscover();
 #ifdef DEBUG
-                        Serial.print("nodeDisc: {isV1SPECThermostat:"); Serial.print(havePkt);
-                        Serial.println("}");
+                Serial.print("nodeDisc: "); Serial.print(nodeId); Serial.print(" ");
 #endif
-                    }
-                    if(!havePkt) { // Any other device from thermostat
-                        havePkt = Net485Network::reqRespNodeId(this->netNodeList[i], SUBNET_BCAST, true);
+        uint8_t nextNodeId = 0;
+        // Check for pre-existing node and/or find next free node
+        // Loop exits with:
+        //          - zero if no node found
+        //          - non-zero is next free node
+        while(nodeId > 0 /* There is a node available from above lookup */
+            && nextNodeId > 0 /* Zero if no node found at that location, number for next node if found */
+            && nodeId < NODEADDR_V2HI /* out of valid node Ids */)
+        {
+            if(nodeId < nextNodeId) nodeId = nextNodeId;
+            if(nodeId==NODEADDR_PRIMY) {
+                // For thermostat node type - send msg to check availability of nodeid
+                nextNodeId = Net485Network::reqRespNodeId(nodeId, SUBNET_V1SPEC, true);
 #ifdef DEBUG
-                        Serial.print("nodeDisc: {isAnyThermostat:"); Serial.print(havePkt);
-                        Serial.println("}");
+                Serial.print(" isV1SPECThermostat: "); Serial.print(nextNodeId); Serial.print(" ");
 #endif
-                    }
-                    if(!havePkt) { // Assign next node ID location
-                        havePkt = Net485Network::reqRespSetAddress(i, NODEADDR_BCAST);
-                    }
-                    if(havePkt) { // Set verified if node Id set/confirmed
-                        this->nodes[i]->nodeStatus = Net485NodeStatE::Verified;
-                    }
+            }
+            if( (nodeId==NODEADDR_PRIMY && nextNodeId != nodeId)
+                || (nodeId != NODEADDR_PRIMY) ){
+                // Any other device from thermostat - send msg to check availability of nodeid
+                nextNodeId = Net485Network::reqRespNodeId(nodeId, SUBNET_BCAST, true);
 #ifdef DEBUG
-                    Serial.print("nodeDisc: {isAnyOtherDevice:"); Serial.print(havePkt);
-                    Serial.print(" nodeId:"); Serial.print(i);
-                    Serial.print(" verified:"); Serial.print(this->nodes[i]->nodeStatus);
-                    Serial.println("}");
+                Serial.print(" isAnyDevice: "); Serial.print(nextNodeId); Serial.print(" ");
 #endif
-                }
+            }
+            if(nodeId == nextNodeId) { /* Node IDs match if exact match found, set exit condition */
+                nextNodeId = 0;
             }
         }
+        if(nodeId > 0) { // Node ID validated with device, Assign node ID location
+            nodeId = Net485Network::reqRespSetAddress(nodeId, NODEADDR_BCAST);
+        }
+#ifdef DEBUG
+        Serial.print(" nodeId:"); Serial.print(nodeId);
+        Serial.print(" verified:"); Serial.print(this->nodes[nodeId]->nodeStatus);
+        Serial.println(" ");
+#endif
+    
     } else {
         // If out-of process message is ever received by server, it should attempt to yield and become client
         if(net485dl->hasPacket()) {
@@ -213,17 +223,23 @@ bool Net485Network::reqRespSetAddress(uint8_t _node, uint8_t _subnet) {
     uint8_t setSubnet = _subnet;
     
     // Unassign this device if not verified by this point
+#ifdef DEBUG
+        Serial.print("nodeId: "); Serial.print(_node);
+        Serial.print(" subnet:"); Serial.print(_subnet);
+        Serial.print(" status:"); Serial.print(this->nodes[_node]->nodeStatus);
+        Serial.print(" verifiedStatus:"); Serial.print(Net485NodeStatE::Verified);
+        Serial.println("");
+#endif
     if(this->nodes[_node]->nodeStatus != Net485NodeStatE::Verified) {
         setNode = 0;
         setSubnet = 0;
+    }
 #ifdef DEBUG
-        Serial.print("nodeUnassigned: {nodeId:"); Serial.print(_node);
-        Serial.print(" subnet:"); Serial.print(_subnet);
+        Serial.print("nodeAssign: {nodeId:"); Serial.print(setNode);
+        Serial.print(" subnet:"); Serial.print(setSubnet);
         Serial.println("}");
 #endif
-    }
-    
-    this->net485dl->send(this->setNodeAddress(&sendPkt,setNode,setSubnet));
+    this->net485dl->send(this->setNodeAddress(&sendPkt,setNode,setSubnet,this->nodes[_node]));
     this->lasttimeOfMessage = millis();
     while(MILLISECDIFF(millis(),lasttimeOfMessage) < RESPONSE_TIMEOUT && !havePkt) {
         havePkt = net485dl->hasPacket(&(this->lasttimeOfMessage));
@@ -240,33 +256,34 @@ bool Net485Network::reqRespSetAddress(uint8_t _node, uint8_t _subnet) {
     }
     return havePkt;
 }
-// Create and send a Set NodeID message, receive and conditionaly validate receipt.
+// Create and send a NodeID message, receive and conditionaly validate receipt.
 //
-// Return: true if node Id set and validated, otherwise false
-bool Net485Network::reqRespNodeId(uint8_t _node, uint8_t _subnet, bool _validateOnly) {
+// Return: NodeId if node Id responds, otherwise zero
+uint8_t Net485Network::reqRespNodeId(uint8_t _node, uint8_t _subnet, bool _validateOnly) {
     Net485Packet *pkt, sendPkt;
     bool havePkt = false;
+    uint8_t matchOrNextNodeId = 0;
     
-    this->net485dl->send(this->setNodeId(&sendPkt,_node,_subnet));
+    this->net485dl->send(this->getNodeId(&sendPkt,_node,_subnet));
     this->lasttimeOfMessage = millis();
     while(MILLISECDIFF(millis(),lasttimeOfMessage) < RESPONSE_TIMEOUT && !havePkt) {
         havePkt = net485dl->hasPacket(&(this->lasttimeOfMessage));
         if(havePkt) {
             pkt = net485dl->getNextPacket();
-            this->getNodeId(pkt,_node, _validateOnly);
+            matchOrNextNodeId = this->addNodeId(pkt,_node, _validateOnly);
             this->lasttimeOfMessage = millis();
-            if(this->nodes[_node]->nodeStatus == Net485NodeStatE::OffLine)  havePkt = false;
         }
     }
-    return havePkt;
+    return matchOrNextNodeId;
 }
 // Send broadcast for node response, if non response received, go to coordinator arbitration state
 // otherwise, add to node list.
 //
-// Return true if received response on node discovery request
-bool Net485Network::reqRespNodeDiscover(uint8_t _nodeIdFilter) {
+// Return nodeId if received response on node discovery request, zero otherwise
+uint8_t Net485Network::reqRespNodeDiscover(uint8_t _nodeIdFilter) {
     Net485Packet *pkt, sendPkt;
     bool anyPkt = false;
+    uint8_t nodeId = 0;
     
     this->net485dl->send(this->setNodeDisc(&sendPkt,_nodeIdFilter));
     this->lasttimeOfMessage = millis();
@@ -277,14 +294,15 @@ bool Net485Network::reqRespNodeDiscover(uint8_t _nodeIdFilter) {
     if(anyPkt) {
         pkt = net485dl->getNextPacket();
         this->lasttimeOfMessage = millis();
-        if(this->getNodeDiscResp(pkt) == NULL) {
+        nodeId = this->getNodeDiscResp(pkt);
+        if(!nodeId) {
             if(pkt->header()[HeaderStructureE::PacketMsgType] == MSGTYP_ANUCVER) {
                 this->state = Net485State::ANClient;
                 return false;
             }
         }
     }
-    return anyPkt;
+    return nodeId;
 }
 void Net485Network::loop() {
     unsigned long thisTime = millis();
