@@ -162,7 +162,7 @@ private:
 
     Net485DataVersion ver;
     uint64_t sessionId;
-    uint8_t nodeId;
+    uint8_t nodeId, subNet;
     
     uint8_t netNodeList[MTU_DATA];
     uint8_t netNodeListCount;
@@ -283,6 +283,16 @@ public:
         uint8_t nodeId = 0;
         if(_pkt->header()[HeaderStructureE::PacketMsgType] == MSGRESP(MSGTYP_GNODEID) ) {
             tmpNode.init(_pkt);
+#ifdef DEBUG
+    Serial.print(" addNodeId: validate:"); Serial.print(_validateOnly); Serial.print(" ");
+    Serial.print(" isValid:"); Serial.print(tmpNode.isNodeIdValid(_node)); Serial.print(" ");
+    Serial.print(" isSame:"); Serial.print(this->nodes[_node]->isSameAs(&tmpNode)); Serial.print(" ");
+    Serial.println("  ");
+    this->nodes[_node]->display();
+    Serial.println("  ");
+    tmpNode.display();
+    Serial.println("  ");
+#endif
             if(_validateOnly) {
                 // Compares with what is in node list, if pass then change status
                 if(tmpNode.isNodeIdValid(_node)) {
@@ -335,6 +345,7 @@ public:
                 && _pkt->data()[2+Net485MacAddressE::SIZE+sizeof(uint64_t)] == 0x01;
             if(result) {
                 this->nodeId = _pkt->data()[0];
+                this->subNet = _pkt->data()[1];
                 // Don't set subnet as we only code for V2
             }
         }
@@ -349,6 +360,23 @@ public:
         return result;
     }
     inline Net485Packet *setRespNodeAddress(Net485Packet *_pkt) {
+        _pkt->header()[HeaderStructureE::HeaderDestAddr] = NODEADDR_COORD;
+        _pkt->header()[HeaderStructureE::HeaderSrcAddr] = this->nodeId;
+        _pkt->header()[HeaderStructureE::HeaderSubnet] = this->subNet;
+        _pkt->header()[HeaderStructureE::HeaderSndMethd] = SNDMTHD_NOROUTE;
+        _pkt->header()[HeaderStructureE::HeaderSndParam] = 0x00;
+        _pkt->header()[HeaderStructureE::HeaderSndParam1] = 0x00;
+        _pkt->header()[HeaderStructureE::HeaderSrcNodeType] = NTC_NETCTRL;
+        _pkt->header()[HeaderStructureE::PacketMsgType] = MSGRESP(MSGTYP_SADDR);
+        _pkt->header()[HeaderStructureE::PacketNumber] = PKTNUMBER(true,false);
+        _pkt->header()[HeaderStructureE::PacketLength] = 19;
+        _pkt->data()[0] = this->nodeId;
+        _pkt->data()[1] = this->subNet;
+        memcpy((void *)&(_pkt->data()[2]), (this->nodes[this->nodeId])->macAddr.mac, Net485MacAddressE::SIZE);
+        memcpy((void *)&(_pkt->data()[2+Net485MacAddressE::SIZE])
+               , &((this->nodes[this->nodeId])->sessionId), sizeof(uint64_t));
+        _pkt->data()[2+Net485MacAddressE::SIZE+sizeof(uint64_t)] = 0x01;
+        return _pkt;
     }
     inline Net485Packet *getRespNodeAddress(Net485Packet *_pkt) {
         if(_pkt->header()[HeaderStructureE::PacketMsgType] == MSGRESP(MSGTYP_NDSCVRY) ) {

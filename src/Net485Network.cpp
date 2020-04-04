@@ -29,6 +29,8 @@ Net485Network::Net485Network(Net485DataLink *_net, Net485Subord *_sub, bool _coo
     this->slotTime = 0;
     this->state = Net485State::None;
     this->sub = _sub;
+    this->nodeId = 0;
+    this->subNet = 0;
     for(int i=0; i<MTU_DATA; i++) {
         this->netNodeList[i] = 0x00;
         this->nodes[i] = NULL;
@@ -126,7 +128,7 @@ void Net485Network::loopClient(unsigned long _thisTime) {
                                 Serial.println(recvPtr->header()[HeaderStructureE::PacketMsgType]);
 #endif
                                 if(this->getNodeAddress(recvPtr)) {
-                                    this->net485dl->send(this->setACK(&sendPkt));
+                                    this->net485dl->send(this->setRespNodeAddress(&sendPkt));
                                 }
                             }
                         }
@@ -158,6 +160,7 @@ void Net485Network::loopClient(unsigned long _thisTime) {
 void Net485Network::loopServer(unsigned long _thisTime) {
     Net485Packet *pkt, sendPkt;
     Net485DataVersion netVer;
+    bool found = false;
     
     if(lastNodeListPoll == 0 ||  MILLISECDIFF(_thisTime,this->lastNodeListPoll) > NODELIST_REPOLLTIME)
     {
@@ -170,39 +173,33 @@ void Net485Network::loopServer(unsigned long _thisTime) {
         // Loop exits with:
         //          - zero if no node found
         //          - non-zero is next free node
-        while(nodeId > 0 /* There is a node available from above lookup */
-            && nextNodeId > 0 /* Zero if no node found at that location, number for next node if found */
+        while( !found
             && nodeId < NODEADDR_V2HI /* out of valid node Ids */)
         {
-            if(nodeId < nextNodeId) nodeId = nextNodeId;
             if(nodeId==NODEADDR_PRIMY) {
                 // For thermostat node type - send msg to check availability of nodeid
                 nextNodeId = Net485Network::reqRespNodeId(nodeId, SUBNET_V1SPEC, true);
 #ifdef DEBUG
                 Serial.print(" isV1SPECThermostat: "); Serial.print(nextNodeId); Serial.print(" ");
 #endif
-            }
-            if( (nodeId==NODEADDR_PRIMY && nextNodeId != nodeId)
-                || (nodeId != NODEADDR_PRIMY) ){
+            } else {
                 // Any other device from thermostat - send msg to check availability of nodeid
                 nextNodeId = Net485Network::reqRespNodeId(nodeId, SUBNET_BCAST, true);
 #ifdef DEBUG
                 Serial.print(" isAnyDevice: "); Serial.print(nextNodeId); Serial.print(" ");
 #endif
             }
-            if(nodeId == nextNodeId) { /* Node IDs match if exact match found, set exit condition */
-                nextNodeId = 0;
+            found = (nodeId == nextNodeId)  /* Node IDs match if exact match found, set exit condition */
+                || (nextNodeId == 0 && nodeId > 0); /* No prior existing node */
+            if(nodeId < nextNodeId) nodeId = nextNodeId;
+            if(nextNodeId == 0) {
+                // There is no pre-existing node at this location
+                this->nodes[nodeId]->nodeStatus = Net485NodeStatE::Verified;
             }
         }
         if(nodeId > 0) { // Node ID validated with device, Assign node ID location
             nodeId = Net485Network::reqRespSetAddress(nodeId, NODEADDR_BCAST);
         }
-#ifdef DEBUG
-        Serial.print(" nodeId:"); Serial.print(nodeId);
-        Serial.print(" verified:"); Serial.print(this->nodes[nodeId]->nodeStatus);
-        Serial.println(" ");
-#endif
-    
     } else {
         // If out-of process message is ever received by server, it should attempt to yield and become client
         if(net485dl->hasPacket()) {
@@ -270,7 +267,7 @@ uint8_t Net485Network::reqRespNodeId(uint8_t _node, uint8_t _subnet, bool _valid
         havePkt = net485dl->hasPacket(&(this->lasttimeOfMessage));
         if(havePkt) {
             pkt = net485dl->getNextPacket();
-            matchOrNextNodeId = this->addNodeId(pkt,_node, _validateOnly);
+            matchOrNextNodeId = this->addNodeId(pkt,_node, false);
             this->lasttimeOfMessage = millis();
         }
     }
