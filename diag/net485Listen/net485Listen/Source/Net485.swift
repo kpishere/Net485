@@ -140,7 +140,8 @@ struct net485MsgHeader {
 
 
 class PacketProcessor : NSObject, ORSSerialPortDelegate {
-
+    var dateTimePrior : Date = Date()
+    
     convenience init(_ port: ORSSerialPort) {
         self.init()
         port.delegate = self
@@ -151,14 +152,17 @@ class PacketProcessor : NSObject, ORSSerialPortDelegate {
     }
     
     func serialPort(_ serialPort: ORSSerialPort, didReceive data: Data) {
+        let currentDateTime = Date();
         let isOK = self.passCRC(data: data)
-        print("\nBytes:\(data.count) Pkt:\(data.asHexString) \(isOK ? "CRCOK":"CRCERR")")
+        let fmdTimediffSec = String(format: "%.3f", currentDateTime.timeIntervalSince(self.dateTimePrior))
+        print("\n\(currentDateTime) \(fmdTimediffSec) Bytes:\(data.count) Pkt:\(data.asHexString) \(isOK ? "CRCOK":"CRCERR")")
         if isOK {
             let msg = net485MsgHeader.init(data)
             print(msg.description)
             let msgOfType = CT485MessageCreator.shared.create(msg)
             msgOfType?.description()
         }
+        self.dateTimePrior = currentDateTime
     }
     
     func passCRC(data: Data) -> Bool {
