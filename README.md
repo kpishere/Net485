@@ -16,4 +16,21 @@ Layer 2:
 
 Layers 3-5:
 
-- The bulk of the work is here.  Version announcemnt and network coordination of who is master (coordinator) is working.  Still nothing usefull ... a work in progress
+- The bulk of the work is here.  Version announcemnt, network coordination of who is master (coordinator), and automatic node assignment are working.  Still not quite usefull but almost. A work in progress ... 
+
+# Net485Listen
+
+Do check out the sub-project under 'diag' folder - a very handy snooper tool for existing networks.  You got one of the following brands?  They all use the same protocol (albeit with their own extensions).  If any of you all are interested, I'm down for logging network activity and reverse-engineering and documenting all of these extensions and ultimately adding support to this library.  You can help out by snooping your own network and submitting samples of what is logged.
+
+- Carrier: Infinity (or Greenspeed)
+- Bryant: Evolution
+- Amana, Goodman and Daikin: ComfortNet
+- Trane and American Standard: ComfortLink II
+- Rheem and Ruud: Comfort Control System
+- Lennox: iComfort
+- Maytag, Tappan, Westinghouse and others: iQ Drive
+- Heil, Comfortmaker, Keep Rite and others: Observer
+- Armstrong Air: Comfort Sync
+- York: Affinity
+- Luxaire: Acclimate
+- Coleman: Echelon
