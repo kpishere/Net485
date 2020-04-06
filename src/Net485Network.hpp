@@ -448,6 +448,41 @@ public:
         n.init(_pkt);
         return n.nodeType;
     }
+    // Prepare an Address confirmation packet for sending
+    //
+    // Returns pointer provided as argument
+    inline Net485Packet *setAddressConfirm(Net485Packet *_pkt) {
+        _pkt->header()[HeaderStructureE::HeaderDestAddr] = NODEADDR_BCAST;
+        _pkt->header()[HeaderStructureE::HeaderSrcAddr] = NODEADDR_COORD;
+        _pkt->header()[HeaderStructureE::HeaderSubnet] = SUBNET_BCAST;
+        _pkt->header()[HeaderStructureE::HeaderSndMethd] = SUBNET_V2SPEC;
+        _pkt->header()[HeaderStructureE::HeaderSndParam] = 0x00;
+        _pkt->header()[HeaderStructureE::HeaderSndParam1] = 0x00;
+        _pkt->header()[HeaderStructureE::HeaderSrcNodeType] = NTC_NETCTRL;
+        _pkt->header()[HeaderStructureE::PacketMsgType] = MSGTYP_ADDRCNFM;
+        _pkt->header()[HeaderStructureE::PacketNumber] = PKTNUMBER(true,false);
+        _pkt->header()[HeaderStructureE::PacketLength] = this->netNodeListCount + 1;
+        _pkt->data()[0] = net485dl->getNodeType();
+        memcpy((void *)&(_pkt->data()[1]), this->netNodeList, this->netNodeListCount);
+        return _pkt;
+    }
+    // Compare local node list with broadcast node list
+    //
+    // returns True if same, false otherwise
+    inline bool isNodeListValid(Net485Packet *_pkt) {
+        bool retVal = true;
+        if(_pkt->header()[HeaderStructureE::PacketMsgType] == MSGTYP_ADDRCNFM) {
+            int nodeCount = _pkt->header()[HeaderStructureE::PacketLength];
+            if(this->nodeId == 0) return false;
+            if(this->netNodeListCount != nodeCount) return false;
+            for(int i=1; i<nodeCount && retVal; i++) {
+                // Don't compare the local subordinate node, they will be different (i=0)
+                retVal = retVal & ( this->netNodeList[i] == _pkt->data()[i] );
+            }
+            return retVal;
+        }
+        return false;
+    }
 };
 
 #endif

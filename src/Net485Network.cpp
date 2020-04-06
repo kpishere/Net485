@@ -105,7 +105,24 @@ void Net485Network::loopClient(unsigned long _thisTime) {
                 && (recvPtr->header()[HeaderStructureE::HeaderSubnet] == this->subNet
                 || recvPtr->header()[HeaderStructureE::HeaderSubnet] == SUBNET_BCAST ) )
             { // Broadcast messages
-                // These are ignored
+                switch(recvPtr->header()[HeaderStructureE::PacketMsgType]) {
+                    case MSGTYP_SADDR: // Coordinator sets device address and subnet
+                        if(this->getNodeAddress(recvPtr)) { // If message is for this device (same sessionId and mac)
+                            this->net485dl->send(this->setRespNodeAddress(&sendPkt));
+                        }
+                        break;
+                    case MSGTYP_ADDRCNFM: // Verify position in node list, refresh timeout
+                        if(!this->isNodeListValid(recvPtr)) {
+                            this->state = Net485State::ANClient;
+                            this->nodeId = 0;
+                            this->subNet = 0;
+                        }
+                        this->lasttimeOfMessage = millis();
+                        break;
+                    default:
+                    // These are ignored
+                        break;
+                }
             }
         } else { // Not in network
             // We only listen for a Node discovery request
@@ -172,9 +189,12 @@ void Net485Network::loopServer(unsigned long _thisTime) {
     Net485Packet *pkt, sendPkt;
     Net485DataVersion netVer;
     bool found = false;
-    
+
     if(lastNodeListPoll == 0 ||  MILLISECDIFF(_thisTime,this->lastNodeListPoll) > NODELIST_REPOLLTIME)
     {
+        //
+        // Poll for new nodes
+        //
         uint8_t nodeId = Net485Network::reqRespNodeDiscover();
 #ifdef DEBUG
                 Serial.print("nodeDisc: "); Serial.print(nodeId); Serial.print(" ");
@@ -212,6 +232,11 @@ void Net485Network::loopServer(unsigned long _thisTime) {
         if(nodeId > 0) { // Node ID validated with device, Assign node ID location
             nodeId = Net485Network::reqRespSetAddress(nodeId, NODEADDR_BCAST);
         }
+        //
+        // Address Confirmation broadcast
+        //
+        this->net485dl->send(this->setAddressConfirm(&sendPkt));
+        //
         this->lastNodeListPoll = _thisTime;
     } else {
         // If out-of process message is ever received by server, it should attempt to yield and become client

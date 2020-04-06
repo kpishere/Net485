@@ -118,7 +118,7 @@
 //
 #define MSGTYP_R2R      0x00 /*Request to Receive (R2R)*/
 #define MSGTYP_NETSTATE 0x75 /*Network State Request*/
-#define MSGTYP_ADDRCNFM 0x76 /*Address Confirmation*/ //TODO
+#define MSGTYP_ADDRCNFM 0x76 /*Address Confirmation*/ 
 #define MSGTYP_TOKEN    0x77 /*Token Offer*/ //TODO
 #define MSGTYP_ANUCVER  0x78 /*Version Announcement */
 #define MSGTYP_NDSCVRY  0x79 /*Node Discovery*/
