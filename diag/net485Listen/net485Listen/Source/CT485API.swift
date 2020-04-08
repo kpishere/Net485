@@ -175,7 +175,7 @@ class CT485Message_NodeId :CT485Message, CT485DeclareMessageTypes
 class CT485Message_NodeList :CT485Message, CT485DeclareMessageTypes
 {
     var virtSubordinate : UInt8? { return UInt8(self.data!.packet.data[0]) }
-    var nodeList : [UInt8]? { return [UInt8](self.data!.packet.data.subdata(in:(0..<self.data!.packet.data.count-1))) }
+    var nodeList : [UInt8]? { return [UInt8](self.data!.packet.data.subdata(in:(0..<self.data!.packet.data.count))) }
     
     override func members() -> [String:Any] { return ["virtSubordinate": virtSubordinate ?? 0x00, "nodeList": nodeList ?? [0x00] ]
     }
@@ -184,7 +184,7 @@ class CT485Message_NodeList :CT485Message, CT485DeclareMessageTypes
 class CT485Message_SetNodeList :CT485Message, CT485DeclareMessageTypes
 {
     var nodeType : UInt8? { return UInt8(self.data!.packet.data[0]) }
-    var nodeList : [UInt8]? { return [UInt8](self.data!.packet.data.subdata(in:(1..<self.data!.packet.data.count-1))) }
+    var nodeList : [UInt8]? { return [UInt8](self.data!.packet.data.subdata(in:(1..<self.data!.packet.data.count))) }
     
     override func members() -> [String:Any] { return ["nodeType": nodeType ?? 0x00, "nodeList": nodeList ?? [0x00] ]
     }
@@ -195,7 +195,7 @@ class CT485Message_NetDataSect :CT485Message, CT485DeclareMessageTypes
 {
     var isRead : Bool? { return UInt8(self.data!.packet.data[0] & 0x80) > 0  }
     var nodeType : UInt8? { return UInt8(self.data!.packet.data[0]) & 0x7F }
-    var nodeNetData : [UInt8]? { return [UInt8](self.data!.packet.data.subdata(in:(1..<self.data!.packet.data.count-1))) }
+    var nodeNetData : [UInt8]? { return [UInt8](self.data!.packet.data.subdata(in:(1..<self.data!.packet.data.count))) }
     
     override func members() -> [String:Any] { return [
                         "isRead": isRead ?? true
