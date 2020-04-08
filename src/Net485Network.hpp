@@ -165,7 +165,7 @@ private:
     uint8_t nodeId, subNet;
     
     uint8_t netNodeList[MTU_DATA];
-    uint8_t netNodeListCount;
+    uint8_t netNodeListHighest;
     Net485Node *nodes[MTU_DATA];
     Net485Packet pktToSend;
     Net485Subord *sub;
@@ -299,6 +299,7 @@ public:
                     if(this->nodes[_node]->isSameAs(&tmpNode)) {
                         this->nodes[nodeId]->nodeStatus = Net485NodeStatE::Verified;
                         nodeId = _node;
+                        this->netNodeList[nodeId] = tmpNode.nodeType;
                     } else {
                         nodeId = tmpNode.nextNodeLocation(this->netNodeList);
                     }
@@ -340,12 +341,14 @@ public:
         bool result = false;
         if(_pkt->header()[HeaderStructureE::PacketMsgType] == MSGTYP_SADDR ) {
             tmpNode.init(_pkt);
+            tmpNode.nodeType = this->net485dl->getNodeType();
             result = net485dl->getMacAddr().isSameAs(&(tmpNode.macAddr))
                 && tmpNode.sessionId == this->sessionId
                 && _pkt->data()[2+Net485MacAddressE::SIZE+sizeof(uint64_t)] == 0x01;
             if(result) {
                 this->nodeId = _pkt->data()[0];
                 this->subNet = _pkt->data()[1];
+                if(this->nodeId > 0) this->addNode(&tmpNode, this->nodeId);
                 // Don't set subnet as we only code for V2
             }
         }
@@ -461,9 +464,8 @@ public:
         _pkt->header()[HeaderStructureE::HeaderSrcNodeType] = NTC_NETCTRL;
         _pkt->header()[HeaderStructureE::PacketMsgType] = MSGTYP_ADDRCNFM;
         _pkt->header()[HeaderStructureE::PacketNumber] = PKTNUMBER(true,false);
-        _pkt->header()[HeaderStructureE::PacketLength] = this->netNodeListCount + 1;
-        _pkt->data()[0] = net485dl->getNodeType();
-        memcpy((void *)&(_pkt->data()[1]), this->netNodeList, this->netNodeListCount);
+        _pkt->header()[HeaderStructureE::PacketLength] = this->netNodeListHighest;
+        memcpy((void *)(_pkt->data()), this->netNodeList, _pkt->header()[HeaderStructureE::PacketLength] );
         return _pkt;
     }
     // Compare local node list with broadcast node list
@@ -473,12 +475,25 @@ public:
         bool retVal = true;
         if(_pkt->header()[HeaderStructureE::PacketMsgType] == MSGTYP_ADDRCNFM) {
             int nodeCount = _pkt->header()[HeaderStructureE::PacketLength];
+#ifdef DEBUG
+    Serial.print("isNodeListValid(MSGTYP_ADDRCNFM): count:"); Serial.print(nodeCount);
+    Serial.print(" this->nodeId:"); Serial.print(this->nodeId, HEX);
+    Serial.print(" this->netNodeListHighest:"); Serial.print(this->netNodeListHighest);
+#endif
             if(this->nodeId == 0) return false;
-            if(this->netNodeListCount != nodeCount) return false;
-            for(int i=1; i<nodeCount && retVal; i++) {
+            if(this->netNodeListHighest != nodeCount) return false;
+            for(int i=NODEADDR_PRIMY; i<nodeCount && retVal; i++) {
                 // Don't compare the local subordinate node, they will be different (i=0)
                 retVal = retVal & ( this->netNodeList[i] == _pkt->data()[i] );
+#ifdef DEBUG
+    Serial.print(" index:"); Serial.print(i);
+    Serial.print(" "); Serial.print(this->netNodeList[i], HEX);
+    Serial.print(" =?= "); Serial.print(_pkt->data()[i], HEX);
+#endif
             }
+#ifdef DEBUG
+    Serial.print(" retVal:"); Serial.println(retVal);
+#endif
             return retVal;
         }
         return false;

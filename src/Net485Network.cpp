@@ -35,7 +35,11 @@ Net485Network::Net485Network(Net485DataLink *_net, Net485Subord *_sub, bool _coo
         this->netNodeList[i] = 0x00;
         this->nodes[i] = NULL;
     }
-    this->netNodeListCount = 0;
+    this->netNodeListHighest = 0;
+    if(this->sub != NULL) {
+        this->netNodeList[0] = this->net485dl->getNodeType();
+        this->netNodeListHighest++;
+    }
 }
 
 // Search from Primary Node Address location up to Note Address Request broker
@@ -70,7 +74,7 @@ uint8_t Net485Network::addNode(Net485Node *_node, uint8_t _nodeId) {
         }
         this->netNodeList[nodeIndex] = _node->nodeType;
         memcpy(this->nodes[nodeIndex],_node,sizeof(Net485Node));
-        this->netNodeListCount++;
+        this->netNodeListHighest = (nodeIndex+1 > this->netNodeListHighest ? nodeIndex+1 : this->netNodeListHighest);
     }
     return nodeIndex;
 }
@@ -225,8 +229,10 @@ void Net485Network::loopServer(unsigned long _thisTime) {
                 || (nextNodeId == 0 && nodeId > 0); /* No prior existing node */
             if(nodeId < nextNodeId) nodeId = nextNodeId;
             if(nextNodeId == 0) {
-                // There is no pre-existing node at this location
+                // There is no pre-existing node at this location, so make temp node list addition perminant
+                this->netNodeList[nodeId] = this->nodes[nodeId]->nodeType;
                 this->nodes[nodeId]->nodeStatus = Net485NodeStatE::Verified;
+                
             }
         }
         if(nodeId > 0) { // Node ID validated with device, Assign node ID location
