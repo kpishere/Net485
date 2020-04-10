@@ -19,6 +19,7 @@ const uint8_t msgTypeAssignNodeFilterList[] = {MSGTYP_SADDR, NULL};
 Net485Network::Net485Network(Net485DataLink *_net, Net485Subord *_sub, bool _coordinatorCapable
                              , uint16_t _coordVer = 0, uint16_t _coordRev = 0) {
     assert(_net != NULL && _net->getNodeType() != NTC_ANY); // Node type must be defined
+    this->workQueue = new Net485WorkQueue(this);
     this->net485dl = _net;
     this->sessionId = this->net485dl->newSessionId();
     this->ver.Version = _coordVer;
@@ -36,12 +37,15 @@ Net485Network::Net485Network(Net485DataLink *_net, Net485Subord *_sub, bool _coo
         this->nodes[i] = NULL;
     }
     this->netNodeListHighest = 0;
-    if(this->sub != NULL) {
+    if(this->sub != NULL && this->ver.isFFD) {
         this->netNodeList[0] = this->net485dl->getNodeType();
         this->netNodeListHighest++;
     }
 }
-
+Net485Network::~Net485Network()
+{
+    delete this->workQueue;
+}
 // Search from Primary Node Address location up to Note Address Request broker
 // for matching node in node list.
 // firstNodeTypeSearch: true - match first nodeType, false - match node type, sessionId, and MAC

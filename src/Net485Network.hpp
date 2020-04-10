@@ -11,6 +11,7 @@
 #include "Net485DataLink.hpp"
 #include "Net485API.hpp"
 #include "Net485Subord.hpp"
+#include "Net485WorkQueue.hpp"
 
 #define NODELIST_REPOLLTIME 110000 /* milli-sconds  ?correct? */
 #define RESPONSE_TIMEOUT 3000 /* milli-sconds */
@@ -170,6 +171,8 @@ private:
     Net485Packet pktToSend;
     Net485Subord *sub;
 
+    Net485WorkQueue *workQueue;
+
     // For RFD Subordinate's coordinator info
     uint64_t coordinatorMACaddr, coordinatorSessionId;
 
@@ -187,11 +190,46 @@ private:
 
     uint8_t nodeExists(Net485Node *_node, bool firstNodeTypeSearch = false);
     uint8_t addNode(Net485Node *_node, uint8_t _nodeId = 0);
+    
+    // Utillity function to copy node list to packet's data
+    // Expects packet header to be populated before calling this method.
+    //
+    inline void copyNodeListToPacket(Net485Packet *_pkt) {
+        if( _pkt->header()[HeaderStructureE::HeaderSubnet] == SUBNET_V1SPEC ) { // Is Version 1 - condensed list
+            int k = 0, v;
+            for(int i=0; i<=NODEADDR_V1HI; i++ ) _pkt->data()[i] = 0x00;
+            for(int i=0; i<this->netNodeListHighest; i++) {
+                bool dobreak = false;
+                v = this->netNodeList[i];
+                if(v == 0) continue; // don't add empty nodes
+                for(int j=0; j<k && dobreak == false; j++) dobreak |= (v == _pkt->data()[j]);
+                if(dobreak) continue; // add only unique node types
+                _pkt->data()[k] = v;
+                k++;
+            }
+            _pkt->header()[HeaderStructureE::PacketLength] = k;
+        } else { // Is Version 2
+            _pkt->header()[HeaderStructureE::PacketLength] = this->netNodeListHighest;
+            memcpy((void *)(_pkt->data()), this->netNodeList, _pkt->header()[HeaderStructureE::PacketLength] );
+        }
+    }
+
+
 public:
     Net485Network(Net485DataLink *_net, Net485Subord *_sub = NULL, bool _coordinatorCapable = true, uint16_t _coordVer = 0, uint16_t _coordRev = 0);
     ~Net485Network();
     
     void loop();
+    
+    // Send packet to appropriate device.  Packet is routed as per header values to appropriate network device.
+    // If further exchange is needed in processing, the next packet to send is over written in place from initial values
+    // and false value is returned.
+    //
+    // Return: true - packet exchange complete, false - new packet to send set in place
+    bool routePacket(Net485Packet *_pkt) {
+        // TODO
+        return true;
+    }
     
     inline Net485Packet *setR2R(Net485Packet *_pkt) {
 #define R2R_CODE 0x00
@@ -451,21 +489,20 @@ public:
         n.init(_pkt);
         return n.nodeType;
     }
-    // Prepare an Address confirmation packet for sending
+    // Prepare an Address confirmation packet for sending - Ver.2 spec only
     //
     // Returns pointer provided as argument
     inline Net485Packet *setAddressConfirm(Net485Packet *_pkt) {
         _pkt->header()[HeaderStructureE::HeaderDestAddr] = NODEADDR_BCAST;
         _pkt->header()[HeaderStructureE::HeaderSrcAddr] = NODEADDR_COORD;
-        _pkt->header()[HeaderStructureE::HeaderSubnet] = SUBNET_BCAST;
-        _pkt->header()[HeaderStructureE::HeaderSndMethd] = SUBNET_V2SPEC;
+        _pkt->header()[HeaderStructureE::HeaderSubnet] = SUBNET_V2SPEC;
+        _pkt->header()[HeaderStructureE::HeaderSndMethd] = SNDMTHD_NOROUTE;
         _pkt->header()[HeaderStructureE::HeaderSndParam] = 0x00;
         _pkt->header()[HeaderStructureE::HeaderSndParam1] = 0x00;
         _pkt->header()[HeaderStructureE::HeaderSrcNodeType] = NTC_NETCTRL;
         _pkt->header()[HeaderStructureE::PacketMsgType] = MSGTYP_ADDRCNFM;
         _pkt->header()[HeaderStructureE::PacketNumber] = PKTNUMBER(true,false);
-        _pkt->header()[HeaderStructureE::PacketLength] = this->netNodeListHighest;
-        memcpy((void *)(_pkt->data()), this->netNodeList, _pkt->header()[HeaderStructureE::PacketLength] );
+        this->copyNodeListToPacket(_pkt);
         return _pkt;
     }
     // Compare local node list with broadcast node list
@@ -482,8 +519,7 @@ public:
 #endif
             if(this->nodeId == 0) return false;
             if(this->netNodeListHighest != nodeCount) return false;
-            for(int i=NODEADDR_PRIMY; i<nodeCount && retVal; i++) {
-                // Don't compare the local subordinate node, they will be different (i=0)
+            for(int i=0; i<nodeCount && retVal; i++) {
                 retVal = retVal & ( this->netNodeList[i] == _pkt->data()[i] );
 #ifdef DEBUG
     Serial.print(" index:"); Serial.print(i);
@@ -497,6 +533,22 @@ public:
             return retVal;
         }
         return false;
+    }
+    // Prepare an Address confirmation packet for sending
+    //
+    // Returns pointer provided as argument
+    inline Net485Packet *setAddressConfirm(Net485Packet *_pkt, uint8_t _nodeId) {
+        _pkt->header()[HeaderStructureE::HeaderDestAddr] = _nodeId;
+        _pkt->header()[HeaderStructureE::HeaderSrcAddr] = NODEADDR_COORD;
+        _pkt->header()[HeaderStructureE::HeaderSubnet] = (this->nodes[_nodeId]->version==NETV1 ? SUBNET_V1SPEC:SUBNET_V2SPEC );
+        _pkt->header()[HeaderStructureE::HeaderSndMethd] = SNDMTHD_NOROUTE;
+        _pkt->header()[HeaderStructureE::HeaderSndParam] = 0x00;
+        _pkt->header()[HeaderStructureE::HeaderSndParam1] = 0x00;
+        _pkt->header()[HeaderStructureE::HeaderSrcNodeType] = NTC_NETCTRL;
+        _pkt->header()[HeaderStructureE::PacketMsgType] = MSGTYP_SNETLIST;
+        _pkt->header()[HeaderStructureE::PacketNumber] = PKTNUMBER(false,false);
+        this->copyNodeListToPacket(_pkt);
+        return _pkt;
     }
 };
 
