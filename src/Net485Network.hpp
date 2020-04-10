@@ -17,6 +17,14 @@
 #define RESPONSE_TIMEOUT 3000 /* milli-sconds */
 #define PROLONGED_SILENCE 120000 /* milli-sconds */
 #define MILLISECDIFF(future,past) ((future < past)? (0xffffffffUL-past)+future : future - past )
+#define MSG_RESEND_ATTEMPTS 3
+
+#define PARM1_CMND_HEAT 0x64
+#define PARM1_CMND_COOL 0x65
+#define PARM1_CMND_FAN 0x66
+#define PARM1_CMND_EMERG 0x67
+#define PARM1_CMND_DEFRST 0x68
+#define PARM1_CMND_AUXHEAT 0x69
 
 typedef enum Net485NodeStatE {
     OffLine,
@@ -214,7 +222,10 @@ private:
         }
     }
 
-
+    bool sendMsgGetResponseInPlace(Net485Packet *_pkt);
+    uint8_t getNodeIndexAmongTypes(uint8_t _nodeId);
+    uint8_t getNodeIdOfType(uint8_t _nodeType, uint8_t _nodeIndex = 0);
+    bool Net485Network::setPriorityNode(Net485Packet *_pkt);
 public:
     Net485Network(Net485DataLink *_net, Net485Subord *_sub = NULL, bool _coordinatorCapable = true, uint16_t _coordVer = 0, uint16_t _coordRev = 0);
     ~Net485Network();
@@ -226,14 +237,43 @@ public:
     // and false value is returned.
     //
     // Return: true - packet exchange complete, false - new packet to send set in place
-    bool routePacket(Net485Packet *_pkt) {
-        // TODO
-        return true;
+    inline bool routePacket(Net485Packet *_pkt) {
+        bool isExchangeComplete = true;
+        bool gotResponse;
+        
+        if(_pkt != NULL) {
+            uint8_t msgType = _pkt->header()[HeaderStructureE::PacketMsgType];
+            switch(msgType) {
+            case MSGTYP_R2R:
+                gotResponse = this->sendMsgGetResponseInPlace(_pkt);
+                if(gotResponse) {
+                    isExchangeComplete = (_pkt->header()[HeaderStructureE::PacketMsgType] == MSGTYP_R2R
+                        && _pkt->data()[0] == R2R_ACK_CODE);
+                    if(isExchangeComplete) {
+                        // TODO:  Validate to R2R ACK response against the node list
+                    }
+                }
+                break;
+            default:
+                gotResponse = this->sendMsgGetResponseInPlace(_pkt);
+            }
+        }
+        if(!gotResponse) {
+            //TODO: Take this node offline
+            
+            isExchangeComplete = true; // Regardless of stage in process, this work is done
+        }
+        return isExchangeComplete;
     }
     
-    inline Net485Packet *setR2R(Net485Packet *_pkt) {
-#define R2R_CODE 0x00
-        _pkt->header()[HeaderStructureE::HeaderSrcNodeType] = net485dl->getNodeType();
+    inline Net485Packet *setR2R(Net485Packet *_pkt, uint8_t _destNodeId) {
+        _pkt->header()[HeaderStructureE::HeaderDestAddr] = _destNodeId;
+        _pkt->header()[HeaderStructureE::HeaderSrcAddr] = NODEADDR_COORD;
+        _pkt->header()[HeaderStructureE::HeaderSubnet] = (this->nodes[_destNodeId]->version==NETV1 ? SUBNET_V1SPEC:SUBNET_V2SPEC );
+        _pkt->header()[HeaderStructureE::HeaderSndMethd] = SNDMTHD_NOROUTE;
+        _pkt->header()[HeaderStructureE::HeaderSndParam] = 0x00;
+        _pkt->header()[HeaderStructureE::HeaderSndParam1] = 0x00;
+        _pkt->header()[HeaderStructureE::HeaderSrcNodeType] = NTC_NETCTRL;
         _pkt->header()[HeaderStructureE::PacketMsgType] = MSGTYP_R2R;
         _pkt->header()[HeaderStructureE::PacketNumber] = PKTNUMBER(true,false);
         _pkt->header()[HeaderStructureE::PacketLength] = 17;
@@ -244,7 +284,6 @@ public:
         return _pkt;
     }
     inline Net485Packet *setACK(Net485Packet *_pkt, uint8_t _destNodeId = NODEADDR_COORD, uint8_t _subNet = SUBNET_V2SPEC ) {
-#define ACK_CODE 0x06
         _pkt->header()[HeaderStructureE::HeaderDestAddr] = _destNodeId;
         _pkt->header()[HeaderStructureE::HeaderSrcAddr] = this->nodeId;
         _pkt->header()[HeaderStructureE::HeaderSubnet] = _subNet;
@@ -255,7 +294,7 @@ public:
         _pkt->header()[HeaderStructureE::PacketMsgType] = MSGTYP_R2R;
         _pkt->header()[HeaderStructureE::PacketNumber] = PKTNUMBER(true,false);
         _pkt->header()[HeaderStructureE::PacketLength] = 17;
-        _pkt->data()[0] = ACK_CODE;
+        _pkt->data()[0] = R2R_ACK_CODE;
         memcpy((void *)&(_pkt->data()[1]), net485dl->getMacAddr().mac, Net485MacAddressE::SIZE);
         memcpy((void *)&(_pkt->data()[1+Net485MacAddressE::SIZE])
                , &sessionId, sizeof(uint64_t));

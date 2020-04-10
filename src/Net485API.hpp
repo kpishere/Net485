@@ -45,13 +45,13 @@
 // Node Type codes
 #define NTC_ANY         0x00 /*Wild card for any Node Type*/
 #define NTC_THERM       0x01 /*Thermostat*/
-#define NTC_FURNGAS     0x02 /*Gas Furnace*/
+#define NTC_FURNGAS     0x02 /*IFC Gas Furnace*/
 #define NTC_AHNDLR      0x03 /*Air Handler*/
 #define NTC_ACOND       0x04 /*Air Conditioner*/
 #define NTC_HPUMP       0x05 /*Heat Pump*/
-#define NTC_FURNELEC    0x06 /*Electric Furnace*/
-#define NTC_PKGGAS      0x07 /*Package System - Gas*/
-#define NTC_PKGELEC     0x08 /*Package System - Electric*/
+#define NTC_FURNELEC    0x06 /*IFC Electric Furnace*/
+#define NTC_PKGGAS      0x07 /*IFC Package System - Gas*/
+#define NTC_PKGELEC     0x08 /*IFC Package System - Electric*/
 #define NTC_XOVER       0x09 /*Crossover (aka OBBI)*/
 #define NTC_COMPSEC     0x0A /*Secondary Compressor*/
 #define NTC_AIREXCH     0x0B /*Air Exchanger*/
@@ -67,7 +67,7 @@
 #define NTC_ZCTRL       0x15 /*Zone Control*/
 #define NTC_ZUI         0x16 /*Zone User Interface*/
 #define NTC_BOILER      0x17 /*Boiler*/
-#define NTC_WHGAS       0x18  /*Water Heater – Gas*/
+#define NTC_WHGAS       0x18 /*Water Heater – Gas*/
 #define NTC_WHELEC      0x19 /*Water Heater – Electric*/
 #define NTC_WHCMTL      0x1A /*Water Heater - Commercial*/
 #define NTC_POOLH       0x1B /*Pool Heater*/
@@ -127,6 +127,11 @@
 #define MSGTYP_NSDSI    0x7D /*Network Shared Data Sector Image*/ //TODO
 #define MSGTYP_NENCREQ  0x7E /*Network Encapsulation Request*/ //TODO
 #define MSGRESP(msg) ((msg) | 0x80) /*Convert # to response code*/
+//
+// Properties specific to each message type
+//
+#define R2R_CODE 0x00
+#define R2R_ACK_CODE 0x06
 
 
 // Packet number

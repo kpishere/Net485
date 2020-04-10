@@ -15,6 +15,16 @@ uint8_t lastState = 0xff;
 const uint8_t msgTypeVerDiscFilterList[] = {MSGTYP_ANUCVER,MSGTYP_NDSCVRY, NULL};
 const uint8_t msgTypeAssignNodeFilterList[] = {MSGTYP_SADDR, NULL};
 
+#define ROUTEP_DEVICES 6
+#define ROUTEP_COMMANDS 6
+const uint8_t routingPriority[][ROUTEP_DEVICES] = {
+    {PARM1_CMND_HEAT,   NTC_ZCTRL,  NTC_HPUMP,  NTC_FURNGAS,    NTC_XOVER,  NTC_AHNDLR},
+    {PARM1_CMND_COOL,   NTC_ZCTRL,  NTC_HPUMP,  NTC_ACOND,      NTC_XOVER,  NTC_FURNGAS},
+    {PARM1_CMND_FAN,    NTC_ZCTRL,  NTC_AHNDLR, NTC_FURNGAS,    NTC_XOVER,  NTC_XOVER},
+    {PARM1_CMND_EMERG,  NTC_ZCTRL,  NTC_AHNDLR, NTC_FURNGAS,    NTC_XOVER,  NTC_XOVER},
+    {PARM1_CMND_DEFRST, NTC_ZCTRL,  NTC_AHNDLR, NTC_FURNGAS,    NTC_XOVER,  NTC_XOVER},
+    {PARM1_CMND_AUXHEAT,NTC_ZCTRL,  NTC_AHNDLR, NTC_FURNGAS,    NTC_XOVER,  NTC_XOVER}
+};
 
 Net485Network::Net485Network(Net485DataLink *_net, Net485Subord *_sub, bool _coordinatorCapable
                              , uint16_t _coordVer = 0, uint16_t _coordRev = 0) {
@@ -349,6 +359,86 @@ uint8_t Net485Network::reqRespNodeDiscover(uint8_t _nodeIdFilter) {
     }
     return nodeId;
 }
+// Perform routing of message to next device
+//
+// Returns: true if received response, false otherwise (like for timeout) or not routed
+bool Net485Network::sendMsgGetResponseInPlace(Net485Packet *_pkt) {
+    bool haveResponse = true;
+    int retriesRemain = MSG_RESEND_ATTEMPTS;
+    
+    uint8_t sndMthd = _pkt->header()[HeaderStructureE::HeaderSndMethd];
+    switch(sndMthd) {
+    case SNDMTHD_PRIORITY:
+        if(!this->setPriorityNode(_pkt)) return false; // This packet will not be routed
+        break;
+    case SNDMTHD_NTYPE:
+        _pkt->header()[HeaderStructureE::HeaderDestAddr] = this->getNodeIdOfType(_pkt->header()[HeaderStructureE::HeaderSndParam], 0);
+        if(_pkt->header()[HeaderStructureE::HeaderDestAddr] == NODEADDR_COORD) return false; // This packet will not be routed
+        break;
+    case SNDMTHD_BYSCKT: // This method supported by NETV2 only
+        _pkt->header()[HeaderStructureE::HeaderDestAddr] = _pkt->header()[HeaderStructureE::HeaderSndParam];
+        if(_pkt->header()[HeaderStructureE::HeaderDestAddr] == NODEADDR_COORD) return false; // This packet will not be routed
+        break;
+    default: /* SNDMTHD_NOROUTE */
+        break;
+    }
+    // update Send Parameter 2
+    if(this->state == Net485State::ANServer) {
+        _pkt->header()[HeaderStructureE::HeaderSndParam1]
+        = this->getNodeIndexAmongTypes(_pkt->header()[HeaderStructureE::HeaderDestAddr]);
+    } else { // Clients always clear this value
+        _pkt->header()[HeaderStructureE::HeaderSndParam1] = 0;
+    }
+    
+    // TODO : Actually do the sending here 
+    
+    return haveResponse;
+}
+
+uint8_t Net485Network::getNodeIndexAmongTypes(uint8_t _nodeId) {
+    uint8_t nodeIndex = 0;
+    uint8_t subjNodeType = this->nodes[_nodeId]->nodeType;
+    for(int i=0; i<_nodeId; i++) nodeIndex += ((this->netNodeList[i]) == subjNodeType ? 1: 0);
+    return nodeIndex;
+}
+
+// Find Nth node of a given type.
+//
+// Returns NodeId if found, NODEADDR_COORD value if NOT found
+uint8_t Net485Network::getNodeIdOfType(uint8_t _nodeType, uint8_t _nodeIndex) {
+    uint8_t nodeId = NODEADDR_COORD; // Indicates not found
+    int finds = 0;
+    for(int i=0; i<this->netNodeListHighest && nodeId == NODEADDR_COORD; i++) {
+        if(this->netNodeList[i] == _nodeType) {
+            if(finds == _nodeIndex) {
+                nodeId = i;
+            } else {
+                finds++;
+            }
+        }
+    }
+    return nodeId;
+}
+
+// Find the priority node for the given command.  NOTE: If returns false, destination node is invalid!
+//
+// Returns: true if found, false otherwise
+bool Net485Network::setPriorityNode(Net485Packet *_pkt) {
+    bool foundNode = false, foundDevice = false;
+    uint8_t cmdCode = _pkt->header()[HeaderStructureE::HeaderSndParam];
+    for(int i =0; i<ROUTEP_COMMANDS && !foundNode; i++) {
+        foundNode |= (routingPriority[i][0] == cmdCode);
+        if(foundNode) {
+            for(int j=1; j < ROUTEP_DEVICES && !foundDevice; j++ ) {
+                _pkt->header()[HeaderStructureE::HeaderDestAddr] = this->getNodeIdOfType(routingPriority[i][j], 0);
+                foundDevice |= ( _pkt->header()[HeaderStructureE::HeaderDestAddr] != NODEADDR_COORD);
+            }
+        }
+    }
+    return foundNode && foundDevice;
+}
+
+
 void Net485Network::loop() {
     unsigned long thisTime = millis();
 #ifdef DEBUG
