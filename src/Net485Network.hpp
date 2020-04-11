@@ -240,6 +240,7 @@ public:
     inline bool routePacket(Net485Packet *_pkt) {
         bool isExchangeComplete = true;
         bool gotResponse;
+        uint8_t sentNodeId = _pkt->header()[HeaderStructureE::HeaderDestAddr];
         
         if(_pkt != NULL) {
             uint8_t msgType = _pkt->header()[HeaderStructureE::PacketMsgType];
@@ -250,7 +251,7 @@ public:
                     isExchangeComplete = (_pkt->header()[HeaderStructureE::PacketMsgType] == MSGTYP_R2R
                         && _pkt->data()[0] == R2R_ACK_CODE);
                     if(isExchangeComplete) {
-                        // TODO:  Validate to R2R ACK response against the node list
+                        this->isR2RACKValid(_pkt, sentNodeId);
                     }
                 }
                 break;
@@ -299,6 +300,28 @@ public:
         memcpy((void *)&(_pkt->data()[1+Net485MacAddressE::SIZE])
                , &sessionId, sizeof(uint64_t));
         return _pkt;
+    }
+    // Validate R2R Ack
+    // _pkt: packet with node to add or compare to what is in node list
+    //
+    // Returns: zero if packet is not MSGRESP(MSGTYP_GNODEID), nodeId if verified packet OR next nodeId if
+    //   verification fails
+    inline bool isR2RACKValid(Net485Packet *_pkt, uint8_t _node) {
+        Net485Node tmpNode;
+        bool isValid = false;
+        if(_pkt->header()[HeaderStructureE::PacketMsgType] == MSGTYP_R2R
+            && _pkt->data()[0] == R2R_ACK_CODE) {
+            tmpNode.init(_pkt);
+            isValid = this->nodes[_node]->isSameAs(&tmpNode);
+#ifdef DEBUG
+    Serial.print(" isR2RACKValid: isValid:"); Serial.println(isValid);
+    this->nodes[_node]->display();
+    Serial.println("  ");
+    tmpNode.display();
+    Serial.println("  ");
+#endif
+        }
+        return isValid;
     }
     inline Net485Packet *setCAVA(Net485Packet *_pkt) {
         _pkt->header()[HeaderStructureE::HeaderDestAddr] = NODEADDR_NARB;

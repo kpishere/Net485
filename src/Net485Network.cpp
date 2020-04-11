@@ -363,7 +363,8 @@ uint8_t Net485Network::reqRespNodeDiscover(uint8_t _nodeIdFilter) {
 //
 // Returns: true if received response, false otherwise (like for timeout) or not routed
 bool Net485Network::sendMsgGetResponseInPlace(Net485Packet *_pkt) {
-    bool haveResponse = true;
+    Net485Packet *recvPtr, sendPkt;
+    bool haveResponse = false;
     int retriesRemain = MSG_RESEND_ATTEMPTS;
     
     uint8_t sndMthd = _pkt->header()[HeaderStructureE::HeaderSndMethd];
@@ -390,7 +391,23 @@ bool Net485Network::sendMsgGetResponseInPlace(Net485Packet *_pkt) {
         _pkt->header()[HeaderStructureE::HeaderSndParam1] = 0;
     }
     
-    // TODO : Actually do the sending here 
+    // Send packet, get response, retry up to N times
+    do {
+        retriesRemain--;
+        this->net485dl->send(_pkt);
+        this->lasttimeOfMessage = millis();
+        while (MILLISECDIFF(millis(),this->lasttimeOfMessage) < RESPONSE_TIMEOUT && !haveResponse) {
+            haveResponse = net485dl->hasPacket(&(this->lasttimeOfMessage));
+            if(haveResponse) {
+                recvPtr = net485dl->getNextPacket();
+    #ifdef DEBUG
+                Serial.print(" received msgType:");
+                Serial.println(recvPtr->header()[HeaderStructureE::PacketMsgType]);
+    #endif
+                memcpy(_pkt,recvPtr, sizeof(Net485Packet));
+            }
+        }
+    } while (retriesRemain > 0 && !haveResponse);
     
     return haveResponse;
 }
