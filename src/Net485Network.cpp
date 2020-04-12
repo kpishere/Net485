@@ -92,6 +92,29 @@ uint8_t Net485Network::addNode(Net485Node *_node, uint8_t _nodeId) {
     }
     return nodeIndex;
 }
+uint8_t Net485Network::delNode(uint8_t _nodeId) {
+#ifdef DEBUG
+    Serial.print(" delNode() _nodeId: "); Serial.print(_nodeId, HEX);
+    Serial.print(" netNodeListHighest: "); Serial.print(this->netNodeListHighest, HEX);
+    Serial.print(" nodeType: "); Serial.print(this->netNodeList[_nodeId], HEX);
+#endif
+    if(this->netNodeList[_nodeId] > 0) {
+        if(this->nodes[_nodeId] != NULL) {
+            free(this->nodes[_nodeId]);
+            this->nodes[_nodeId] = NULL;
+        }
+        this->netNodeList[_nodeId] = 0;
+        // Reduce # if this is highest node in list
+        if(_nodeId == this->netNodeListHighest - 1) {
+            this->netNodeListHighest--;
+        }
+    }
+#ifdef DEBUG
+    Serial.print(" nodeType: "); Serial.print(this->netNodeList[_nodeId], HEX);
+    Serial.print(" netNodeListHighest: "); Serial.print(this->netNodeListHighest, HEX);
+    Serial.println("");
+#endif
+}
 void Net485Network::loopClient(unsigned long _thisTime) {
     Net485Packet *recvPtr, sendPkt;
     bool havePkt;
@@ -213,6 +236,8 @@ void Net485Network::loopServer(unsigned long _thisTime) {
 
     if(lastNodeListPoll == 0 ||  MILLISECDIFF(_thisTime,this->lastNodeListPoll) > NODELIST_REPOLLTIME)
     {
+        // Address Confirmation broadcast - NetV1
+        this->issueR2RNetV1();
         //
         // Poll for new nodes
         //
@@ -255,13 +280,9 @@ void Net485Network::loopServer(unsigned long _thisTime) {
         if(nodeId > 0) { // Node ID validated with device, Assign node ID location
             newDeviceSet = Net485Network::reqRespSetAddress(nodeId);
         }
-        //
-        // Address Confirmation broadcast
-        // ? Not sure if this should be broadcast or routed
-        this->net485dl->send(this->setAddressConfirm(&sendPkt));
-        //
-        if(newDeviceSet) { // Inform rest of network of new device
-            this->issueNodeListToNetwork();
+        // Inform rest of network of new device
+        if(newDeviceSet) {
+            this->issueNodeListToNetwork(true);
         }
         //
         this->lastNodeListPoll = _thisTime;
@@ -272,7 +293,7 @@ void Net485Network::loopServer(unsigned long _thisTime) {
         if(net485dl->hasPacket()) {
             pkt = net485dl->getNextPacket();
         }
-
+        this->removeOfflineDevices();
         this->workQueue->doWork();
     }
 }
@@ -316,7 +337,7 @@ bool Net485Network::reqRespSetAddress(uint8_t _node) {
         Serial.println(" *node set offline* ");
 #endif
                 havePkt = false;
-                this->nodes[_node]->nodeStatus = Net485NodeStatE::OffLine;
+                this->delNode(_node);
             }
         }
     }

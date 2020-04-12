@@ -198,11 +198,16 @@ private:
 
     uint8_t nodeExists(Net485Node *_node, bool firstNodeTypeSearch = false);
     uint8_t addNode(Net485Node *_node, uint8_t _nodeId = 0);
+    uint8_t delNode(uint8_t _nodeId);
+
     
     // Utillity function to copy node list to packet's data
     // Expects packet header to be populated before calling this method.
     //
     inline void copyNodeListToPacket(Net485Packet *_pkt) {
+        // Clear values in packet
+        for(int i=0; i<MTU_DATA; i++) _pkt->data()[i] = 0x00;
+        // Copy values to packet
         if( _pkt->header()[HeaderStructureE::HeaderSubnet] == SUBNET_V1SPEC ) {
             // Is Version 1 - condensed list
             int k = 0, v;
@@ -289,9 +294,11 @@ public:
         Serial.print(gotResponse);
     #endif
         if(!gotResponse) {
-            // Set node status offline to stop sending it packets
-            this->nodes[ _pkt->header()[HeaderStructureE::HeaderDestAddr] ]->nodeStatus = Net485NodeStat::OffLine;
             isExchangeComplete = true; // Regardless of stage in process, this work is done
+            // Only remove NET nodes from list
+            if(_pkt->header()[HeaderStructureE::HeaderDestAddr] > 0) {
+                this->nodes[_pkt->header()[HeaderStructureE::HeaderDestAddr]]->nodeStatus = Net485NodeStatE::OffLine;
+            }
         }
     #ifdef DEBUG
         Serial.print(" isExchangeComplete:");
@@ -302,7 +309,7 @@ public:
     
     // Push node list to each node on network.
     //
-    inline void issueNodeListToNetwork() {
+    inline void issueNodeListToNetwork(bool doWorkImmediately = false) {
         Net485Packet sendPkt;
         int workItems = 0;
         for(int i=0; i<this->netNodeListHighest; i++) {
@@ -311,9 +318,23 @@ public:
             this->workQueue->pushWork(sendPkt);
             workItems++;
         }
-        this->workQueue->doWork(workItems);
+        if(doWorkImmediately) this->workQueue->doWork(workItems);
     }
-    
+    inline void issueR2RNetV1() {
+        // TODO: Issue R2R to only V1 devices if any in node list
+        // this->net485dl->send(this->setAddressConfirm(&sendPkt));
+    }
+    inline void removeOfflineDevices() {
+        bool removedADevice = false;
+        for(int i=1; i<this->netNodeListHighest; i++) {
+            if(this->netNodeList[i] == 0x00) continue;
+            if(this->nodes[i]->nodeStatus == Net485NodeStatE::OffLine) {
+                this->delNode(i);
+                removedADevice = removedADevice || true;
+            }
+        }
+        if(removedADevice) this->issueNodeListToNetwork(false);
+    }
     inline Net485Packet *setR2R(Net485Packet *_pkt, uint8_t _destNodeId) {
         _pkt->header()[HeaderStructureE::HeaderDestAddr] = _destNodeId;
         _pkt->header()[HeaderStructureE::HeaderSrcAddr] = NODEADDR_COORD;
