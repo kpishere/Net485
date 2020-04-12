@@ -241,9 +241,16 @@ public:
         bool isExchangeComplete = true;
         bool gotResponse;
         uint8_t sentNodeId = _pkt->header()[HeaderStructureE::HeaderDestAddr];
-        
+    #ifdef DEBUG
+        Serial.print(" routePacket() sentNodeId:");
+        Serial.print(sentNodeId, HEX);
+    #endif
         if(_pkt != NULL) {
             uint8_t msgType = _pkt->header()[HeaderStructureE::PacketMsgType];
+    #ifdef DEBUG
+        Serial.print(" msgType:");
+        Serial.println(msgType, HEX);
+    #endif
             switch(msgType) {
             case MSGTYP_R2R:
                 gotResponse = this->sendMsgGetResponseInPlace(_pkt);
@@ -255,16 +262,43 @@ public:
                     }
                 }
                 break;
-            default:
+            //case MSGTYP_SNETLIST:
+            default:    // Generic expect MSGRESP() and only check that is returned
                 gotResponse = this->sendMsgGetResponseInPlace(_pkt);
+                if(gotResponse) {
+                    isExchangeComplete = (MSGRESP(msgType) == _pkt->header()[HeaderStructureE::PacketMsgType]);
+                }
+                break;
             }
         }
+    #ifdef DEBUG
+        Serial.print(" gotResponse:");
+        Serial.print(gotResponse);
+    #endif
         if(!gotResponse) {
-            //TODO: Take this node offline
-            
+            // Set node status offline to stop sending it packets
+            this->nodes[ _pkt->header()[HeaderStructureE::HeaderDestAddr] ]->nodeStatus = Net485NodeStat::OffLine;
             isExchangeComplete = true; // Regardless of stage in process, this work is done
         }
+    #ifdef DEBUG
+        Serial.print(" isExchangeComplete:");
+        Serial.println(isExchangeComplete);
+    #endif
         return isExchangeComplete;
+    }
+    
+    // Push node list to each node on network.
+    //
+    inline void issueNodeListToNetwork() {
+        Net485Packet sendPkt;
+        int workItems = 0;
+        for(int i=0; i<this->netNodeListHighest; i++) {
+            if(this->netNodeList[i] == 0x00) continue;
+            this->setNetList(&sendPkt, i);
+            this->workQueue->pushWork(sendPkt);
+            workItems++;
+        }
+        this->workQueue->doWork(workItems);
     }
     
     inline Net485Packet *setR2R(Net485Packet *_pkt, uint8_t _destNodeId) {
@@ -482,7 +516,7 @@ public:
         return _pkt;
     }
     inline Net485Packet *getRespNodeAddress(Net485Packet *_pkt) {
-        if(_pkt->header()[HeaderStructureE::PacketMsgType] == MSGRESP(MSGTYP_NDSCVRY) ) {
+        if(_pkt->header()[HeaderStructureE::PacketMsgType] == MSGRESP(MSGTYP_SADDR) ) {
             return _pkt;
         } else return NULL;
     }
@@ -599,7 +633,7 @@ public:
     // Prepare an Address confirmation packet for sending
     //
     // Returns pointer provided as argument
-    inline Net485Packet *setAddressConfirm(Net485Packet *_pkt, uint8_t _nodeId) {
+    inline Net485Packet *setNetList(Net485Packet *_pkt, uint8_t _nodeId) {
         _pkt->header()[HeaderStructureE::HeaderDestAddr] = _nodeId;
         _pkt->header()[HeaderStructureE::HeaderSrcAddr] = NODEADDR_COORD;
         _pkt->header()[HeaderStructureE::HeaderSubnet] = (this->nodes[_nodeId]->version==NETV1 ? SUBNET_V1SPEC:SUBNET_V2SPEC );

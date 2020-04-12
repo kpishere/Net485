@@ -251,6 +251,8 @@ void Net485Network::loopServer(unsigned long _thisTime) {
         }
         if(nodeId > 0) { // Node ID validated with device, Assign node ID location
             nodeId = Net485Network::reqRespSetAddress(nodeId, NODEADDR_BCAST);
+            
+            this->issueNodeListToNetwork();
         }
         //
         // Address Confirmation broadcast
@@ -258,15 +260,16 @@ void Net485Network::loopServer(unsigned long _thisTime) {
         this->net485dl->send(this->setAddressConfirm(&sendPkt));
         //
         this->lastNodeListPoll = _thisTime;
-    } else {
-        // If out-of process message is ever received by server, it should attempt to yield and become client
+    } else { // Dataflow cycle
+        this->lasttimeOfMessage = _thisTime;
+
+        // If out-of process message is ever received by server, ignore it
         if(net485dl->hasPacket()) {
             pkt = net485dl->getNextPacket();
-            this->becomeClient(pkt, _thisTime);
-            this->lasttimeOfMessage = _thisTime;
         }
+
+        this->workQueue->doWork();
     }
-    // TODO: The server related stuff should go here
 }
 // Set the device's nodeId.  If no valid response, put node offline
 //
@@ -304,6 +307,9 @@ bool Net485Network::reqRespSetAddress(uint8_t _node, uint8_t _subnet) {
             this->nodes[_node]->lastExchange = this->lasttimeOfMessage;
             
             if(this->getRespNodeAddress(pkt) == NULL) {
+#ifdef DEBUG
+        Serial.println(" *node set offline* ");
+#endif
                 havePkt = false;
                 this->nodes[_node]->nodeStatus = Net485NodeStatE::OffLine;
             }
@@ -370,15 +376,30 @@ bool Net485Network::sendMsgGetResponseInPlace(Net485Packet *_pkt) {
     uint8_t sndMthd = _pkt->header()[HeaderStructureE::HeaderSndMethd];
     switch(sndMthd) {
     case SNDMTHD_PRIORITY:
-        if(!this->setPriorityNode(_pkt)) return false; // This packet will not be routed
+        if(!this->setPriorityNode(_pkt)) {
+#ifdef DEBUG
+            Serial.println("SNDMTHD_PRIORITY not routed");
+#endif
+            return false; // This packet will not be routed
+        }
         break;
     case SNDMTHD_NTYPE:
         _pkt->header()[HeaderStructureE::HeaderDestAddr] = this->getNodeIdOfType(_pkt->header()[HeaderStructureE::HeaderSndParam], 0);
-        if(_pkt->header()[HeaderStructureE::HeaderDestAddr] == NODEADDR_COORD) return false; // This packet will not be routed
+        if(_pkt->header()[HeaderStructureE::HeaderDestAddr] == NODEADDR_COORD) {
+#ifdef DEBUG
+            Serial.println("SNDMTHD_NTYPE not routed");
+#endif
+            return false; // This packet will not be routed
+        }
         break;
     case SNDMTHD_BYSCKT: // This method supported by NETV2 only
         _pkt->header()[HeaderStructureE::HeaderDestAddr] = _pkt->header()[HeaderStructureE::HeaderSndParam];
-        if(_pkt->header()[HeaderStructureE::HeaderDestAddr] == NODEADDR_COORD) return false; // This packet will not be routed
+        if(_pkt->header()[HeaderStructureE::HeaderDestAddr] == NODEADDR_COORD) {
+#ifdef DEBUG
+            Serial.println("SNDMTHD_BYSCKT not routed");
+#endif
+            return false; // This packet will not be routed
+        }
         break;
     default: /* SNDMTHD_NOROUTE */
         break;
@@ -391,24 +412,46 @@ bool Net485Network::sendMsgGetResponseInPlace(Net485Packet *_pkt) {
         _pkt->header()[HeaderStructureE::HeaderSndParam1] = 0;
     }
     
-    // Send packet, get response, retry up to N times
-    do {
-        retriesRemain--;
-        this->net485dl->send(_pkt);
-        this->lasttimeOfMessage = millis();
-        while (MILLISECDIFF(millis(),this->lasttimeOfMessage) < RESPONSE_TIMEOUT && !haveResponse) {
-            haveResponse = net485dl->hasPacket(&(this->lasttimeOfMessage));
-            if(haveResponse) {
-                recvPtr = net485dl->getNextPacket();
-    #ifdef DEBUG
-                Serial.print(" received msgType:");
-                Serial.println(recvPtr->header()[HeaderStructureE::PacketMsgType]);
-    #endif
-                memcpy(_pkt,recvPtr, sizeof(Net485Packet));
+    // Nodes in status offline do not get packets routed
+    if( _pkt->header()[HeaderStructureE::HeaderDestAddr] == NODEADDR_BCAST ) {
+        // Routed messages are NEVER broadcast, this message is destined for the virtual node
+        if(this->sub != NULL) {
+            this->sub->send(_pkt);
+            this->lasttimeOfMessage = millis();
+            while (MILLISECDIFF(millis(),this->lasttimeOfMessage) < RESPONSE_TIMEOUT && !haveResponse) {
+                haveResponse = this->sub->hasPacket(&(this->lasttimeOfMessage));
+                if(haveResponse) {
+                    recvPtr = this->sub->getNextPacket();
+            #ifdef DEBUG
+                    Serial.print(" received msgType:");
+                    Serial.println(recvPtr->header()[HeaderStructureE::PacketMsgType]);
+            #endif
+                    memcpy(_pkt,recvPtr, sizeof(Net485Packet));
+                }
             }
         }
-    } while (retriesRemain > 0 && !haveResponse);
-    
+    } else {
+        // Network routed messages
+        if(this->nodes[_pkt->header()[HeaderStructureE::HeaderDestAddr]]->nodeStatus != Net485NodeStat::OffLine) {
+            // Send packet, get response, retry up to N times
+            do {
+                retriesRemain--;
+                this->net485dl->send(_pkt);
+                this->lasttimeOfMessage = millis();
+                while (MILLISECDIFF(millis(),this->lasttimeOfMessage) < RESPONSE_TIMEOUT && !haveResponse) {
+                    haveResponse = net485dl->hasPacket(&(this->lasttimeOfMessage));
+                    if(haveResponse) {
+                        recvPtr = net485dl->getNextPacket();
+            #ifdef DEBUG
+                        Serial.print(" received msgType:");
+                        Serial.println(recvPtr->header()[HeaderStructureE::PacketMsgType]);
+            #endif
+                        memcpy(_pkt,recvPtr, sizeof(Net485Packet));
+                    }
+                }
+            } while (retriesRemain > 0 && !haveResponse);
+        }
+    }
     return haveResponse;
 }
 

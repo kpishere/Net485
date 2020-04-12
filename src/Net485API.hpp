@@ -175,6 +175,16 @@ typedef struct Net485PacketS {
     uint8_t* checksum() {
         return &buffer[MTU_HEADER + dataSize];
     }
+    void display() {
+#ifdef DEBUG
+        Serial.print("{Pkt header: ");
+        for(int i=0; i<MTU_HEADER;i++) {
+            Serial.print(header()[i],HEX);
+            Serial.print(" ");
+        }
+        Serial.println("}");
+#endif
+    }
 } Net485Packet;
 
 /////

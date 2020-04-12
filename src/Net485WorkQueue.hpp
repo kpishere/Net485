@@ -2,6 +2,8 @@
 #ifndef Net485WorkQueue_hpp
 #define Net485WorkQueue_hpp
 
+#define DEBUG
+
 #include "Net485DataLink.hpp"
 #include "Net485API.hpp"
 
