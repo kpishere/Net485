@@ -16,7 +16,10 @@ Layer 2:
 
 Layers 3-5:
 
-- The bulk of the work is here.  Version announcemnt, network coordination of who is master (coordinator), and automatic node assignment are working.  Still not quite usefull but almost. A work in progress ... 
+- The bulk of the work is here.  Version announcemnt, network coordination of who is master (coordinator), and automatic node assignment are working.  
+- Data packets infrastructure in place along with 4 types of packet routing. Next items are Token Offer Broadcast and correct handling of devices on coordinator side in case of device timeouts.
+
+Still not quite usefull but almost. A work in progress ... 
 
 # Net485Listen
 
