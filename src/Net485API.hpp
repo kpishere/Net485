@@ -122,7 +122,7 @@
 #define MSGTYP_TOKEN    0x77 /*Token Offer*/ //TODO
 #define MSGTYP_ANUCVER  0x78 /*Version Announcement */
 #define MSGTYP_NDSCVRY  0x79 /*Node Discovery*/
-#define MSGTYP_SADDR    0x7A /*Set Address*/ //TODO
+#define MSGTYP_SADDR    0x7A /*Set Address*/ 
 #define MSGTYP_GNODEID  0x7B /*Get Node ID*/
 #define MSGTYP_NSDSI    0x7D /*Network Shared Data Sector Image*/ //TODO
 #define MSGTYP_NENCREQ  0x7E /*Network Encapsulation Request*/ //TODO

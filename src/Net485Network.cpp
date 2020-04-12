@@ -99,23 +99,26 @@ void Net485Network::loopClient(unsigned long _thisTime) {
     if (net485dl->hasPacket())
     {
         recvPtr = net485dl->getNextPacket();
+#ifdef DEBUG
+    Serial.print("myNodeId: "); Serial.print(this->nodeId, HEX);
+    Serial.print(" targetNodeId: "); Serial.print(recvPtr->header()[HeaderStructureE::HeaderDestAddr], HEX);
+    Serial.print(" mySubnet: "); Serial.print(this->subNet, HEX);
+    Serial.print(" targetSubnet: "); Serial.print(recvPtr->header()[HeaderStructureE::HeaderSubnet], HEX);
+    Serial.print(" msgType: "); Serial.print(recvPtr->header()[HeaderStructureE::PacketMsgType], HEX);
+    Serial.println("");
+#endif
         if(this->nodeId > 0) { // Enrolled in network behaviour
             if( recvPtr->header()[HeaderStructureE::HeaderDestAddr] == this->nodeId
                 && recvPtr->header()[HeaderStructureE::HeaderSubnet] == this->subNet )
             { // Addressed to this node messages
                 switch(recvPtr->header()[HeaderStructureE::PacketMsgType]) {
+                    case MSGTYP_SNETLIST:
+                        this->voidCopyPacketToNodeList(recvPtr);
+                        this->net485dl->send(this->setNetListResp(&pktToSend));
+                        break;
                     default:
-                        this->net485dl->send(this->setACK(&pktToSend));
-#ifdef DEBUG
-                        {
-                            char messageBuffer[160]; // Temp for testing only
-                            sprintf(messageBuffer,"{header: 0x");
-                            for(int i=0; i<MTU_HEADER ; i++) sprintf( &(messageBuffer[11+i*2]), "%0X ",recvPtr->header()[i]);
-                            sprintf(&(messageBuffer[11+2*MTU_HEADER]),", data: %0X .. (%d), chksum: 0x%0X%0X }", recvPtr->data()[0], recvPtr->dataSize
-                                    ,recvPtr->checksum()[0], recvPtr->checksum()[1]);
-                            Serial.println(messageBuffer);
-                        }
-#endif
+                        // Ignore if it isn't mapped for action
+                        break;
                 }
                 this->lasttimeOfMessage = millis();
             }
@@ -127,15 +130,15 @@ void Net485Network::loopClient(unsigned long _thisTime) {
                     case MSGTYP_SADDR: // Coordinator sets device address and subnet
                         if(this->getNodeAddress(recvPtr)) { // If message is for this device (same sessionId and mac)
                             this->net485dl->send(this->setRespNodeAddress(&sendPkt));
+                            this->lasttimeOfMessage = millis();
                         }
                         break;
-                    case MSGTYP_ADDRCNFM: // Verify position in node list, refresh timeout
+                    case MSGTYP_ADDRCNFM: // Verify position in node list
                         if(!this->isNodeListValid(recvPtr)) {
                             this->state = Net485State::ANClient;
                             this->nodeId = 0;
                             this->subNet = 0;
                         }
-                        this->lasttimeOfMessage = millis();
                         break;
                     default:
                     // These are ignored
@@ -184,7 +187,7 @@ void Net485Network::loopClient(unsigned long _thisTime) {
                                 recvPtr = net485dl->getNextPacket();
 #ifdef DEBUG
                                 Serial.print(" received msgType:");
-                                Serial.println(recvPtr->header()[HeaderStructureE::PacketMsgType]);
+                                Serial.println(recvPtr->header()[HeaderStructureE::PacketMsgType], HEX);
 #endif
                                 if(this->getNodeAddress(recvPtr)) {
                                     this->net485dl->send(this->setRespNodeAddress(&sendPkt));
@@ -206,7 +209,7 @@ void Net485Network::loopClient(unsigned long _thisTime) {
 void Net485Network::loopServer(unsigned long _thisTime) {
     Net485Packet *pkt, sendPkt;
     Net485DataVersion netVer;
-    bool found = false;
+    bool found = false, newDeviceSet = false;
 
     if(lastNodeListPoll == 0 ||  MILLISECDIFF(_thisTime,this->lastNodeListPoll) > NODELIST_REPOLLTIME)
     {
@@ -250,14 +253,16 @@ void Net485Network::loopServer(unsigned long _thisTime) {
             }
         }
         if(nodeId > 0) { // Node ID validated with device, Assign node ID location
-            nodeId = Net485Network::reqRespSetAddress(nodeId, NODEADDR_BCAST);
-            
-            this->issueNodeListToNetwork();
+            newDeviceSet = Net485Network::reqRespSetAddress(nodeId);
         }
         //
         // Address Confirmation broadcast
-        //
+        // ? Not sure if this should be broadcast or routed
         this->net485dl->send(this->setAddressConfirm(&sendPkt));
+        //
+        if(newDeviceSet) { // Inform rest of network of new device
+            this->issueNodeListToNetwork();
+        }
         //
         this->lastNodeListPoll = _thisTime;
     } else { // Dataflow cycle
@@ -274,16 +279,16 @@ void Net485Network::loopServer(unsigned long _thisTime) {
 // Set the device's nodeId.  If no valid response, put node offline
 //
 // Returns: true if value set, false otherwise
-bool Net485Network::reqRespSetAddress(uint8_t _node, uint8_t _subnet) {
+bool Net485Network::reqRespSetAddress(uint8_t _node) {
     Net485Packet *pkt, sendPkt;
     bool havePkt = false;
     uint8_t setNode = _node;
-    uint8_t setSubnet = _subnet;
+    uint8_t setSubnet = (this->nodes[_node]->version==NETV1 ? SUBNET_V1SPEC:SUBNET_V2SPEC );
     
     // Unassign this device if not verified by this point
 #ifdef DEBUG
         Serial.print("nodeId: "); Serial.print(_node);
-        Serial.print(" subnet:"); Serial.print(_subnet);
+        Serial.print(" subnet:"); Serial.print(setSubnet);
         Serial.print(" status:"); Serial.print(this->nodes[_node]->nodeStatus);
         Serial.print(" verifiedStatus:"); Serial.print(Net485NodeStatE::Verified);
         Serial.println("");
@@ -422,10 +427,6 @@ bool Net485Network::sendMsgGetResponseInPlace(Net485Packet *_pkt) {
                 haveResponse = this->sub->hasPacket(&(this->lasttimeOfMessage));
                 if(haveResponse) {
                     recvPtr = this->sub->getNextPacket();
-            #ifdef DEBUG
-                    Serial.print(" received msgType:");
-                    Serial.println(recvPtr->header()[HeaderStructureE::PacketMsgType]);
-            #endif
                     memcpy(_pkt,recvPtr, sizeof(Net485Packet));
                 }
             }
@@ -442,10 +443,6 @@ bool Net485Network::sendMsgGetResponseInPlace(Net485Packet *_pkt) {
                     haveResponse = net485dl->hasPacket(&(this->lasttimeOfMessage));
                     if(haveResponse) {
                         recvPtr = net485dl->getNextPacket();
-            #ifdef DEBUG
-                        Serial.print(" received msgType:");
-                        Serial.println(recvPtr->header()[HeaderStructureE::PacketMsgType]);
-            #endif
                         memcpy(_pkt,recvPtr, sizeof(Net485Packet));
                     }
                 }
@@ -513,7 +510,11 @@ void Net485Network::loop() {
 #endif
     // Network silence time - device warm starts if this silence is exceeded
     if( MILLISECDIFF(thisTime,lasttimeOfMessage) > PROLONGED_SILENCE ) {
-        this->warmStart(thisTime);
+        if(this->state != Net485State::ANClient) this->warmStart(thisTime);
+        else { // Take device offline due to inactivity from coordinator
+            this->nodeId = 0;
+            this->subNet = 0;
+        }
     }
     switch(this->state) {
         case Net485State::ANClient:

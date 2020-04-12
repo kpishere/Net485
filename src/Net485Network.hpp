@@ -194,7 +194,7 @@ private:
 
     uint8_t reqRespNodeId(uint8_t _node, uint8_t _subnet, bool _validateOnly = false);
     uint8_t reqRespNodeDiscover(uint8_t _nodeIdFilter = 0x00);
-    bool reqRespSetAddress(uint8_t _node, uint8_t _subnet);
+    bool reqRespSetAddress(uint8_t _node);
 
     uint8_t nodeExists(Net485Node *_node, bool firstNodeTypeSearch = false);
     uint8_t addNode(Net485Node *_node, uint8_t _nodeId = 0);
@@ -203,7 +203,8 @@ private:
     // Expects packet header to be populated before calling this method.
     //
     inline void copyNodeListToPacket(Net485Packet *_pkt) {
-        if( _pkt->header()[HeaderStructureE::HeaderSubnet] == SUBNET_V1SPEC ) { // Is Version 1 - condensed list
+        if( _pkt->header()[HeaderStructureE::HeaderSubnet] == SUBNET_V1SPEC ) {
+            // Is Version 1 - condensed list
             int k = 0, v;
             for(int i=0; i<=NODEADDR_V1HI; i++ ) _pkt->data()[i] = 0x00;
             for(int i=0; i<this->netNodeListHighest; i++) {
@@ -219,6 +220,18 @@ private:
         } else { // Is Version 2
             _pkt->header()[HeaderStructureE::PacketLength] = this->netNodeListHighest;
             memcpy((void *)(_pkt->data()), this->netNodeList, _pkt->header()[HeaderStructureE::PacketLength] );
+        }
+    }
+    // Utillity function to copy node list from packet to this object
+    //
+    inline voidCopyPacketToNodeList(Net485Packet *_pkt) {
+        if( _pkt->header()[HeaderStructureE::HeaderSubnet] == SUBNET_V1SPEC ) {
+            // Not expected to be implemented.
+        } else {
+            for(int i=0; i<MTU_DATA; i++) this->netNodeList[i] = 0x00;
+
+            this->netNodeListHighest = _pkt->header()[HeaderStructureE::PacketLength];
+            memcpy(this->netNodeList, (void *)(_pkt->data()),this->netNodeListHighest);
         }
     }
 
@@ -642,6 +655,22 @@ public:
         _pkt->header()[HeaderStructureE::HeaderSndParam1] = 0x00;
         _pkt->header()[HeaderStructureE::HeaderSrcNodeType] = NTC_NETCTRL;
         _pkt->header()[HeaderStructureE::PacketMsgType] = MSGTYP_SNETLIST;
+        _pkt->header()[HeaderStructureE::PacketNumber] = PKTNUMBER(false,false);
+        this->copyNodeListToPacket(_pkt);
+        return _pkt;
+    }
+    // Respond to node list set command
+    //
+    // Returns pointer provided as argument
+    inline Net485Packet *setNetListResp(Net485Packet *_pkt) {
+        _pkt->header()[HeaderStructureE::HeaderDestAddr] = NODEADDR_COORD;
+        _pkt->header()[HeaderStructureE::HeaderSrcAddr] = this->nodeId;
+        _pkt->header()[HeaderStructureE::HeaderSubnet] = (this->nodes[this->nodeId]->version==NETV1 ? SUBNET_V1SPEC:SUBNET_V2SPEC );
+        _pkt->header()[HeaderStructureE::HeaderSndMethd] = SNDMTHD_NOROUTE;
+        _pkt->header()[HeaderStructureE::HeaderSndParam] = 0x00;
+        _pkt->header()[HeaderStructureE::HeaderSndParam1] = 0x00;
+        _pkt->header()[HeaderStructureE::HeaderSrcNodeType] = this->net485dl->getNodeType();
+        _pkt->header()[HeaderStructureE::PacketMsgType] = MSGRESP(MSGTYP_SNETLIST);
         _pkt->header()[HeaderStructureE::PacketNumber] = PKTNUMBER(false,false);
         this->copyNodeListToPacket(_pkt);
         return _pkt;
