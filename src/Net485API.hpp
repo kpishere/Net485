@@ -5,6 +5,7 @@
 // Node addresses
 #define NODEADDR_BCAST 0x00
 #define NODEADDR_PRIMY 0x01
+#define NODEADDR_VRTSUB 0xF1
 #define NODEADDR_NARB 0xFE
 #define NODEADDR_COORD 0xFF
 

@@ -192,7 +192,7 @@ private:
     void loopServer(unsigned long _thisTime);
     bool becomeClient(Net485Packet *pkt, unsigned long _thisTime);
 
-    uint8_t reqRespNodeId(uint8_t _node, uint8_t _subnet, bool _validateOnly = false);
+    uint8_t reqRespNodeId(uint8_t _node, uint8_t _subnet);
     uint8_t reqRespNodeDiscover(uint8_t _nodeIdFilter = 0x00);
     bool reqRespSetAddress(uint8_t _node);
 
@@ -243,7 +243,8 @@ private:
     bool sendMsgGetResponseInPlace(Net485Packet *_pkt);
     uint8_t getNodeIndexAmongTypes(uint8_t _nodeId);
     uint8_t getNodeIdOfType(uint8_t _nodeType, uint8_t _nodeIndex = 0);
-    bool Net485Network::setPriorityNode(Net485Packet *_pkt);
+    bool setPriorityNode(Net485Packet *_pkt);
+    void assignNewNode(uint8_t foundNodeId);
 public:
     Net485Network(Net485DataLink *_net, Net485Subord *_sub = NULL, bool _coordinatorCapable = true, uint16_t _coordVer = 0, uint16_t _coordRev = 0);
     ~Net485Network();

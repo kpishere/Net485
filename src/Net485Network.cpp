@@ -256,13 +256,13 @@ void Net485Network::loopServer(unsigned long _thisTime) {
         {
             if(nodeId==NODEADDR_PRIMY) {
                 // For thermostat node type - send msg to check availability of nodeid
-                nextNodeId = Net485Network::reqRespNodeId(nodeId, SUBNET_V1SPEC, true);
+                nextNodeId = Net485Network::reqRespNodeId(nodeId, SUBNET_V1SPEC);
 #ifdef DEBUG
                 Serial.print(" isV1SPECThermostat: "); Serial.print(nextNodeId); Serial.print(" ");
 #endif
             } else {
                 // Any other device from thermostat - send msg to check availability of nodeid
-                nextNodeId = Net485Network::reqRespNodeId(nodeId, SUBNET_BCAST, true);
+                nextNodeId = Net485Network::reqRespNodeId(nodeId, SUBNET_BCAST);
 #ifdef DEBUG
                 Serial.print(" isAnyDevice: "); Serial.print(nextNodeId); Serial.print(" ");
 #endif
@@ -274,7 +274,6 @@ void Net485Network::loopServer(unsigned long _thisTime) {
                 // There is no pre-existing node at this location, so make temp node list addition perminant
                 this->netNodeList[nodeId] = this->nodes[nodeId]->nodeType;
                 this->nodes[nodeId]->nodeStatus = Net485NodeStatE::Verified;
-                
             }
         }
         if(nodeId > 0) { // Node ID validated with device, Assign node ID location
@@ -287,6 +286,7 @@ void Net485Network::loopServer(unsigned long _thisTime) {
         //
         this->lastNodeListPoll = _thisTime;
     } else { // Dataflow cycle
+        uint8_t foundNodeId;
         this->lasttimeOfMessage = _thisTime;
 
         // If out-of process message is ever received by server, ignore it
@@ -294,7 +294,51 @@ void Net485Network::loopServer(unsigned long _thisTime) {
             pkt = net485dl->getNextPacket();
         }
         this->removeOfflineDevices();
-        this->workQueue->doWork();
+        
+        // Priority subordinate active
+        if( this->netNodeList[NODEADDR_PRIMY] == 0
+            && ( this->net485dl->getNodeType() != NTC_THERM
+                || this->net485dl->getNodeType() != NTC_ZCTRL ) ) {
+            this->assignNewNode(NODEADDR_PRIMY);
+        } else {
+            // Perform message transaction cycle with primary node
+            this->setR2R(&sendPkt, NODEADDR_PRIMY);
+            this->workQueue->pushWork(sendPkt);
+            this->workQueue->doWork();
+            // Perform Node discovery
+            foundNodeId = Net485Network::reqRespNodeDiscover();
+            if(foundNodeId) {
+                this->assignNewNode(foundNodeId);
+            } else {
+                // If Node on Subnet 3
+                // - send Addr Conf. Broadcast
+                // - Loop upto 5 times
+                //      - send Token Offer Broadcast
+                //      - if resp, send R2R and process transaction
+                // If Node on Subnet 2
+                // - For each node
+                //      - send R2R and process transaction
+                // Send R2R to the next Subnet 3 node in a slow rolling list
+                // Send R2R to Virtual Internal Subordinate
+                
+                // Any other Coordinator Transactions
+                this->workQueue->doWork();
+            }
+        }
+    }
+}
+void Net485Network::assignNewNode(uint8_t foundNodeId) {
+    foundNodeId = Net485Network::reqRespNodeId(foundNodeId, SUBNET_V1SPEC);
+    if(foundNodeId == 0 ) {
+        foundNodeId = Net485Network::reqRespNodeId(foundNodeId, SUBNET_V2SPEC);
+    }
+    if(foundNodeId)
+    {
+        this->netNodeList[foundNodeId] = this->nodes[foundNodeId]->nodeType;
+        this->nodes[foundNodeId]->nodeStatus = Net485NodeStatE::Verified;
+        if(Net485Network::reqRespSetAddress(foundNodeId)) {
+            this->issueNodeListToNetwork(true);
+        }
     }
 }
 // Set the device's nodeId.  If no valid response, put node offline
@@ -346,7 +390,7 @@ bool Net485Network::reqRespSetAddress(uint8_t _node) {
 // Create and send a NodeID message, receive and conditionaly validate receipt.
 //
 // Return: NodeId if node Id responds, otherwise zero
-uint8_t Net485Network::reqRespNodeId(uint8_t _node, uint8_t _subnet, bool _validateOnly) {
+uint8_t Net485Network::reqRespNodeId(uint8_t _node, uint8_t _subnet) {
     Net485Packet *pkt, sendPkt;
     bool havePkt = false;
     uint8_t matchOrNextNodeId = 0;
@@ -438,13 +482,13 @@ bool Net485Network::sendMsgGetResponseInPlace(Net485Packet *_pkt) {
         _pkt->header()[HeaderStructureE::HeaderSndParam1] = 0;
     }
     
-    // Nodes in status offline do not get packets routed
-    if( _pkt->header()[HeaderStructureE::HeaderDestAddr] == NODEADDR_BCAST ) {
-        // Routed messages are NEVER broadcast, this message is destined for the virtual node
+    if( _pkt->header()[HeaderStructureE::HeaderDestAddr] == NODEADDR_VRTSUB ) {
+        // This message is destined for the virtual node
         if(this->sub != NULL) {
             this->sub->send(_pkt);
             this->lasttimeOfMessage = millis();
-            while (MILLISECDIFF(millis(),this->lasttimeOfMessage) < RESPONSE_TIMEOUT && !haveResponse) {
+            while (MILLISECDIFF(millis(),this->lasttimeOfMessage) < RESPONSE_TIMEOUT
+            && !haveResponse) {
                 haveResponse = this->sub->hasPacket(&(this->lasttimeOfMessage));
                 if(haveResponse) {
                     recvPtr = this->sub->getNextPacket();
