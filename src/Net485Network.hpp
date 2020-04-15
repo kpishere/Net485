@@ -260,6 +260,7 @@ public:
         bool isExchangeComplete = true;
         bool gotResponse;
         uint8_t sentNodeId = _pkt->header()[HeaderStructureE::HeaderDestAddr];
+        
     #ifdef DEBUG
         Serial.print(" routePacket() sentNodeId:");
         Serial.print(sentNodeId, HEX);
@@ -310,16 +311,28 @@ public:
     
     // Push node list to each node on network.
     //
+    // TODO: Node Lists are sent directly and individually to each Subnet 2 node, directly and individually to each newly added subnet 3 node, and may be broadcast to all other Subnet 3 nodes. A broadcast node list to subnet 3 is required to ensure a node that considers itself as being addressed, will receive an indication the coordinator no longer considers that node part of the network.
+    //
+    //  Current:  Broadcast to each node in list (this does Subnet 2 then Subnet 3), then send
+    //      broadcast to Subnet 3
+    //
     inline void issueNodeListToNetwork(bool doWorkImmediately = false) {
-        Net485Packet sendPkt;
+        Net485Packet sendPkt, *ptr;
         int workItems = 0;
+        // Issue node list to each node on network
         for(int i=0; i<this->netNodeListHighest; i++) {
             if(this->netNodeList[i] == 0x00) continue;
             this->setNetList(&sendPkt, i);
-            this->workQueue->pushWork(sendPkt);
+            this->workQueue->pushWork(sendPkt); // NB: Zero gets translated to NODEADDR_VRTSUB by this method
             workItems++;
         }
         if(doWorkImmediately) this->workQueue->doWork(workItems);
+
+        // Broadcast on Subnet 3
+        ptr = this->setNetList(&sendPkt, NODEADDR_BCAST);
+        ptr->header()[HeaderStructureE::HeaderSubnet] = SUBNET_V2SPEC;
+        this->net485dl->send( ptr );
+        this->lasttimeOfMessage = millis();
     }
     inline void issueR2RNetV1() {
         // TODO: Issue R2R to only V1 devices if any in node list

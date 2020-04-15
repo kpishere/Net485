@@ -11,7 +11,7 @@
 #endif
 
 #include "src/Net485Network.hpp"
-#include "src/Net485Subord.hpp"
+#include "src/Net485Subord_Echo.hpp"
 
 #define FW_NAME "net485gw"
 #define FW_VERSION __DATE__
@@ -86,7 +86,7 @@ void setup() {
   
   Serial.println("Hardware start now");
   device485 = new Net485DataLink(&Serial2, NTC_FURNGAS );
-  devApp = new Net485Subord();
+  devApp = new Net485Subord_Echo();
   net485 = new Net485Network(device485, devApp, true, ver, rev);
   Serial.println("Hardware stop now");
 }

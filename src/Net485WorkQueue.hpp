@@ -17,8 +17,7 @@ private:
     int _maxitems;
 
     Net485Network *_net;
-    
-    void pop();
+
 public:
     int _next;
 
@@ -41,6 +40,7 @@ public:
     int doWork(int forNitems = 1);
 
     Net485Packet* top();
+    void pop();
 };
 
 

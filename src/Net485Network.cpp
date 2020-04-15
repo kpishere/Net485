@@ -299,6 +299,11 @@ void Net485Network::loopServer(unsigned long _thisTime) {
         if( this->netNodeList[NODEADDR_PRIMY] == 0
             && ( this->net485dl->getNodeType() != NTC_THERM
                 || this->net485dl->getNodeType() != NTC_ZCTRL ) ) {
+#ifdef DEBUG
+        Serial.print(" PRIMRY:"); Serial.print(this->netNodeList[NODEADDR_PRIMY]);
+        Serial.print(" subNode:"); Serial.print(this->net485dl->getNodeType());
+        Serial.println("");
+#endif
             this->assignNewNode(NODEADDR_PRIMY);
         } else {
             // Perform message transaction cycle with primary node
@@ -482,7 +487,8 @@ bool Net485Network::sendMsgGetResponseInPlace(Net485Packet *_pkt) {
         _pkt->header()[HeaderStructureE::HeaderSndParam1] = 0;
     }
     
-    if( _pkt->header()[HeaderStructureE::HeaderDestAddr] == NODEADDR_VRTSUB ) {
+    if( _pkt->header()[HeaderStructureE::HeaderDestAddr] == NODEADDR_VRTSUB
+     || _pkt->header()[HeaderStructureE::HeaderDestAddr] == 0x00 ) {
         // This message is destined for the virtual node
         if(this->sub != NULL) {
             this->sub->send(_pkt);
