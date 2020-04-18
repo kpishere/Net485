@@ -85,6 +85,7 @@ void setup() {
 #endif  
   
   Serial.println("Hardware start now");
+  devApp = new Net485Subord_Echo();
   device485 = new Net485DataLink(&Serial2, NTC_THERM );
   net485 = new Net485Network(device485, devApp, true, ver, rev);
   Serial.println("Hardware stop now");

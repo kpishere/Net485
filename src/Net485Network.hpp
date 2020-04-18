@@ -229,7 +229,7 @@ private:
     }
     // Utillity function to copy node list from packet to this object
     //
-    inline voidCopyPacketToNodeList(Net485Packet *_pkt) {
+    inline void copyPacketToNodeList(Net485Packet *_pkt) {
         if( _pkt->header()[HeaderStructureE::HeaderSubnet] == SUBNET_V1SPEC ) {
             // Not expected to be implemented.
         } else {
@@ -319,6 +319,9 @@ public:
     inline void issueNodeListToNetwork(bool doWorkImmediately = false) {
         Net485Packet sendPkt, *ptr;
         int workItems = 0;
+#ifdef DEBUG
+    Serial.print(" issueNodeListToNetwork() nodeList:");Serial.println(this->netNodeListHighest);
+#endif
         // Issue node list to each node on network
         for(int i=0; i<this->netNodeListHighest; i++) {
             if(this->netNodeList[i] == 0x00) continue;
@@ -328,6 +331,9 @@ public:
         }
         if(doWorkImmediately) this->workQueue->doWork(workItems);
 
+#ifdef DEBUG
+    Serial.println(" issueNodeListToNetwork() bcastSubnet 3");
+#endif
         // Broadcast on Subnet 3
         ptr = this->setNetList(&sendPkt, NODEADDR_BCAST);
         ptr->header()[HeaderStructureE::HeaderSubnet] = SUBNET_V2SPEC;

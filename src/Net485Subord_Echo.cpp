@@ -1,7 +1,7 @@
 #include "Net485Subord_Echo.hpp"
 
 Net485Subord_Echo::Net485Subord_Echo() {
-    this->workQueue = new Net485WorkQueue(NULL);
+    this->workQueue = new Net485WorkQueue(NULL,1);
     this->popNext = false;
 }
 

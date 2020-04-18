@@ -47,10 +47,6 @@ Net485Network::Net485Network(Net485DataLink *_net, Net485Subord *_sub, bool _coo
         this->nodes[i] = NULL;
     }
     this->netNodeListHighest = 0;
-    if(this->sub != NULL && this->ver.isFFD) {
-        this->netNodeList[0] = this->net485dl->getNodeType();
-        this->netNodeListHighest++;
-    }
 }
 Net485Network::~Net485Network()
 {
@@ -136,7 +132,7 @@ void Net485Network::loopClient(unsigned long _thisTime) {
             { // Addressed to this node messages
                 switch(recvPtr->header()[HeaderStructureE::PacketMsgType]) {
                     case MSGTYP_SNETLIST:
-                        this->voidCopyPacketToNodeList(recvPtr);
+                        this->copyPacketToNodeList(recvPtr);
                         this->net485dl->send(this->setNetListResp(&pktToSend));
                         break;
                     default:
@@ -491,6 +487,9 @@ bool Net485Network::sendMsgGetResponseInPlace(Net485Packet *_pkt) {
      || _pkt->header()[HeaderStructureE::HeaderDestAddr] == 0x00 ) {
         // This message is destined for the virtual node
         if(this->sub != NULL) {
+#ifdef DEBUG
+            Serial.println("VIRTUAL SEND");
+#endif
             this->sub->send(_pkt);
             this->lasttimeOfMessage = millis();
             while (MILLISECDIFF(millis(),this->lasttimeOfMessage) < RESPONSE_TIMEOUT
@@ -712,6 +711,11 @@ void Net485Network::warmStart(unsigned long _thisTime) {
                 } else if( MILLISECDIFF(_thisTime,this->lasttimeOfMessage) > RESPONSE_TIMEOUT ) {
                     // 1.1.2.3.2 Yes
                     this->state = Net485State::ANServer;
+                    // Set the network Virtual node for coordinator
+                    if(this->sub != NULL) {
+                        this->netNodeList[0] = this->net485dl->getNodeType();
+                        this->netNodeListHighest = 1;
+                    }
                 }
                 break;
             default:

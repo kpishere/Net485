@@ -24,7 +24,7 @@ public:
         uint8_t msgType = packet->header()[HeaderStructureE::PacketMsgType];
 #ifdef DEBUG
     Serial.print(" virtualNode:"); Serial.print(fromNodeId);
-    Serial.print(" msg:"); Serial.println(msgType);
+    Serial.print(" msg:"); Serial.println(msgType, HEX);
 #endif
         doPop();
         
