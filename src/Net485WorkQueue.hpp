@@ -9,7 +9,7 @@
 
 class Net485Network;
 
-#define DEFAULT_MAXITEMS 8
+#define DEFAULT_MAXITEMS 4
 
 class Net485WorkQueue {
 private:

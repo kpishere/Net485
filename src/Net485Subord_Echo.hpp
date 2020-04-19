@@ -33,9 +33,6 @@ public:
         sendPkt.header()[HeaderStructureE::HeaderSrcAddr] = fromNodeId;
         
         switch(msgType) {
-        case MSGTYP_R2R:
-            sendPkt.data()[0] == R2R_ACK_CODE;
-            break;
         //case MSGTYP_SNETLIST:
         default:    // Generic expect MSGRESP() and only check that is returned
             sendPkt.header()[HeaderStructureE::PacketMsgType] = MSGRESP(msgType);

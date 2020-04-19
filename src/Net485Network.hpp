@@ -91,6 +91,9 @@ typedef struct Net485NodeS {
              ? NODEADDR_PRIMY
              : (version == NETV1 ? 1+NODEADDR_V1LO : NODEADDR_V2LO ));
         while(netNodeList[i]!=0 && i<= (version == NETV1? NODEADDR_V1HI : NODEADDR_V2HI ) ) {
+#ifdef DEBUG
+    Serial.print(" nextNodeLocation() i:"); Serial.print(i); Serial.print(" netNodeList[i]:"); Serial.println(netNodeList[i]);
+#endif
             i = (version == NETV2
                  && (nodeType == NTC_THERM || nodeType == NTC_ZCTRL)
                  && i==1+NODEADDR_V1LO
@@ -174,7 +177,7 @@ private:
     uint8_t nodeId, subNet;
     
     uint8_t netNodeList[MTU_DATA];
-    uint8_t netNodeListHighest;
+    uint8_t netNodeListHighest; /* An index value */
     Net485Node *nodes[MTU_DATA];
     Net485Packet pktToSend;
     Net485Subord *sub;
@@ -212,7 +215,7 @@ private:
             // Is Version 1 - condensed list
             int k = 0, v;
             for(int i=0; i<=NODEADDR_V1HI; i++ ) _pkt->data()[i] = 0x00;
-            for(int i=0; i<this->netNodeListHighest; i++) {
+            for(int i=0; i<=this->netNodeListHighest; i++) {
                 bool dobreak = false;
                 v = this->netNodeList[i];
                 if(v == 0) continue; // don't add empty nodes
@@ -223,7 +226,7 @@ private:
             }
             _pkt->header()[HeaderStructureE::PacketLength] = k;
         } else { // Is Version 2
-            _pkt->header()[HeaderStructureE::PacketLength] = this->netNodeListHighest;
+            _pkt->header()[HeaderStructureE::PacketLength] = this->netNodeListHighest + 1;
             memcpy((void *)(_pkt->data()), this->netNodeList, _pkt->header()[HeaderStructureE::PacketLength] );
         }
     }
@@ -235,8 +238,8 @@ private:
         } else {
             for(int i=0; i<MTU_DATA; i++) this->netNodeList[i] = 0x00;
 
-            this->netNodeListHighest = _pkt->header()[HeaderStructureE::PacketLength];
-            memcpy(this->netNodeList, (void *)(_pkt->data()),this->netNodeListHighest);
+            this->netNodeListHighest = _pkt->header()[HeaderStructureE::PacketLength] - 1;
+            memcpy(this->netNodeList, (void *)(_pkt->data()),_pkt->header()[HeaderStructureE::PacketLength]);
         }
     }
 
@@ -299,6 +302,9 @@ public:
             isExchangeComplete = true; // Regardless of stage in process, this work is done
             // Only remove NET nodes from list
             if(_pkt->header()[HeaderStructureE::HeaderDestAddr] > 0) {
+#ifdef DEBUG
+    Serial.print(" routePacket() Net485NodeStatE::OffLine");
+#endif
                 this->nodes[_pkt->header()[HeaderStructureE::HeaderDestAddr]]->nodeStatus = Net485NodeStatE::OffLine;
             }
         }
@@ -323,7 +329,7 @@ public:
     Serial.print(" issueNodeListToNetwork() nodeList:");Serial.println(this->netNodeListHighest);
 #endif
         // Issue node list to each node on network
-        for(int i=0; i<this->netNodeListHighest; i++) {
+        for(int i=0; i<=this->netNodeListHighest; i++) {
             if(this->netNodeList[i] == 0x00) continue;
             this->setNetList(&sendPkt, i);
             this->workQueue->pushWork(sendPkt); // NB: Zero gets translated to NODEADDR_VRTSUB by this method
@@ -345,8 +351,11 @@ public:
         // this->net485dl->send(this->setAddressConfirm(&sendPkt));
     }
     inline void removeOfflineDevices() {
+#ifdef DEBUG
+    Serial.println(" removeOfflineDevices()");
+#endif
         bool removedADevice = false;
-        for(int i=1; i<this->netNodeListHighest; i++) {
+        for(int i=1; i<=this->netNodeListHighest; i++) {
             if(this->netNodeList[i] == 0x00) continue;
             if(this->nodes[i]->nodeStatus == Net485NodeStatE::OffLine) {
                 this->delNode(i);
@@ -492,6 +501,9 @@ public:
                         nodeId = tmpNode.nextNodeLocation(this->netNodeList);
                     }
                 } else {
+#ifdef DEBUG
+    Serial.print(" addNodeId() Net485NodeStatE::OffLine");
+#endif
                     this->nodes[_node]->nodeStatus = Net485NodeStatE::OffLine;
                     this->nodes[_node]->lastExchange = millis();
                     nodeId = tmpNode.nextNodeLocation(this->netNodeList);
@@ -546,7 +558,7 @@ public:
         Serial.print(" thisDevice:");
         net485dl->getMacAddr().display();
         Serial.print(" nodeId: ");
-        Serial.println(this->nodeId);
+        Serial.println(this->nodeId, HEX);
 #endif
         return result;
     }
@@ -620,13 +632,24 @@ public:
     inline uint8_t getNodeDiscResp(Net485Packet *_pkt) {
         Net485Node tmpNode;
         uint8_t nodeIndex = 0;
+#ifdef DEBUG
+            Serial.print("getNodeDiscResp() "); Serial.print(_pkt->header()[HeaderStructureE::PacketMsgType],HEX); Serial.print(" =?= "); Serial.print(MSGRESP(MSGTYP_NDSCVRY),HEX); Serial.println("");
+#endif
         if(_pkt->header()[HeaderStructureE::PacketMsgType] == MSGRESP(MSGTYP_NDSCVRY)) {
             tmpNode.init(_pkt);
             if(tmpNode.nodeType == NTC_ANY) return 0;
-            nodeIndex = nodeExists(&tmpNode);
-            if(nodeIndex == 0) nodeIndex = this->addNode(&tmpNode);
 #ifdef DEBUG
-            Serial.print("getNodeDiscResp: nodeIndex:"); Serial.print(nodeIndex,HEX); Serial.print(" ");  tmpNode.display();
+            Serial.print(" nodeType: "); Serial.print(tmpNode.nodeType,HEX); Serial.println("");
+#endif
+            nodeIndex = nodeExists(&tmpNode);
+#ifdef DEBUG
+            Serial.print(" nodeIndex a: "); Serial.print(nodeIndex,HEX); Serial.println("");
+#endif
+            if(nodeIndex == 0) {
+                nodeIndex = this->addNode(&tmpNode);
+            }
+#ifdef DEBUG
+            Serial.print(" getNodeDiscResp: nodeIndex:"); Serial.print(nodeIndex,HEX); Serial.print(" ");  tmpNode.display();
 #endif
         }
         return nodeIndex;
@@ -668,7 +691,7 @@ public:
     Serial.print(" this->netNodeListHighest:"); Serial.print(this->netNodeListHighest);
 #endif
             if(this->nodeId == 0) return false;
-            if(this->netNodeListHighest != nodeCount) return false;
+            if(this->netNodeListHighest+1 != nodeCount) return false;
             for(int i=0; i<nodeCount && retVal; i++) {
                 retVal = retVal & ( this->netNodeList[i] == _pkt->data()[i] );
 #ifdef DEBUG

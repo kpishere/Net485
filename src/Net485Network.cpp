@@ -77,15 +77,23 @@ uint8_t Net485Network::nodeExists(Net485Node *_node, bool firstNodeTypeSearch) {
 // TODO: Is there memory leak with updater?  Should free first?
 uint8_t Net485Network::addNode(Net485Node *_node, uint8_t _nodeId) {
     uint8_t nodeIndex = (_nodeId > 0 ? _nodeId : _node->nextNodeLocation(this->netNodeList));
-
+#ifdef DEBUG
+    Serial.print(" addNode() nodeIndex a: "); Serial.print(nodeIndex, HEX); Serial.println("");
+#endif
     if(nodeIndex > 0) {
         if(this->nodes[nodeIndex] == NULL) {
             this->nodes[nodeIndex] = malloc(sizeof(Net485Node));
         }
         this->netNodeList[nodeIndex] = _node->nodeType;
         memcpy(this->nodes[nodeIndex],_node,sizeof(Net485Node));
-        this->netNodeListHighest = (nodeIndex+1 > this->netNodeListHighest ? nodeIndex+1 : this->netNodeListHighest);
+        this->netNodeListHighest = (nodeIndex > this->netNodeListHighest ? nodeIndex : this->netNodeListHighest);
+#ifdef DEBUG
+    Serial.print(" addNode() netNodeListHighest: "); Serial.print(this->netNodeListHighest, HEX); Serial.println("");
+#endif
     }
+#ifdef DEBUG
+    Serial.print(" addNode() nodeIndex b: "); Serial.print(nodeIndex, HEX); Serial.println("");
+#endif
     return nodeIndex;
 }
 uint8_t Net485Network::delNode(uint8_t _nodeId) {
@@ -127,16 +135,42 @@ void Net485Network::loopClient(unsigned long _thisTime) {
     Serial.println("");
 #endif
         if(this->nodeId > 0) { // Enrolled in network behaviour
+#ifdef DEBUG
+    Serial.println(" IN NETWORK");
+#endif
             if( recvPtr->header()[HeaderStructureE::HeaderDestAddr] == this->nodeId
                 && recvPtr->header()[HeaderStructureE::HeaderSubnet] == this->subNet )
             { // Addressed to this node messages
+#ifdef DEBUG
+    Serial.println(" THIS NODE");
+#endif
                 switch(recvPtr->header()[HeaderStructureE::PacketMsgType]) {
                     case MSGTYP_SNETLIST:
                         this->copyPacketToNodeList(recvPtr);
                         this->net485dl->send(this->setNetListResp(&pktToSend));
                         break;
+                    case MSGTYP_R2R:
+#ifdef DEBUG
+    Serial.println(" MSGTYP_R2R");
+#endif
+                        if(this->sub != NULL && this->sub->hasPacket(&(this->lasttimeOfMessage)) ) {
+#ifdef DEBUG
+    Serial.println(" VIRTUAL DEVICE CALL");
+#endif
+                            this->net485dl->send(this->sub->getNextPacket());
+                        } else {
+#ifdef DEBUG
+    Serial.println(" VIRTUAL DEVICE R2R_ACK");
+#endif
+                            this->net485dl->send(this->setACK(&pktToSend));
+                        }
+                        break;
                     default:
-                        // Ignore if it isn't mapped for action
+                        if(!PKTISDATA(recvPtr) && this->sub != NULL) {
+                            // Forward packet to virtual device if CT-CIM Application message types
+                            this->sub->send(recvPtr);
+                            this->net485dl->send(this->setACK(&pktToSend));
+                        }
                         break;
                 }
                 this->lasttimeOfMessage = millis();
@@ -293,8 +327,8 @@ void Net485Network::loopServer(unsigned long _thisTime) {
         
         // Priority subordinate active
         if( this->netNodeList[NODEADDR_PRIMY] == 0
-            && ( this->net485dl->getNodeType() != NTC_THERM
-                || this->net485dl->getNodeType() != NTC_ZCTRL ) ) {
+            && this->net485dl->getNodeType() != NTC_THERM
+            && this->net485dl->getNodeType() != NTC_ZCTRL ) {
 #ifdef DEBUG
         Serial.print(" PRIMRY:"); Serial.print(this->netNodeList[NODEADDR_PRIMY]);
         Serial.print(" subNode:"); Serial.print(this->net485dl->getNodeType());
@@ -490,16 +524,26 @@ bool Net485Network::sendMsgGetResponseInPlace(Net485Packet *_pkt) {
 #ifdef DEBUG
             Serial.println("VIRTUAL SEND");
 #endif
-            this->sub->send(_pkt);
-            this->lasttimeOfMessage = millis();
-            while (MILLISECDIFF(millis(),this->lasttimeOfMessage) < RESPONSE_TIMEOUT
-            && !haveResponse) {
-                haveResponse = this->sub->hasPacket(&(this->lasttimeOfMessage));
-                if(haveResponse) {
-                    recvPtr = this->sub->getNextPacket();
-                    memcpy(_pkt,recvPtr, sizeof(Net485Packet));
-                }
+            switch(_pkt->header()[HeaderStructureE::PacketMsgType]) {
+                case MSGTYP_R2R:
+                    if(this->sub != NULL && this->sub->hasPacket(&(this->lasttimeOfMessage))) {
+                        recvPtr = this->sub->getNextPacket();
+                        memcpy(_pkt,recvPtr, sizeof(Net485Packet));
+                    } else {
+                        uint8_t toNodeId = _pkt->header()[HeaderStructureE::HeaderSrcAddr];
+                        recvPtr = this->setACK(_pkt, toNodeId);
+                        recvPtr->header()[HeaderStructureE::HeaderSrcAddr] = NODEADDR_VRTSUB;
+                        memcpy(_pkt,recvPtr, sizeof(Net485Packet));
+                    }
+                    break;
+                default:
+                    if(!PKTISDATA(_pkt) && this->sub != NULL) {
+                        // Forward packet to virtual device if CT-CIM Application message types
+                        this->sub->send(_pkt);
+                    }
+                    break;
             }
+            this->lasttimeOfMessage = millis();
         }
     } else {
         // Network routed messages
@@ -535,7 +579,7 @@ uint8_t Net485Network::getNodeIndexAmongTypes(uint8_t _nodeId) {
 uint8_t Net485Network::getNodeIdOfType(uint8_t _nodeType, uint8_t _nodeIndex) {
     uint8_t nodeId = NODEADDR_COORD; // Indicates not found
     int finds = 0;
-    for(int i=0; i<this->netNodeListHighest && nodeId == NODEADDR_COORD; i++) {
+    for(int i=0; i<=this->netNodeListHighest && nodeId == NODEADDR_COORD; i++) {
         if(this->netNodeList[i] == _nodeType) {
             if(finds == _nodeIndex) {
                 nodeId = i;
@@ -714,7 +758,7 @@ void Net485Network::warmStart(unsigned long _thisTime) {
                     // Set the network Virtual node for coordinator
                     if(this->sub != NULL) {
                         this->netNodeList[0] = this->net485dl->getNodeType();
-                        this->netNodeListHighest = 1;
+                        this->netNodeListHighest = 0;
                     }
                 }
                 break;
