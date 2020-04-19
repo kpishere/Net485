@@ -41,15 +41,16 @@ typedef struct Net485NodeS {
     uint8_t version;
     unsigned long lastExchange;
     void init(Net485Packet *pkt) {
+        uint8_t msgType = pkt->header()[HeaderStructureE::PacketMsgType];
         version = PKTVER(pkt);
-        if(pkt->header()[HeaderStructureE::PacketMsgType] == MSGRESP(MSGTYP_GNODEID)) {
+        if(msgType == MSGRESP(MSGTYP_GNODEID)) {
             nodeType = pkt->data()[0];
             memcpy(&macAddr, &(pkt->data()[1]), Net485MacAddressE::SIZE);
             memcpy(&sessionId, &(pkt->data()[Net485MacAddressE::SIZE+1]), sizeof(uint64_t));
             nodeStatus = Net485NodeStatE::Unverified;
         }
         // Init Node values from Node Discovery request
-        if(pkt->header()[HeaderStructureE::PacketMsgType] == MSGTYP_NDSCVRY) {
+        if(msgType == MSGTYP_NDSCVRY) {
             nodeType = pkt->data()[0];
             // Initialize other values to zero
             macAddr.clear();
@@ -58,13 +59,18 @@ typedef struct Net485NodeS {
             lastExchange = 0;
             nodeStatus = Net485NodeStatE::Unverified;
         }
-        if(pkt->header()[HeaderStructureE::PacketMsgType] == MSGRESP(MSGTYP_NDSCVRY)) {
+        if(msgType == MSGRESP(MSGTYP_NDSCVRY)) {
             nodeType = pkt->data()[0];
             memcpy(&macAddr, &(pkt->data()[2]), Net485MacAddressE::SIZE);
             memcpy(&sessionId, &(pkt->data()[Net485MacAddressE::SIZE+2]), sizeof(uint64_t));
             nodeStatus = Net485NodeStatE::Unverified;
         }
-        if(pkt->header()[HeaderStructureE::PacketMsgType] == MSGTYP_SADDR) {
+        if(msgType == MSGTYP_R2R ) {
+            memcpy(&macAddr, &(pkt->data()[1]), Net485MacAddressE::SIZE);
+            memcpy(&sessionId, &(pkt->data()[Net485MacAddressE::SIZE+1]), sizeof(uint64_t));
+            nodeStatus = Net485NodeStatE::Unverified;
+        }
+        if(msgType == MSGTYP_SADDR) {
             nodeType = NTC_ANY;
             version = pkt->data()[1];
             memcpy(&macAddr, &(pkt->data()[2]), Net485MacAddressE::SIZE);
