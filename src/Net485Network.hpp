@@ -18,6 +18,7 @@
 #define PROLONGED_SILENCE 120000 /* milli-sconds */
 #define MILLISECDIFF(future,past) ((future < past)? (0xffffffffUL-past)+future : future - past )
 #define MSG_RESEND_ATTEMPTS 3
+#define R2R_LOOPS_PERDATACYCLE 5
 
 #define PARM1_CMND_HEAT 0x64
 #define PARM1_CMND_COOL 0x65
@@ -64,6 +65,12 @@ typedef struct Net485NodeS {
             memcpy(&macAddr, &(pkt->data()[2]), Net485MacAddressE::SIZE);
             memcpy(&sessionId, &(pkt->data()[Net485MacAddressE::SIZE+2]), sizeof(uint64_t));
             nodeStatus = Net485NodeStatE::Unverified;
+        }
+        if(msgType == MSGRESP(MSGTYP_TOKEN)) {
+            nodeType = pkt->data()[0]; /* this is node ID !*/
+            version = (pkt->data()[1] == SUBNET_V2SPEC ? NETV2 : NETV1);
+            memcpy(&macAddr, (void *)&(pkt->data()[2]), Net485MacAddressE::SIZE);
+            memcpy(&sessionId, (void *)&(pkt->data()[2+Net485MacAddressE::SIZE]), sizeof(uint64_t));
         }
         if(msgType == MSGTYP_R2R ) {
             memcpy(&macAddr, &(pkt->data()[1]), Net485MacAddressE::SIZE);
@@ -202,10 +209,13 @@ private:
     bool becomeClient(Net485Packet *pkt, unsigned long _thisTime);
 
     uint8_t reqRespNodeId(uint8_t _node, uint8_t _subnet);
+    uint8_t reqRespTOB(uint8_t _nodeTypeFilter = NTC_ANY, uint8_t _destNodeId = NODEADDR_BCAST, uint8_t _subNet = SUBNET_V2SPEC);
     uint8_t reqRespNodeDiscover(uint8_t _nodeIdFilter = 0x00);
     bool reqRespSetAddress(uint8_t _node);
 
     uint8_t nodeExists(Net485Node *_node, bool firstNodeTypeSearch = false);
+    bool subnetNodeExists(uint8_t _subNet);
+    uint8_t rollNextNet2node();
     uint8_t addNode(Net485Node *_node, uint8_t _nodeId = 0);
     uint8_t delNode(uint8_t _nodeId);
 
@@ -321,14 +331,14 @@ public:
         return isExchangeComplete;
     }
     
-    // Push node list to each node on network.
+    // Push node list to each node on network for NETV1.
     //
-    // TODO: Node Lists are sent directly and individually to each Subnet 2 node, directly and individually to each newly added subnet 3 node, and may be broadcast to all other Subnet 3 nodes. A broadcast node list to subnet 3 is required to ensure a node that considers itself as being addressed, will receive an indication the coordinator no longer considers that node part of the network.
+    // Note: Node Lists are sent directly and individually to each Subnet 2 node, directly and individually to each newly added subnet 3 node, and may be broadcast to all other Subnet 3 nodes. A broadcast node list to subnet 3 is required to ensure a node that considers itself as being addressed, will receive an indication the coordinator no longer considers that node part of the network.
     //
     //  Current:  Broadcast to each node in list (this does Subnet 2 then Subnet 3), then send
     //      broadcast to Subnet 3
     //
-    inline void issueNodeListToNetwork(bool doWorkImmediately = false) {
+    inline void issueNodeListToNetwork(bool doWorkImmediately = false, bool vnet2Broadcast = true) {
         Net485Packet sendPkt, *ptr;
         int workItems = 0;
 #ifdef DEBUG
@@ -337,20 +347,20 @@ public:
         // Issue node list to each node on network
         for(int i=0; i<=this->netNodeListHighest; i++) {
             if(this->netNodeList[i] == 0x00) continue;
+            if(this->nodes[i]->version == NETV2) continue;
             this->setNetList(&sendPkt, i);
             this->workQueue->pushWork(sendPkt); // NB: Zero gets translated to NODEADDR_VRTSUB by this method
             workItems++;
         }
         if(doWorkImmediately) this->workQueue->doWork(workItems);
-
+        if(vnet2Broadcast) {
 #ifdef DEBUG
     Serial.println(" issueNodeListToNetwork() bcastSubnet 3");
 #endif
-        // Broadcast on Subnet 3
-        ptr = this->setNetList(&sendPkt, NODEADDR_BCAST);
-        ptr->header()[HeaderStructureE::HeaderSubnet] = SUBNET_V2SPEC;
-        this->net485dl->send( ptr );
-        this->lasttimeOfMessage = millis();
+            // Broadcast on Subnet 3
+            ptr = this->setNetList(&sendPkt, NODEADDR_BCAST);
+            this->net485dl->send( ptr );
+        }
     }
     inline void issueR2RNetV1() {
         // TODO: Issue R2R to only V1 devices if any in node list
@@ -671,10 +681,10 @@ public:
     // Prepare an Address confirmation packet for sending - Ver.2 spec only
     //
     // Returns pointer provided as argument
-    inline Net485Packet *setAddressConfirm(Net485Packet *_pkt) {
-        _pkt->header()[HeaderStructureE::HeaderDestAddr] = NODEADDR_BCAST;
+    inline Net485Packet *setAddressConfirm(Net485Packet *_pkt, uint8_t _dest = NODEADDR_BCAST, uint8_t _subNet = SUBNET_V2SPEC) {
+        _pkt->header()[HeaderStructureE::HeaderDestAddr] = _dest;
         _pkt->header()[HeaderStructureE::HeaderSrcAddr] = NODEADDR_COORD;
-        _pkt->header()[HeaderStructureE::HeaderSubnet] = SUBNET_V2SPEC;
+        _pkt->header()[HeaderStructureE::HeaderSubnet] = _subNet;
         _pkt->header()[HeaderStructureE::HeaderSndMethd] = SNDMTHD_NOROUTE;
         _pkt->header()[HeaderStructureE::HeaderSndParam] = 0x00;
         _pkt->header()[HeaderStructureE::HeaderSndParam1] = 0x00;
@@ -719,7 +729,11 @@ public:
     inline Net485Packet *setNetList(Net485Packet *_pkt, uint8_t _nodeId) {
         _pkt->header()[HeaderStructureE::HeaderDestAddr] = _nodeId;
         _pkt->header()[HeaderStructureE::HeaderSrcAddr] = NODEADDR_COORD;
-        _pkt->header()[HeaderStructureE::HeaderSubnet] = (this->nodes[_nodeId]->version==NETV1 ? SUBNET_V1SPEC:SUBNET_V2SPEC );
+        if( _nodeId == NODEADDR_BCAST ) {
+            _pkt->header()[HeaderStructureE::HeaderSubnet] = SUBNET_V2SPEC;
+        } else {
+            _pkt->header()[HeaderStructureE::HeaderSubnet] = (this->nodes[_nodeId]->version==NETV1 ? SUBNET_V1SPEC:SUBNET_V2SPEC );
+        }
         _pkt->header()[HeaderStructureE::HeaderSndMethd] = SNDMTHD_NOROUTE;
         _pkt->header()[HeaderStructureE::HeaderSndParam] = 0x00;
         _pkt->header()[HeaderStructureE::HeaderSndParam1] = 0x00;
@@ -743,6 +757,42 @@ public:
         _pkt->header()[HeaderStructureE::PacketMsgType] = MSGRESP(MSGTYP_SNETLIST);
         _pkt->header()[HeaderStructureE::PacketNumber] = PKTNUMBER(false,false);
         this->copyNodeListToPacket(_pkt);
+        return _pkt;
+    }
+    inline Net485Packet *setTOB(Net485Packet *_pkt, uint8_t _nodeTypeFilter = NTC_ANY, uint8_t _destNodeId = NODEADDR_BCAST, uint8_t _subNet = SUBNET_V2SPEC) {
+        _pkt->header()[HeaderStructureE::HeaderDestAddr] = _destNodeId;
+        _pkt->header()[HeaderStructureE::HeaderSrcAddr] = NODEADDR_COORD;
+        if(_destNodeId == NODEADDR_BCAST) {
+            _pkt->header()[HeaderStructureE::HeaderSubnet] = _subNet;
+        } else {
+            _pkt->header()[HeaderStructureE::HeaderSubnet] = (this->nodes[_destNodeId]->version==NETV1 ? SUBNET_V1SPEC:SUBNET_V2SPEC );
+        }
+        _pkt->header()[HeaderStructureE::HeaderSndMethd] = SNDMTHD_NOROUTE;
+        _pkt->header()[HeaderStructureE::HeaderSndParam] = 0x00;
+        _pkt->header()[HeaderStructureE::HeaderSndParam1] = 0x00;
+        _pkt->header()[HeaderStructureE::HeaderSrcNodeType] = NTC_NETCTRL;
+        _pkt->header()[HeaderStructureE::PacketMsgType] = MSGTYP_TOKEN;
+        _pkt->header()[HeaderStructureE::PacketNumber] = PKTNUMBER(true,false);
+        _pkt->header()[HeaderStructureE::PacketLength] = 1;
+        _pkt->data()[0] = _nodeTypeFilter;
+        return _pkt;
+    }
+    inline Net485Packet *setTOBACK(Net485Packet *_pkt, uint8_t _destNodeId = NODEADDR_COORD ) {
+        _pkt->header()[HeaderStructureE::HeaderDestAddr] = _destNodeId;
+        _pkt->header()[HeaderStructureE::HeaderSrcAddr] = this->nodeId;
+        _pkt->header()[HeaderStructureE::HeaderSubnet] = this->subNet;
+        _pkt->header()[HeaderStructureE::HeaderSndMethd] = SNDMTHD_NOROUTE;
+        _pkt->header()[HeaderStructureE::HeaderSndParam] = 0x00;
+        _pkt->header()[HeaderStructureE::HeaderSndParam1] = 0x00;
+        _pkt->header()[HeaderStructureE::HeaderSrcNodeType] = net485dl->getNodeType();
+        _pkt->header()[HeaderStructureE::PacketMsgType] = MSGRESP(MSGTYP_TOKEN);
+        _pkt->header()[HeaderStructureE::PacketNumber] = PKTNUMBER(true,false);
+        _pkt->header()[HeaderStructureE::PacketLength] = 18;
+        _pkt->data()[0] = this->nodeId;
+        _pkt->data()[1] = this->subNet;
+        memcpy((void *)&(_pkt->data()[2]), net485dl->getMacAddr().mac, Net485MacAddressE::SIZE);
+        memcpy((void *)&(_pkt->data()[2+Net485MacAddressE::SIZE])
+               , &sessionId, sizeof(uint64_t));
         return _pkt;
     }
 };

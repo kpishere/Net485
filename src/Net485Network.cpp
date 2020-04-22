@@ -26,6 +26,8 @@ const uint8_t routingPriority[][ROUTEP_DEVICES] = {
     {PARM1_CMND_AUXHEAT,NTC_ZCTRL,  NTC_AHNDLR, NTC_FURNGAS,    NTC_XOVER,  NTC_XOVER}
 };
 
+uint8_t nextSubnet3NodeId;
+
 Net485Network::Net485Network(Net485DataLink *_net, Net485Subord *_sub, bool _coordinatorCapable
                              , uint16_t _coordVer = 0, uint16_t _coordRev = 0) {
     assert(_net != NULL && _net->getNodeType() != NTC_ANY); // Node type must be defined
@@ -47,6 +49,7 @@ Net485Network::Net485Network(Net485DataLink *_net, Net485Subord *_sub, bool _coo
         this->nodes[i] = NULL;
     }
     this->netNodeListHighest = 0;
+    nextSubnet3NodeId = 0;
 }
 Net485Network::~Net485Network()
 {
@@ -64,6 +67,29 @@ uint8_t Net485Network::nodeExists(Net485Node *_node, bool firstNodeTypeSearch) {
             } else {
                 if(_node->isSameAs(this->nodes[i])) // If node is same, return location
                     return i;
+            }
+        }
+    }
+    return 0;
+}
+bool Net485Network::subnetNodeExists(uint8_t _netVersion) {
+    for(int i = NODEADDR_PRIMY; i<= this->netNodeListHighest; i++) {
+        if(this->netNodeList[i] > 0) { // A node location is used
+            if(this->nodes[i] != NULL && this->nodes[i]->version == _netVersion ) {
+                return true;
+            }
+        }
+    }
+    return false;
+}
+uint8_t Net485Network::rollNextNet2node() {
+    if(nextSubnet3NodeId > this->netNodeListHighest || nextSubnet3NodeId < NODEADDR_PRIMY)
+        nextSubnet3NodeId = NODEADDR_PRIMY;
+    for(int i = nextSubnet3NodeId ; i<= this->netNodeListHighest; i++) {
+        if(this->netNodeList[i] > 0) { // A node location is used
+            if(this->nodes[i] != NULL && this->nodes[i]->version == NETV2 ) {
+                nextSubnet3NodeId++;
+                return i;
             }
         }
     }
@@ -263,6 +289,8 @@ void Net485Network::loopServer(unsigned long _thisTime) {
     Net485Packet *pkt, sendPkt;
     Net485DataVersion netVer;
     bool found = false, newDeviceSet = false;
+    int r2rPerDataCycle = R2R_LOOPS_PERDATACYCLE;
+    int nodeId;
 
     if(lastNodeListPoll == 0 ||  MILLISECDIFF(_thisTime,this->lastNodeListPoll) > NODELIST_REPOLLTIME)
     {
@@ -336,27 +364,49 @@ void Net485Network::loopServer(unsigned long _thisTime) {
 #endif
             this->assignNewNode(NODEADDR_PRIMY);
         } else {
-            // Perform message transaction cycle with primary node
+            // (1) Perform message transaction cycle with primary node
             this->setR2R(&sendPkt, NODEADDR_PRIMY);
             this->workQueue->pushWork(sendPkt);
             this->workQueue->doWork();
-            // Perform Node discovery
+            // (2) Perform Node discovery
             foundNodeId = Net485Network::reqRespNodeDiscover();
             if(foundNodeId) {
                 this->assignNewNode(foundNodeId);
             } else {
                 // If Node on Subnet 3
-                // - send Addr Conf. Broadcast
-                // - Loop upto 5 times
-                //      - send Token Offer Broadcast
-                //      - if resp, send R2R and process transaction
-                // If Node on Subnet 2
-                // - For each node
-                //      - send R2R and process transaction
-                // Send R2R to the next Subnet 3 node in a slow rolling list
-                // Send R2R to Virtual Internal Subordinate
-                
-                // Any other Coordinator Transactions
+                if(this->subnetNodeExists(NETV2)) {
+                    // - (3) send Addr Conf. Broadcast -- clients check node list and
+                    //   remove themselves if not on (they don't respond)
+                    this->net485dl->send(this->setAddressConfirm(&sendPkt, NODEADDR_BCAST, SUBNET_V2SPEC));
+                    do {
+                        //      - (4) send Token Offer Broadcast
+                        nodeId = this->reqRespTOB(NTC_ANY,NODEADDR_BCAST,SUBNET_V2SPEC);
+                        if(nodeId) {
+                        //      - (4.1.1) if resp, send R2R and process transaction
+                            this->setR2R(&sendPkt, nodeId);
+                            this->workQueue->pushWork(sendPkt);
+                            this->workQueue->doWork();
+                        }
+                    } while(--r2rPerDataCycle > 0 && nodeId > 0); // - Loop upto 5 times
+                }
+                // (5) If Node on Subnet 2
+                if(this->subnetNodeExists(NETV1)) {
+                    // - For each node
+                    //      - send R2R and process transaction
+                    this->issueNodeListToNetwork(true,false);
+                }
+                nodeId = this->rollNextNet2node();
+                // (6) Send R2R to the next Subnet 3 node in a slow rolling list
+                if(nodeId) {
+                    this->setR2R(&sendPkt, nodeId);
+                    this->workQueue->pushWork(sendPkt);
+                    this->workQueue->doWork();
+                }
+                // (7) Send R2R to Virtual Internal Subordinate
+                this->setR2R(&sendPkt, NODEADDR_VRTSUB);
+                this->workQueue->pushWork(sendPkt);
+                this->workQueue->doWork();
+                // (8) Any other Coordinator Transactions
                 this->workQueue->doWork();
             }
         }
@@ -442,6 +492,35 @@ uint8_t Net485Network::reqRespNodeId(uint8_t _node, uint8_t _subnet) {
     }
     return matchOrNextNodeId;
 }
+// Create and send a Token Offer Broadcast (TOB) message, receive validate
+//
+// Return: NodeId if response and is valid, otherwise zero
+uint8_t Net485Network::reqRespTOB(uint8_t _nodeTypeFilter, uint8_t _destNodeId, uint8_t _subNet) {
+    Net485Packet *pkt, sendPkt;
+    bool havePkt = false;
+    Net485Node tobACK;
+    uint8_t nodeId = 0;
+    
+    this->net485dl->send(this->setTOB(&sendPkt,_nodeTypeFilter,_destNodeId,_subNet));
+    this->lasttimeOfMessage = millis();
+    while(MILLISECDIFF(millis(),lasttimeOfMessage) < RESPONSE_TIMEOUT && !havePkt) {
+        havePkt = net485dl->hasPacket();
+        if(havePkt) {
+            pkt = net485dl->getNextPacket();
+            if(pkt->header()[HeaderStructureE::PacketMsgType] == MSGRESP(MSGTYP_TOKEN)) {
+                tobACK.init(pkt);
+                nodeId = tobACK.nodeType;
+                tobACK.nodeType = NTC_ANY;
+                if(this->nodes[nodeId] == NULL || !tobACK.isSameAs(this->nodes[nodeId])) {
+                    nodeId = 0;
+                }
+            }
+        }
+    }
+    return nodeId;
+}
+
+
 // Send broadcast for node response, if non response received, go to coordinator arbitration state
 // otherwise, add to node list.
 //
