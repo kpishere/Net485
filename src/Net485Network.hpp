@@ -338,27 +338,45 @@ public:
     //  Current:  Broadcast to each node in list (this does Subnet 2 then Subnet 3), then send
     //      broadcast to Subnet 3
     //
-    inline void issueNodeListToNetwork(bool doWorkImmediately = false, bool vnet2Broadcast = true) {
+    inline void issueToNetwork(uint8_t msgType, bool doWorkImmediately = false, bool vnet2Broadcast = true) {
         Net485Packet sendPkt, *ptr;
         int workItems = 0;
 #ifdef DEBUG
-    Serial.print(" issueNodeListToNetwork() nodeList:");Serial.println(this->netNodeListHighest);
+    Serial.print(" issueToNetwork() nodeList:");Serial.println(this->netNodeListHighest);
 #endif
         // Issue node list to each node on network
         for(int i=0; i<=this->netNodeListHighest; i++) {
             if(this->netNodeList[i] == 0x00) continue;
             if(this->nodes[i]->version == NETV2) continue;
-            this->setNetList(&sendPkt, i);
+            switch(msgType) {
+                case MSGTYP_SNETLIST:
+                    this->setNetList(&sendPkt, i);
+                    break;
+                case MSGTYP_R2R:
+                    this->setR2R(&sendPkt, i);
+                    break;
+                default:
+                    continue;
+            }
             this->workQueue->pushWork(sendPkt); // NB: Zero gets translated to NODEADDR_VRTSUB by this method
             workItems++;
         }
         if(doWorkImmediately) this->workQueue->doWork(workItems);
         if(vnet2Broadcast) {
 #ifdef DEBUG
-    Serial.println(" issueNodeListToNetwork() bcastSubnet 3");
+    Serial.println(" issueToNetwork() bcastSubnet 3");
 #endif
             // Broadcast on Subnet 3
-            ptr = this->setNetList(&sendPkt, NODEADDR_BCAST);
+            switch(msgType) {
+                case MSGTYP_SNETLIST:
+                    ptr = this->setNetList(&sendPkt, NODEADDR_BCAST);
+                    break;
+                case MSGTYP_R2R:
+                    ptr = this->setR2R(&sendPkt, NODEADDR_BCAST);
+                    break;
+                default:
+                    return;
+            }
             this->net485dl->send( ptr );
         }
     }
@@ -378,7 +396,7 @@ public:
                 removedADevice = removedADevice || true;
             }
         }
-        if(removedADevice) this->issueNodeListToNetwork(false);
+        if(removedADevice) this->issueToNetwork(MSGTYP_SNETLIST,false);
     }
     inline Net485Packet *setR2R(Net485Packet *_pkt, uint8_t _destNodeId) {
         _pkt->header()[HeaderStructureE::HeaderDestAddr] = _destNodeId;

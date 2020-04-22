@@ -339,7 +339,7 @@ void Net485Network::loopServer(unsigned long _thisTime) {
         }
         // Inform rest of network of new device
         if(newDeviceSet) {
-            this->issueNodeListToNetwork(true);
+            this->issueToNetwork(MSGTYP_SNETLIST,true);
         }
         //
         this->lastNodeListPoll = _thisTime;
@@ -393,7 +393,7 @@ void Net485Network::loopServer(unsigned long _thisTime) {
                 if(this->subnetNodeExists(NETV1)) {
                     // - For each node
                     //      - send R2R and process transaction
-                    this->issueNodeListToNetwork(true,false);
+                    this->issueToNetwork(MSGTYP_R2R,true,false);
                 }
                 nodeId = this->rollNextNet2node();
                 // (6) Send R2R to the next Subnet 3 node in a slow rolling list
@@ -422,7 +422,7 @@ void Net485Network::assignNewNode(uint8_t foundNodeId) {
         this->netNodeList[foundNodeId] = this->nodes[foundNodeId]->nodeType;
         this->nodes[foundNodeId]->nodeStatus = Net485NodeStatE::Verified;
         if(Net485Network::reqRespSetAddress(foundNodeId)) {
-            this->issueNodeListToNetwork(true);
+            this->issueToNetwork(MSGTYP_SNETLIST,true);
         }
     }
 }
