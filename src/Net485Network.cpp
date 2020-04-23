@@ -206,6 +206,22 @@ void Net485Network::loopClient(unsigned long _thisTime) {
                 || recvPtr->header()[HeaderStructureE::HeaderSubnet] == SUBNET_BCAST ) )
             { // Broadcast messages
                 switch(recvPtr->header()[HeaderStructureE::PacketMsgType]) {
+                    case MSGTYP_TOKEN:
+                        // TODO: add factor based on last message process time to skew for better 'random' distribution?
+                        this->slotTime = this->net485dl->newSlotDelay(0,RESPONSE_TIMEOUT);
+#ifdef DEBUG
+                        Serial.print(" MSGTYP_TOKEN delay ... "); Serial.print(this->slotTime);
+#endif
+                        // Slot delay before responding to broadcast message
+                        havePkt = false;
+                        this->lasttimeOfMessage = millis();
+                        while (MILLISECDIFF(millis(),this->lasttimeOfMessage) < this->slotTime && !havePkt) {
+                            havePkt = net485dl->hasPacket();
+                        }
+                        if(!havePkt) { // If there was no packet heard on line, then we can respond
+                            this->net485dl->send(this->setTOBACK(&pktToSend));
+                        }
+                        break;
                     case MSGTYP_SADDR: // Coordinator sets device address and subnet
                         if(this->getNodeAddress(recvPtr)) { // If message is for this device (same sessionId and mac)
                             this->net485dl->send(this->setRespNodeAddress(&sendPkt));
