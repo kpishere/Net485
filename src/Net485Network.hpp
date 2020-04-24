@@ -34,6 +34,13 @@ typedef enum Net485NodeStatE {
     Online
 } Net485NodeStat;
 
+typedef struct Net485RoutingS {
+    uint8_t SendMethod;
+    uint8_t SendParam;
+    uint8_t SendParam1;
+    uint8_t SourceNode; // If not set, RFD/FFD sets
+} Net485Routing;
+
 typedef struct Net485NodeS {
     Net485MacAddress macAddr;
     uint64_t sessionId;
@@ -811,6 +818,46 @@ public:
         memcpy((void *)&(_pkt->data()[2]), net485dl->getMacAddr().mac, Net485MacAddressE::SIZE);
         memcpy((void *)&(_pkt->data()[2+Net485MacAddressE::SIZE])
                , &sessionId, sizeof(uint64_t));
+        return _pkt;
+    }
+    //
+    // CIM Application message types
+    //
+    // MSGTYP_GCONF    0x01 /*Get Configuration*/
+    // MSGTYP_GSTAT    0x02 /*Get Status*/
+    // MSGTYP_CCMD     0x03 /*Control Command*/
+    
+    // MSGTYP_SDMSG    0x04 /*Set Display Message*/
+    inline Net485Packet *setDisplayMessage(Net485Packet *_pkt, Net485Routing _route = {SNDMTHD_NOROUTE, 0x00, 0x00, 0x00}
+        ,uint8_t _nodeTypeOrigin = 0x00, const char *_message = "") {
+#define MSGTYP_SDMSG_MAX_STRLEN 30
+        _pkt->header()[HeaderStructureE::HeaderDestAddr] = 0x00; /* Set by Net485Routing */
+        _pkt->header()[HeaderStructureE::HeaderSrcAddr] = this->nodeId;
+        _pkt->header()[HeaderStructureE::HeaderSubnet] = this->subNet;
+        _pkt->header()[HeaderStructureE::HeaderSndMethd] = _route.SendMethod;
+        _pkt->header()[HeaderStructureE::HeaderSndParam] = _route.SendParam;
+        _pkt->header()[HeaderStructureE::HeaderSndParam1] = _route.SendParam1;
+        _pkt->header()[HeaderStructureE::HeaderSrcNodeType] = (_route.SourceNode > 0x00 ? _route.SourceNode : net485dl->getNodeType());
+        _pkt->header()[HeaderStructureE::PacketMsgType] = MSGTYP_SDMSG;
+        _pkt->header()[HeaderStructureE::PacketNumber] = PKTNUMBER(false,false);
+        _pkt->data()[0] = _nodeTypeOrigin;
+        _pkt->data()[1] = min( strlen(_message), MSGTYP_SDMSG_MAX_STRLEN );
+        memcpy((void *)&(_pkt->data()[2]), _message, _pkt->data()[1] );
+        _pkt->header()[HeaderStructureE::PacketLength] = _pkt->data()[1] + 2;
+        return _pkt;
+    }
+    inline Net485Packet *setDisplayMessageACK(Net485Packet *_pkt) {
+#define MAX_STRLEN 30
+        _pkt->header()[HeaderStructureE::HeaderSrcAddr] = this->nodeId;
+        _pkt->header()[HeaderStructureE::HeaderSndMethd] = SNDMTHD_NOROUTE;
+        _pkt->header()[HeaderStructureE::HeaderSndParam] = 0x00;
+        _pkt->header()[HeaderStructureE::HeaderSndParam1] = 0x00;
+        _pkt->header()[HeaderStructureE::HeaderSrcNodeType] = net485dl->getNodeType();
+        _pkt->header()[HeaderStructureE::PacketMsgType] = MSGRESP(MSGTYP_SDMSG);
+        _pkt->header()[HeaderStructureE::PacketNumber] = PKTNUMBER(false,false);
+        _pkt->header()[HeaderStructureE::PacketLength] = 2;
+        _pkt->data()[0] = 0xAC;
+        _pkt->data()[1] = 0x06;
         return _pkt;
     }
 };

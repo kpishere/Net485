@@ -34,10 +34,10 @@
 #define SUBNET_V2SPEC 0x03
 
 // Send methods
-#define SNDMTHD_NOROUTE 0x00
-#define SNDMTHD_PRIORITY 0x01
-#define SNDMTHD_NTYPE 0x02
-#define SNDMTHD_BYSCKT 0x03
+#define SNDMTHD_NOROUTE 0x00 /* Destination NodeId must be set directly in header, Param == 0, Param1 == (see below) */
+#define SNDMTHD_PRIORITY 0x01 /* Param == Contro command code , Parm1 == (see header enum comments below) */
+#define SNDMTHD_NTYPE 0x02 /* Param == Targeted node type, Parm1 == (see header enum comments below)*/
+#define SNDMTHD_BYSCKT 0x03 /* Param == Targeted NodeId (socket), Parm1 = (see header enum comments below)*/
 
 // Parameters
 #define PARMBYTEHI(x) ((x)>>8)
@@ -152,7 +152,7 @@ enum HeaderStructureE {
     HeaderSubnet = 0x02,
     HeaderSndMethd = 0x03,
     HeaderSndParam = 0x04,
-    HeaderSndParam1 = 0x05,
+    HeaderSndParam1 = 0x05, /* Msg from coordinator = Nth node in all nodes of same type, Msg from subordinate == Zero */
     HeaderSrcNodeType = 0x06,
     PacketMsgType = 0x07,
     PacketNumber = 0x08,
