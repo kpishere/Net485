@@ -17,12 +17,6 @@ int Net485WorkQueue::pushWork(Net485Packet &pkt) {
         // Check wrap around
         if (this->_next > this->_maxitems) this->_next -= (this->_maxitems + 1);
     }
-#ifdef DEBUG
-    Serial.print("pushWork() ");
-    Serial.print(this->_next);
-    Serial.print(" ");
-    this->top()->display();
-#endif
     return this->_next;
 }
 Net485Packet* Net485WorkQueue::top() {
@@ -39,19 +33,9 @@ int Net485WorkQueue::doWork(int forNitems) {
     
     while(forNitems > 0 && this->_next>0 ) {
         transComplete = false;
-#ifdef DEBUG
-        Serial.print("doWork() ");
-        Serial.print(forNitems);
-        Serial.print(" ");
-        Serial.print(this->_next);
-        Serial.print(",");
-#endif
         // Execute as many steps as are required to complete routing
         if(this->_net != NULL) {
             while( !transComplete ) {
-#ifdef DEBUG
-                this->top()->display();
-#endif
                 transComplete = this->_net->routePacket( this->top() );
             }
         }

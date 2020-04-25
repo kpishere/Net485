@@ -6,8 +6,6 @@
 #ifndef Net485Network_hpp
 #define Net485Network_hpp
 
-#define DEBUG
-
 #include "Net485DataLink.hpp"
 #include "Net485API.hpp"
 #include "Net485Subord.hpp"
@@ -19,6 +17,8 @@
 #define MILLISECDIFF(future,past) ((future < past)? (0xffffffffUL-past)+future : future - past )
 #define MSG_RESEND_ATTEMPTS 3
 #define R2R_LOOPS_PERDATACYCLE 5
+#define ANET_SLOTLO  6000 /* Slot delay for node discovery 6s to 30s */
+#define ANET_SLOTHI 30000
 
 #define PARM1_CMND_HEAT 0x64
 #define PARM1_CMND_COOL 0x65
@@ -93,9 +93,6 @@ typedef struct Net485NodeS {
                           ? Net485NodeStatE::Verified
                           : Net485NodeStatE::Unverified);
         }
-#ifdef DEBUG
-        Serial.print("Net485Node.init(): "); display();
-#endif
         lastExchange = millis();
     };
     bool isSameAs(struct Net485NodeS *_node) {
@@ -111,9 +108,6 @@ typedef struct Net485NodeS {
              ? NODEADDR_PRIMY
              : (version == NETV1 ? 1+NODEADDR_V1LO : NODEADDR_V2LO ));
         while(netNodeList[i]!=0 && i<= (version == NETV1? NODEADDR_V1HI : NODEADDR_V2HI ) ) {
-#ifdef DEBUG
-    Serial.print(" nextNodeLocation() i:"); Serial.print(i); Serial.print(" netNodeList[i]:"); Serial.println(netNodeList[i]);
-#endif
             i = (version == NETV2
                  && (nodeType == NTC_THERM || nodeType == NTC_ZCTRL)
                  && i==1+NODEADDR_V1LO
@@ -127,49 +121,18 @@ typedef struct Net485NodeS {
     bool isNodeIdValid(uint8_t _nodeId) {
         if((nodeType == NTC_THERM || nodeType == NTC_ZCTRL) && _nodeId == 1 )
         {
-#ifdef DEBUG
-            Serial.println("nodeId is valid - nodeType == NTC_THERM || nodeType == NTC_ZCTRL");
-#endif
             return true;
         }
         if(version == NETV1 && _nodeId > NODEADDR_V1LO && _nodeId <= NODEADDR_V1HI) return true;
         {
-#ifdef DEBUG
-            Serial.println("nodeId is valid - version == NETV1 && _nodeId > NODEADDR_V1LO && _nodeId <= NODEADDR_V1HI");
-#endif
             return true;
         }
         if(version == NETV2 && _nodeId >= NODEADDR_V2LO && _nodeId <= NODEADDR_V2HI) return true;
         {
-#ifdef DEBUG
-            Serial.println("nodeId is valid - NETV2 && _nodeId >= NODEADDR_V2LO && _nodeId <= NODEADDR_V2HI");
-#endif
             return true;
         }
-#ifdef DEBUG
-            Serial.println("nodeId is NOT valid ");
-#endif
         return false;
     };
-    void display() {
-#ifdef DEBUG
-        Serial.print("{Node sessionid:");
-        Serial.print((unsigned long)sessionId >> 32,HEX);
-        Serial.print(" ");
-        Serial.print((unsigned long)sessionId & 0xffffffff,HEX);
-        Serial.print(" nodeType:");
-        Serial.print(nodeType,HEX);
-        Serial.print(" nodeStatus:");
-        Serial.print(nodeStatus,HEX);
-        Serial.print(" version:");
-        Serial.print(version,HEX);
-        Serial.print(" lastExchange:");
-        Serial.print(lastExchange);
-        Serial.print(" macAddr:");
-        macAddr.display();
-        Serial.println("}");
-#endif
-    }
 } Net485Node;
 
 enum Net485State {
@@ -287,16 +250,8 @@ public:
         bool gotResponse;
         uint8_t sentNodeId = _pkt->header()[HeaderStructureE::HeaderDestAddr];
         
-    #ifdef DEBUG
-        Serial.print(" routePacket() sentNodeId:");
-        Serial.print(sentNodeId, HEX);
-    #endif
         if(_pkt != NULL) {
             uint8_t msgType = _pkt->header()[HeaderStructureE::PacketMsgType];
-    #ifdef DEBUG
-        Serial.print(" msgType:");
-        Serial.println(msgType, HEX);
-    #endif
             switch(msgType) {
             case MSGTYP_R2R:
                 gotResponse = this->sendMsgGetResponseInPlace(_pkt);
@@ -317,24 +272,13 @@ public:
                 break;
             }
         }
-    #ifdef DEBUG
-        Serial.print(" gotResponse:");
-        Serial.print(gotResponse);
-    #endif
         if(!gotResponse) {
             isExchangeComplete = true; // Regardless of stage in process, this work is done
             // Only remove NET nodes from list
             if(_pkt->header()[HeaderStructureE::HeaderDestAddr] > 0) {
-#ifdef DEBUG
-    Serial.print(" routePacket() Net485NodeStatE::OffLine");
-#endif
                 this->nodes[_pkt->header()[HeaderStructureE::HeaderDestAddr]]->nodeStatus = Net485NodeStatE::OffLine;
             }
         }
-    #ifdef DEBUG
-        Serial.print(" isExchangeComplete:");
-        Serial.println(isExchangeComplete);
-    #endif
         return isExchangeComplete;
     }
     
@@ -348,9 +292,6 @@ public:
     inline void issueToNetwork(uint8_t msgType, bool doWorkImmediately = false, bool vnet2Broadcast = true) {
         Net485Packet sendPkt, *ptr;
         int workItems = 0;
-#ifdef DEBUG
-    Serial.print(" issueToNetwork() nodeList:");Serial.println(this->netNodeListHighest);
-#endif
         // Issue node list to each node on network
         for(int i=0; i<=this->netNodeListHighest; i++) {
             if(this->netNodeList[i] == 0x00) continue;
@@ -370,9 +311,6 @@ public:
         }
         if(doWorkImmediately) this->workQueue->doWork(workItems);
         if(vnet2Broadcast) {
-#ifdef DEBUG
-    Serial.println(" issueToNetwork() bcastSubnet 3");
-#endif
             // Broadcast on Subnet 3
             switch(msgType) {
                 case MSGTYP_SNETLIST:
@@ -392,9 +330,6 @@ public:
         // this->net485dl->send(this->setAddressConfirm(&sendPkt));
     }
     inline void removeOfflineDevices() {
-#ifdef DEBUG
-    Serial.println(" removeOfflineDevices()");
-#endif
         bool removedADevice = false;
         for(int i=1; i<=this->netNodeListHighest; i++) {
             if(this->netNodeList[i] == 0x00) continue;
@@ -451,13 +386,6 @@ public:
             && _pkt->data()[0] == R2R_ACK_CODE) {
             tmpNode.init(_pkt);
             isValid = this->nodes[_node]->isSameAs(&tmpNode);
-#ifdef DEBUG
-    Serial.print(" isR2RACKValid: isValid:"); Serial.println(isValid);
-    this->nodes[_node]->display();
-    Serial.println("  ");
-    tmpNode.display();
-    Serial.println("  ");
-#endif
         }
         return isValid;
     }
@@ -521,16 +449,6 @@ public:
         uint8_t nodeId = 0;
         if(_pkt->header()[HeaderStructureE::PacketMsgType] == MSGRESP(MSGTYP_GNODEID) ) {
             tmpNode.init(_pkt);
-#ifdef DEBUG
-    Serial.print(" addNodeId: validate:"); Serial.print(_validateOnly); Serial.print(" ");
-    Serial.print(" isValid:"); Serial.print(tmpNode.isNodeIdValid(_node)); Serial.print(" ");
-    Serial.print(" isSame:"); Serial.print(this->nodes[_node]->isSameAs(&tmpNode)); Serial.print(" ");
-    Serial.println("  ");
-    this->nodes[_node]->display();
-    Serial.println("  ");
-    tmpNode.display();
-    Serial.println("  ");
-#endif
             if(_validateOnly) {
                 // Compares with what is in node list, if pass then change status
                 if(tmpNode.isNodeIdValid(_node)) {
@@ -542,9 +460,6 @@ public:
                         nodeId = tmpNode.nextNodeLocation(this->netNodeList);
                     }
                 } else {
-#ifdef DEBUG
-    Serial.print(" addNodeId() Net485NodeStatE::OffLine");
-#endif
                     this->nodes[_node]->nodeStatus = Net485NodeStatE::OffLine;
                     this->nodes[_node]->lastExchange = millis();
                     nodeId = tmpNode.nextNodeLocation(this->netNodeList);
@@ -593,14 +508,6 @@ public:
                 // Don't set subnet as we only code for V2
             }
         }
-#ifdef DEBUG
-        Serial.print("NodeAddress set: ");
-        Serial.print(result);
-        Serial.print(" thisDevice:");
-        net485dl->getMacAddr().display();
-        Serial.print(" nodeId: ");
-        Serial.println(this->nodeId, HEX);
-#endif
         return result;
     }
     inline Net485Packet *setRespNodeAddress(Net485Packet *_pkt) {
@@ -673,25 +580,13 @@ public:
     inline uint8_t getNodeDiscResp(Net485Packet *_pkt) {
         Net485Node tmpNode;
         uint8_t nodeIndex = 0;
-#ifdef DEBUG
-            Serial.print("getNodeDiscResp() "); Serial.print(_pkt->header()[HeaderStructureE::PacketMsgType],HEX); Serial.print(" =?= "); Serial.print(MSGRESP(MSGTYP_NDSCVRY),HEX); Serial.println("");
-#endif
         if(_pkt->header()[HeaderStructureE::PacketMsgType] == MSGRESP(MSGTYP_NDSCVRY)) {
             tmpNode.init(_pkt);
             if(tmpNode.nodeType == NTC_ANY) return 0;
-#ifdef DEBUG
-            Serial.print(" nodeType: "); Serial.print(tmpNode.nodeType,HEX); Serial.println("");
-#endif
             nodeIndex = nodeExists(&tmpNode);
-#ifdef DEBUG
-            Serial.print(" nodeIndex a: "); Serial.print(nodeIndex,HEX); Serial.println("");
-#endif
             if(nodeIndex == 0) {
                 nodeIndex = this->addNode(&tmpNode);
             }
-#ifdef DEBUG
-            Serial.print(" getNodeDiscResp: nodeIndex:"); Serial.print(nodeIndex,HEX); Serial.print(" ");  tmpNode.display();
-#endif
         }
         return nodeIndex;
     }
@@ -726,24 +621,11 @@ public:
         bool retVal = true;
         if(_pkt->header()[HeaderStructureE::PacketMsgType] == MSGTYP_ADDRCNFM) {
             int nodeCount = _pkt->header()[HeaderStructureE::PacketLength];
-#ifdef DEBUG
-    Serial.print("isNodeListValid(MSGTYP_ADDRCNFM): count:"); Serial.print(nodeCount);
-    Serial.print(" this->nodeId:"); Serial.print(this->nodeId, HEX);
-    Serial.print(" this->netNodeListHighest:"); Serial.print(this->netNodeListHighest);
-#endif
             if(this->nodeId == 0) return false;
             if(this->netNodeListHighest+1 != nodeCount) return false;
             for(int i=0; i<nodeCount && retVal; i++) {
                 retVal = retVal & ( this->netNodeList[i] == _pkt->data()[i] );
-#ifdef DEBUG
-    Serial.print(" index:"); Serial.print(i);
-    Serial.print(" "); Serial.print(this->netNodeList[i], HEX);
-    Serial.print(" =?= "); Serial.print(_pkt->data()[i], HEX);
-#endif
             }
-#ifdef DEBUG
-    Serial.print(" retVal:"); Serial.println(retVal);
-#endif
             return retVal;
         }
         return false;

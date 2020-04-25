@@ -3,8 +3,6 @@
  *  Net485
  *
  */
-#define DEBUG
-
 #include "Net485DataLink.hpp"
 
 #define ACCUMULATE_FLETCHER(s1,s2,len,ptr) \
@@ -31,11 +29,6 @@ Net485DataLink::Net485DataLink(HardwareSerial *_hwSerial
     if(_deviceId == 0 || _mfgId == 0) {
         this->macAddr.setRandom(seed);
     }
-#ifdef DEBUG
-    Serial.print("DataLink.init(): {macAddr:"); this->macAddr.display();
-    Serial.print(" nodeType:"); Serial.print((unsigned char)this->nodeType,HEX);
-    Serial.println("}");
-#endif
 }
 Net485DataLink::~Net485DataLink() {
 }
@@ -52,25 +45,6 @@ void Net485DataLink::send(Net485Packet *packet) {
     // Set checksum bytes to send
     packet->checksum()[0] =0xff - (((iSum1 + iSum2))% 0xff);
     packet->checksum()[1] =0xff - (((iSum1 + packet->checksum()[0]))%0xff);
-    
-#ifdef DEBUG
-    {
-        char messageBuffer[512]; // Temp for testing only
-        
-        sprintf(messageBuffer,"send {header: 0x");
-        for(int i=0; i<MTU_HEADER ; i++)
-            sprintf( &(messageBuffer[strlen("send {header: 0x")+i*3]), "%0X  ",packet->header()[i]);
-        sprintf(&(messageBuffer[strlen("send {header: 0x")+3*MTU_HEADER]),", data: 0x");
-        for(int i=0; i<packet->dataSize ; i++)
-            sprintf( &(messageBuffer[strlen("send {header: 0x"", data: 0x")
-                                     +3*(MTU_HEADER+i)]), "%0X  ",packet->data()[i]);
-        sprintf(&(messageBuffer[strlen("send {header: 0x"", data: 0x")
-                                +3*(MTU_HEADER+packet->dataSize)])
-                ,", chksum: 0x%0X%0X, now:%lu}"
-                , packet->checksum()[0], packet->checksum()[1], millis());
-        Serial.println(messageBuffer);
-    }
-#endif
     Net485Physical_HardwareSerial::send(packet);
 }
 // Get pointer to next packet in ring buffer
@@ -81,29 +55,11 @@ Net485Packet *Net485DataLink::getNextPacket() {
 
     // Copy bytes received into structure location
     retPkt->dataSize = retPkt->header()[HeaderStructureE::PacketLength];
-#ifdef DEBUG
-    {
-        char messageBuffer[512]; // Temp for testing only
-        
-        sprintf(messageBuffer,"get {header: 0x");
-        for(int i=0; i<MTU_HEADER ; i++)
-            sprintf( &(messageBuffer[strlen("get {header: 0x")+i*3]), "%0X  "
-                    ,retPkt->header()[i]);
-        sprintf(&(messageBuffer[strlen("get {header: 0x")+3*MTU_HEADER]),", data: 0x");
-        for(int i=0; i<retPkt->dataSize ; i++)
-            sprintf( &(messageBuffer[strlen("get {header: 0x"", data: 0x")
-                                     +3*(MTU_HEADER+i)]), "%0X  ",retPkt->data()[i]);
-        sprintf(&(messageBuffer[strlen("get {header: 0x"", data: 0x")
-                                +3*(MTU_HEADER+retPkt->dataSize)])
-                ,", chksum: 0x%0X%0X, now: %lu}"
-                , retPkt->checksum()[0], retPkt->checksum()[1], millis());
-        Serial.println(messageBuffer);
-    }
-#endif
+    
    return retPkt;
 }
 // Fletcher Checksum calculation
-bool Net485DataLink::isChecksumValid(Net485Packet *packet) {
+static bool Net485DataLink::isChecksumValid(Net485Packet *packet) {
     unsigned char iSum1 = 0xAA; // New Fletcher Seed.
     unsigned char iSum2 = 0;
 

@@ -9,7 +9,6 @@
 #include "Net485Physical_HardwareSerial.hpp"
 #include "Net485API.hpp"
 
-
 class Net485DataLink : public Net485Physical_HardwareSerial {
 private:
     Net485MacAddress macAddr;
@@ -57,9 +56,7 @@ public:
         v = v * random(-2^31,2^31-1);
         return v;
     }
-#define SLOT_LOW 100000
-#define SLOT_HIGH 2500000
-    inline uint16_t newSlotDelay(unsigned int low = SLOT_LOW, unsigned int hi = SLOT_HIGH) {
+    inline uint16_t newSlotDelay(unsigned int low, unsigned int hi) {
         unsigned long seed = this->getLoopCount() + this->nodeType + this->macAddr.manufacturerId() + analogRead(0);
         randomSeed(seed);
         return random(low,hi);
@@ -71,7 +68,7 @@ public:
     void send(Net485Packet *packet);
     Net485Packet *getNextPacket();
 
-    bool isChecksumValid(Net485Packet *packet);
+    static bool isChecksumValid(Net485Packet *packet);
 };
 
 #endif Net485DataLink_hpp

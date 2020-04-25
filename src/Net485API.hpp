@@ -176,16 +176,6 @@ typedef struct Net485PacketS {
     uint8_t* checksum() {
         return &buffer[MTU_HEADER + dataSize];
     }
-    void display() {
-#ifdef DEBUG
-        Serial.print("{Pkt header: ");
-        for(int i=0; i<MTU_HEADER;i++) {
-            Serial.print(header()[i],HEX);
-            Serial.print(" ");
-        }
-        Serial.println("}");
-#endif
-    }
 } Net485Packet;
 
 /////
@@ -227,16 +217,6 @@ typedef struct Net485MacAddressS {
         for(int i=Net485MacAddressE::DeviceId; i<Net485MacAddressE::SIZE; i++)
             mac[i] = random(0x00, 0xFF);
         mac[Net485MacAddressE::Reserved] = 0xFF; // Non-zero value flags a random MAC
-    }
-    void display() {
-#ifdef DEBUG
-    Serial.print("{mac:");
-    for(int i=0; i<Net485MacAddressE::SIZE;i++) {
-        Serial.print(mac[i],HEX);
-        Serial.print(" ");
-    }
-    Serial.print("}");
-#endif
     }
 } Net485MacAddress;
 

@@ -6,12 +6,6 @@
 #include "Net485Network.hpp"
 #include <assert.h>
 
-#ifdef DEBUG
-uint8_t lastState = 0xff;
-#endif
-
-#define ANET_SLOTLO  6000
-#define ANET_SLOTHI 30000
 const uint8_t msgTypeVerDiscFilterList[] = {MSGTYP_ANUCVER,MSGTYP_NDSCVRY, NULL};
 const uint8_t msgTypeAssignNodeFilterList[] = {MSGTYP_SADDR, NULL};
 
@@ -103,9 +97,6 @@ uint8_t Net485Network::rollNextNet2node() {
 // TODO: Is there memory leak with updater?  Should free first?
 uint8_t Net485Network::addNode(Net485Node *_node, uint8_t _nodeId) {
     uint8_t nodeIndex = (_nodeId > 0 ? _nodeId : _node->nextNodeLocation(this->netNodeList));
-#ifdef DEBUG
-    Serial.print(" addNode() nodeIndex a: "); Serial.print(nodeIndex, HEX); Serial.println("");
-#endif
     if(nodeIndex > 0) {
         if(this->nodes[nodeIndex] == NULL) {
             this->nodes[nodeIndex] = malloc(sizeof(Net485Node));
@@ -113,21 +104,10 @@ uint8_t Net485Network::addNode(Net485Node *_node, uint8_t _nodeId) {
         this->netNodeList[nodeIndex] = _node->nodeType;
         memcpy(this->nodes[nodeIndex],_node,sizeof(Net485Node));
         this->netNodeListHighest = (nodeIndex > this->netNodeListHighest ? nodeIndex : this->netNodeListHighest);
-#ifdef DEBUG
-    Serial.print(" addNode() netNodeListHighest: "); Serial.print(this->netNodeListHighest, HEX); Serial.println("");
-#endif
     }
-#ifdef DEBUG
-    Serial.print(" addNode() nodeIndex b: "); Serial.print(nodeIndex, HEX); Serial.println("");
-#endif
     return nodeIndex;
 }
 uint8_t Net485Network::delNode(uint8_t _nodeId) {
-#ifdef DEBUG
-    Serial.print(" delNode() _nodeId: "); Serial.print(_nodeId, HEX);
-    Serial.print(" netNodeListHighest: "); Serial.print(this->netNodeListHighest, HEX);
-    Serial.print(" nodeType: "); Serial.print(this->netNodeList[_nodeId], HEX);
-#endif
     if(this->netNodeList[_nodeId] > 0) {
         if(this->nodes[_nodeId] != NULL) {
             free(this->nodes[_nodeId]);
@@ -139,11 +119,6 @@ uint8_t Net485Network::delNode(uint8_t _nodeId) {
             this->netNodeListHighest--;
         }
     }
-#ifdef DEBUG
-    Serial.print(" nodeType: "); Serial.print(this->netNodeList[_nodeId], HEX);
-    Serial.print(" netNodeListHighest: "); Serial.print(this->netNodeListHighest, HEX);
-    Serial.println("");
-#endif
 }
 void Net485Network::loopClient(unsigned long _thisTime) {
     Net485Packet *recvPtr, sendPkt;
@@ -152,42 +127,19 @@ void Net485Network::loopClient(unsigned long _thisTime) {
     if (net485dl->hasPacket())
     {
         recvPtr = net485dl->getNextPacket();
-#ifdef DEBUG
-    Serial.print("myNodeId: "); Serial.print(this->nodeId, HEX);
-    Serial.print(" targetNodeId: "); Serial.print(recvPtr->header()[HeaderStructureE::HeaderDestAddr], HEX);
-    Serial.print(" mySubnet: "); Serial.print(this->subNet, HEX);
-    Serial.print(" targetSubnet: "); Serial.print(recvPtr->header()[HeaderStructureE::HeaderSubnet], HEX);
-    Serial.print(" msgType: "); Serial.print(recvPtr->header()[HeaderStructureE::PacketMsgType], HEX);
-    Serial.println("");
-#endif
         if(this->nodeId > 0) { // Enrolled in network behaviour
-#ifdef DEBUG
-    Serial.println(" IN NETWORK");
-#endif
             if( recvPtr->header()[HeaderStructureE::HeaderDestAddr] == this->nodeId
                 && recvPtr->header()[HeaderStructureE::HeaderSubnet] == this->subNet )
             { // Addressed to this node messages
-#ifdef DEBUG
-    Serial.println(" THIS NODE");
-#endif
                 switch(recvPtr->header()[HeaderStructureE::PacketMsgType]) {
                     case MSGTYP_SNETLIST:
                         this->copyPacketToNodeList(recvPtr);
                         this->net485dl->send(this->setNetListResp(&pktToSend));
                         break;
                     case MSGTYP_R2R:
-#ifdef DEBUG
-    Serial.println(" MSGTYP_R2R");
-#endif
                         if(this->sub != NULL && this->sub->hasPacket(&(this->lasttimeOfMessage)) ) {
-#ifdef DEBUG
-    Serial.println(" VIRTUAL DEVICE CALL");
-#endif
                             this->net485dl->send(this->sub->getNextPacket());
                         } else {
-#ifdef DEBUG
-    Serial.println(" VIRTUAL DEVICE R2R_ACK");
-#endif
                             this->net485dl->send(this->setACK(&pktToSend));
                         }
                         break;
@@ -209,9 +161,6 @@ void Net485Network::loopClient(unsigned long _thisTime) {
                     case MSGTYP_TOKEN:
                         // TODO: add factor based on last message process time to skew for better 'random' distribution?
                         this->slotTime = this->net485dl->newSlotDelay(0,RESPONSE_TIMEOUT);
-#ifdef DEBUG
-                        Serial.print(" MSGTYP_TOKEN delay ... "); Serial.print(this->slotTime);
-#endif
                         // Slot delay before responding to broadcast message
                         havePkt = false;
                         this->lasttimeOfMessage = millis();
@@ -244,23 +193,14 @@ void Net485Network::loopClient(unsigned long _thisTime) {
             // We only listen for a Node discovery request
             if( recvPtr->header()[HeaderStructureE::PacketMsgType] == MSGTYP_NDSCVRY ) {
                 this->slotTime = this->net485dl->newSlotDelay(ANET_SLOTLO,ANET_SLOTHI);
-#ifdef DEBUG
-                Serial.print("delay ... "); Serial.print(this->slotTime);
-#endif
                 // Slot delay before responding to broadcast message
                 havePkt = false;
                 this->lasttimeOfMessage = millis();
                 while (MILLISECDIFF(millis(),this->lasttimeOfMessage) < this->slotTime && !havePkt) {
                     havePkt = net485dl->hasPacket();
                 }
-#ifdef DEBUG
-                Serial.print(" havePkt:"); Serial.println(havePkt,HEX);
-#endif
                 if(!havePkt) {
                     uint8_t nodeTypeFilter = getNodeDiscNodeTypeFilter(recvPtr);
-#ifdef DEBUG
-                    Serial.print("clientNodeType:"); Serial.print(net485dl->getNodeType(),HEX); Serial.print(" discoverNodeType:"); Serial.println(nodeTypeFilter,HEX);
-#endif
                     // Nobody else responded, continue
                     if(nodeTypeFilter == NTC_ANY || nodeTypeFilter == net485dl->getNodeType())
                     {
@@ -269,9 +209,6 @@ void Net485Network::loopClient(unsigned long _thisTime) {
                         this->lasttimeOfMessage = millis();
                         havePkt = false;
                         // Wait for address assignment of this node
-#ifdef DEBUG
-                    Serial.print("wait ... ");
-#endif
                         this->lasttimeOfMessage = millis();
                         net485dl->setPacketFilter(NULL,NULL,NULL,msgTypeAssignNodeFilterList);
                         while (MILLISECDIFF(millis(),this->lasttimeOfMessage)
@@ -280,21 +217,12 @@ void Net485Network::loopClient(unsigned long _thisTime) {
                             havePkt = net485dl->hasPacket(&(this->lasttimeOfMessage));
                             if(havePkt) {
                                 recvPtr = net485dl->getNextPacket();
-#ifdef DEBUG
-                                Serial.print(" received msgType:");
-                                Serial.println(recvPtr->header()[HeaderStructureE::PacketMsgType], HEX);
-#endif
                                 if(this->getNodeAddress(recvPtr)) {
                                     this->net485dl->send(this->setRespNodeAddress(&sendPkt));
                                 }
                             }
                         }
                         net485dl->setPacketFilter(NULL,NULL,NULL,NULL);
-#ifdef DEBUG
-                        if(!havePkt) {
-                            Serial.println(" no assignment from coordinator!");
-                        }
-#endif
                     }
                 } /* !havePkt */
             } /* MSGTYP_NDSCVRY */
@@ -316,9 +244,6 @@ void Net485Network::loopServer(unsigned long _thisTime) {
         // Poll for new nodes
         //
         uint8_t nodeId = Net485Network::reqRespNodeDiscover();
-#ifdef DEBUG
-                Serial.print("nodeDisc: "); Serial.print(nodeId); Serial.print(" ");
-#endif
         uint8_t nextNodeId = 0;
         // Check for pre-existing node and/or find next free node
         // Loop exits with:
@@ -331,15 +256,9 @@ void Net485Network::loopServer(unsigned long _thisTime) {
             if(nodeId==NODEADDR_PRIMY) {
                 // For thermostat node type - send msg to check availability of nodeid
                 nextNodeId = Net485Network::reqRespNodeId(nodeId, SUBNET_V1SPEC);
-#ifdef DEBUG
-                Serial.print(" isV1SPECThermostat: "); Serial.print(nextNodeId); Serial.print(" ");
-#endif
             } else {
                 // Any other device from thermostat - send msg to check availability of nodeid
                 nextNodeId = Net485Network::reqRespNodeId(nodeId, SUBNET_BCAST);
-#ifdef DEBUG
-                Serial.print(" isAnyDevice: "); Serial.print(nextNodeId); Serial.print(" ");
-#endif
             }
             found = (nodeId == nextNodeId)  /* Node IDs match if exact match found, set exit condition */
                 || (nextNodeId == 0 && nodeId > 0); /* No prior existing node */
@@ -373,11 +292,6 @@ void Net485Network::loopServer(unsigned long _thisTime) {
         if( this->netNodeList[NODEADDR_PRIMY] == 0
             && this->net485dl->getNodeType() != NTC_THERM
             && this->net485dl->getNodeType() != NTC_ZCTRL ) {
-#ifdef DEBUG
-        Serial.print(" PRIMRY:"); Serial.print(this->netNodeList[NODEADDR_PRIMY]);
-        Serial.print(" subNode:"); Serial.print(this->net485dl->getNodeType());
-        Serial.println("");
-#endif
             this->assignNewNode(NODEADDR_PRIMY);
         } else {
             // (1) Perform message transaction cycle with primary node
@@ -452,22 +366,10 @@ bool Net485Network::reqRespSetAddress(uint8_t _node) {
     uint8_t setSubnet = (this->nodes[_node]->version==NETV1 ? SUBNET_V1SPEC:SUBNET_V2SPEC );
     
     // Unassign this device if not verified by this point
-#ifdef DEBUG
-        Serial.print("nodeId: "); Serial.print(_node);
-        Serial.print(" subnet:"); Serial.print(setSubnet);
-        Serial.print(" status:"); Serial.print(this->nodes[_node]->nodeStatus);
-        Serial.print(" verifiedStatus:"); Serial.print(Net485NodeStatE::Verified);
-        Serial.println("");
-#endif
     if(this->nodes[_node]->nodeStatus != Net485NodeStatE::Verified) {
         setNode = 0;
         setSubnet = 0;
     }
-#ifdef DEBUG
-        Serial.print("nodeAssign: {nodeId:"); Serial.print(setNode);
-        Serial.print(" subnet:"); Serial.print(setSubnet);
-        Serial.println("}");
-#endif
     this->net485dl->send(this->setNodeAddress(&sendPkt,setNode,setSubnet,this->nodes[_node]));
     this->lasttimeOfMessage = millis();
     while(MILLISECDIFF(millis(),lasttimeOfMessage) < RESPONSE_TIMEOUT && !havePkt) {
@@ -478,9 +380,6 @@ bool Net485Network::reqRespSetAddress(uint8_t _node) {
             this->nodes[_node]->lastExchange = this->lasttimeOfMessage;
             
             if(this->getRespNodeAddress(pkt) == NULL) {
-#ifdef DEBUG
-        Serial.println(" *node set offline* ");
-#endif
                 havePkt = false;
                 this->delNode(_node);
             }
@@ -577,27 +476,18 @@ bool Net485Network::sendMsgGetResponseInPlace(Net485Packet *_pkt) {
     switch(sndMthd) {
     case SNDMTHD_PRIORITY:
         if(!this->setPriorityNode(_pkt)) {
-#ifdef DEBUG
-            Serial.println("SNDMTHD_PRIORITY not routed");
-#endif
             return false; // This packet will not be routed
         }
         break;
     case SNDMTHD_NTYPE:
         _pkt->header()[HeaderStructureE::HeaderDestAddr] = this->getNodeIdOfType(_pkt->header()[HeaderStructureE::HeaderSndParam], 0);
         if(_pkt->header()[HeaderStructureE::HeaderDestAddr] == NODEADDR_COORD) {
-#ifdef DEBUG
-            Serial.println("SNDMTHD_NTYPE not routed");
-#endif
             return false; // This packet will not be routed
         }
         break;
     case SNDMTHD_BYSCKT: // This method supported by NETV2 only
         _pkt->header()[HeaderStructureE::HeaderDestAddr] = _pkt->header()[HeaderStructureE::HeaderSndParam];
         if(_pkt->header()[HeaderStructureE::HeaderDestAddr] == NODEADDR_COORD) {
-#ifdef DEBUG
-            Serial.println("SNDMTHD_BYSCKT not routed");
-#endif
             return false; // This packet will not be routed
         }
         break;
@@ -616,9 +506,6 @@ bool Net485Network::sendMsgGetResponseInPlace(Net485Packet *_pkt) {
      || _pkt->header()[HeaderStructureE::HeaderDestAddr] == 0x00 ) {
         // This message is destined for the virtual node
         if(this->sub != NULL) {
-#ifdef DEBUG
-            Serial.println("VIRTUAL SEND");
-#endif
             switch(_pkt->header()[HeaderStructureE::PacketMsgType]) {
                 case MSGTYP_R2R:
                     if(this->sub != NULL && this->sub->hasPacket(&(this->lasttimeOfMessage))) {
@@ -707,16 +594,6 @@ bool Net485Network::setPriorityNode(Net485Packet *_pkt) {
 
 void Net485Network::loop() {
     unsigned long thisTime = millis();
-#ifdef DEBUG
-    {
-        char messageBuffer[100]; // Temp for testing only
-        if(lastState != this->state) {
-            sprintf(messageBuffer,"{state: %d, now:%lu, deltaLasttimeOfMessage:%lu}",this->state, thisTime, MILLISECDIFF(thisTime,lasttimeOfMessage));
-            Serial.println(messageBuffer);
-            lastState = this->state;
-        }
-    }
-#endif
     // Network silence time - device warm starts if this silence is exceeded
     if( MILLISECDIFF(thisTime,lasttimeOfMessage) > PROLONGED_SILENCE ) {
         if(this->state != Net485State::ANClient) this->warmStart(thisTime);
@@ -741,20 +618,11 @@ void Net485Network::loop() {
 bool Net485Network::becomeClient(Net485Packet *pkt, unsigned long _thisTime) {
     Net485DataVersion netVer;
     bool isCAVA = false;
-#ifdef DEBUG
-    char messageBuffer[160]; // Temp for testing only
-#endif
 
     if(pkt->header()[HeaderStructureE::PacketMsgType] == MSGTYP_ANUCVER) {
         isCAVA = true;
         // 1.1 CAVA Seen
         netVer.init(pkt);
-        
-#ifdef DEBUG
-        sprintf(messageBuffer,"{becomClient: %hu leftVer: %hu leftRev:%hu rightVer: %hu rightRev: %hu}",netVer.comp(this->ver,netVer), this->ver.Version, this->ver.Revision, netVer.Version, netVer.Revision);
-        Serial.println(messageBuffer);
-#endif
-
         if( netVer.comp(this->ver,netVer)>0 ) {
             // Is Net CAVA < own CAVA 1.2 Yes
             this->state = Net485State::ANServerBecomingB;
@@ -766,15 +634,8 @@ bool Net485Network::becomeClient(Net485Packet *pkt, unsigned long _thisTime) {
             if(this->sub != NULL) {
                 net485dl->setPacketFilter(NULL,NULL,NULL,NULL);
                 this->state = Net485State::ANClient;
-#ifdef DEBUG
-                Serial.println("{client, gone quiet}");
-#endif
-            } else {
-                // otherwise, go quiet - left as client becoming until reset
-#ifdef DEBUG
-                Serial.println("{client without subordinate, gone quiet}");
-#endif
             }
+            // MOTE: otherwise, go quiet - left as client becoming until reset
         }
         this->lasttimeOfMessage = _thisTime;
     }
@@ -883,14 +744,7 @@ void Net485Network::warmStart(unsigned long _thisTime) {
         if(this->sub != NULL) {
             net485dl->setPacketFilter(NULL,NULL,NULL,NULL);
             this->state = Net485State::ANClient;
-#ifdef DEBUG
-            Serial.println("{client, gone quiet}");
-#endif
-        } else {
-            // otherwise, go quiet - left as client becoming until reset
-#ifdef DEBUG
-            Serial.println("{client without subordinate, gone quiet}");
-#endif
         }
+        // NOTE: otherwise, go quiet - left as client becoming until reset
     }
 }
