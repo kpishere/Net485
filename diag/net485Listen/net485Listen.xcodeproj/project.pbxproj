@@ -50,7 +50,7 @@
 		0FF08BB9242905DE0058B5E1 /* CT485API.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CT485API.swift; sourceTree = "<group>"; };
 		0FF08BBA242905DE0058B5E1 /* main.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = main.swift; sourceTree = "<group>"; };
 		0FF08BBB242905DE0058B5E1 /* Net485.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Net485.swift; sourceTree = "<group>"; };
-		0FF08BBC242905DE0058B5E1 /* Swift-Bridging-Header.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "Swift-Bridging-Header.h"; sourceTree = "<group>"; };
+		0FF08BBC242905DE0058B5E1 /* Swift-Bridging-Header.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "Swift-Bridging-Header.h"; path = "../../net485Furnace/Source/Swift-Bridging-Header.h"; sourceTree = "<group>"; };
 		0FF08BBD242905DE0058B5E1 /* Package.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = Package.swift; path = net485Listen/Package.swift; sourceTree = "<group>"; };
 		0FF08BBE242905DE0058B5E1 /* README.md */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = net.daringfireball.markdown; name = README.md; path = net485Listen/README.md; sourceTree = "<group>"; };
 		0FF08BC52429211B0058B5E1 /* ORSSerialPort.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = ORSSerialPort.xcodeproj; path = "net485Listen/Frameworks/ORSSerialPort/Framework Project/ORSSerialPort.xcodeproj"; sourceTree = "<group>"; };

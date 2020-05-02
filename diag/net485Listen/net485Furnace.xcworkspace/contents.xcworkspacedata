@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Workspace
+   version = "1.0">
+   <FileRef
+      location = "group:net485Furnace/net485Furnace.xcodeproj">
+   </FileRef>
+   <FileRef
+      location = "container:net485Listen.xcodeproj">
+   </FileRef>
+</Workspace>

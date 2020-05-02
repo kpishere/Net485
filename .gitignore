@@ -5,3 +5,4 @@ Thermostat/
 *.xcodeproj
 *.json
 .build
+xcuserdata/
