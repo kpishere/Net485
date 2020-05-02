@@ -163,6 +163,7 @@ enum HeaderStructureE {
 #define MTU_DATA 240UL
 #define MTU_CHECKSUM 2UL
 #define MTU_MAX (MTU_HEADER + MTU_DATA + MTU_CHECKSUM)
+#define SDMSG_LEN 30
 
 typedef struct Net485PacketS {
     uint8_t buffer[MTU_MAX];

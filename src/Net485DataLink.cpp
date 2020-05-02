@@ -34,17 +34,7 @@ Net485DataLink::~Net485DataLink() {
 }
 // Calculate checksum and set on packet before sending
 void Net485DataLink::send(Net485Packet *packet) {
-    unsigned char iSum1 = 0xAA; // New Fletcher Seed.
-    unsigned char iSum2 = 0;
-    
-    // copy header bytes to send to structure location
-    packet->dataSize = packet->header()[HeaderStructureE::PacketLength];
-
-    // Accumulate data to send
-    ACCUMULATE_FLETCHER(iSum1,iSum2,packet->header()[HeaderStructureE::PacketLength] + MTU_HEADER,packet->buffer)
-    // Set checksum bytes to send
-    packet->checksum()[0] =0xff - (((iSum1 + iSum2))% 0xff);
-    packet->checksum()[1] =0xff - (((iSum1 + packet->checksum()[0]))%0xff);
+    calculateChecksum(packet);
     Net485Physical_HardwareSerial::send(packet);
 }
 // Get pointer to next packet in ring buffer
@@ -70,5 +60,19 @@ static bool Net485DataLink::isChecksumValid(Net485Packet *packet) {
     
     return ((iSum1 == 0) && (iSum2 == 0) && packet->header()[HeaderStructureE::PacketLength] == packet->dataSize);
 }
+static void Net485DataLink::calculateChecksum(Net485Packet *packet) {
+    unsigned char iSum1 = 0xAA; // New Fletcher Seed.
+    unsigned char iSum2 = 0;
+    
+    // copy header bytes to send to structure location
+    packet->dataSize = packet->header()[HeaderStructureE::PacketLength];
+
+    // Accumulate data to send
+    ACCUMULATE_FLETCHER(iSum1,iSum2,packet->header()[HeaderStructureE::PacketLength] + MTU_HEADER,packet->buffer)
+    // Set checksum bytes to send
+    packet->checksum()[0] =0xff - (((iSum1 + iSum2))% 0xff);
+    packet->checksum()[1] =0xff - (((iSum1 + packet->checksum()[0]))%0xff);
+}
+
 
 

@@ -27,6 +27,13 @@
 #define PARM1_CMND_DEFRST 0x68
 #define PARM1_CMND_AUXHEAT 0x69
 
+enum Net485Diagnostic : uint8_t {
+    ERROR,
+    WARNING,
+    INFO_LOW,
+    INFO_HIGH
+};
+
 typedef enum Net485NodeStatE {
     OffLine,
     Unverified,
@@ -158,6 +165,7 @@ private:
     Net485DataVersion ver;
     uint64_t sessionId;
     uint8_t nodeId, subNet;
+    Net485Diagnostic diagnostic;
     
     uint8_t netNodeList[MTU_DATA];
     uint8_t netNodeListHighest; /* An index value */
@@ -188,6 +196,8 @@ private:
     uint8_t rollNextNet2node();
     uint8_t addNode(Net485Node *_node, uint8_t _nodeId = 0);
     uint8_t delNode(uint8_t _nodeId);
+
+    void sendVirtDevMacMsg();
 
     
     // Utillity function to copy node list to packet's data
@@ -235,9 +245,9 @@ private:
     bool setPriorityNode(Net485Packet *_pkt);
     void assignNewNode(uint8_t foundNodeId);
 public:
-    Net485Network(Net485DataLink *_net, Net485Subord *_sub = NULL, bool _coordinatorCapable = true, uint16_t _coordVer = 0, uint16_t _coordRev = 0);
+    Net485Network(Net485DataLink *_net, Net485Subord *_sub = NULL, bool _coordinatorCapable = true, uint16_t _coordVer = 0, uint16_t _coordRev = 0, Net485Diagnostic _diagnostic = 0);
     ~Net485Network();
-    
+        
     void loop();
     
     // Send packet to appropriate device.  Packet is routed as per header values to appropriate network device.
@@ -324,10 +334,6 @@ public:
             }
             this->net485dl->send( ptr );
         }
-    }
-    inline void issueR2RNetV1() {
-        // TODO: Issue R2R to only V1 devices if any in node list
-        // this->net485dl->send(this->setAddressConfirm(&sendPkt));
     }
     inline void removeOfflineDevices() {
         bool removedADevice = false;
@@ -710,8 +716,7 @@ public:
     // MSGTYP_CCMD     0x03 /*Control Command*/
     
     // MSGTYP_SDMSG    0x04 /*Set Display Message*/
-    inline Net485Packet *setDisplayMessage(Net485Packet *_pkt, Net485Routing _route = {SNDMTHD_NOROUTE, 0x00, 0x00, 0x00}
-        ,uint8_t _nodeTypeOrigin = 0x00, const char *_message = "") {
+    inline Net485Packet *setDisplayMessage(Net485Packet *_pkt, const char *_message = "",uint8_t _nodeTypeOrigin = 0x00, Net485Routing _route = {SNDMTHD_NOROUTE, 0x00, 0x00, 0x00}) {
 #define MSGTYP_SDMSG_MAX_STRLEN 30
         _pkt->header()[HeaderStructureE::HeaderDestAddr] = 0x00; /* Set by Net485Routing */
         _pkt->header()[HeaderStructureE::HeaderSrcAddr] = this->nodeId;
@@ -722,7 +727,7 @@ public:
         _pkt->header()[HeaderStructureE::HeaderSrcNodeType] = (_route.SourceNode > 0x00 ? _route.SourceNode : net485dl->getNodeType());
         _pkt->header()[HeaderStructureE::PacketMsgType] = MSGTYP_SDMSG;
         _pkt->header()[HeaderStructureE::PacketNumber] = PKTNUMBER(false,false);
-        _pkt->data()[0] = _nodeTypeOrigin;
+        _pkt->data()[0] = (_nodeTypeOrigin > 0x00 ? _nodeTypeOrigin : net485dl->getNodeType());
         _pkt->data()[1] = min( strlen(_message), MSGTYP_SDMSG_MAX_STRLEN );
         memcpy((void *)&(_pkt->data()[2]), _message, _pkt->data()[1] );
         _pkt->header()[HeaderStructureE::PacketLength] = _pkt->data()[1] + 2;

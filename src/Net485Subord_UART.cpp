@@ -25,6 +25,7 @@ bool Net485Subord_UART::readPkt(int _waitms) {
     return pktReady;
 }
 void Net485Subord_UART::send(Net485Packet *packet) {
+    Net485DataLink::calculateChecksum(packet);
     this->hwSerial->write(packet->buffer,MTU_HEADER + packet->dataSize + MTU_CHECKSUM);
 };
 bool Net485Subord_UART::hasPacket(unsigned long *millisLastRead) {

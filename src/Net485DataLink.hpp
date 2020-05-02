@@ -69,6 +69,7 @@ public:
     Net485Packet *getNextPacket();
 
     static bool isChecksumValid(Net485Packet *packet);
+    static void calculateChecksum(Net485Packet *packet);
 };
 
 #endif Net485DataLink_hpp

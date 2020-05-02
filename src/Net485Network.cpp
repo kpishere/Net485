@@ -23,7 +23,7 @@ const uint8_t routingPriority[][ROUTEP_DEVICES] = {
 uint8_t nextSubnet3NodeId;
 
 Net485Network::Net485Network(Net485DataLink *_net, Net485Subord *_sub, bool _coordinatorCapable
-                             , uint16_t _coordVer = 0, uint16_t _coordRev = 0) {
+                             , uint16_t _coordVer, uint16_t _coordRev, Net485Diagnostic _diagnostic) {
     assert(_net != NULL && _net->getNodeType() != NTC_ANY); // Node type must be defined
     this->workQueue = new Net485WorkQueue(this);
     this->net485dl = _net;
@@ -38,6 +38,7 @@ Net485Network::Net485Network(Net485DataLink *_net, Net485Subord *_sub, bool _coo
     this->sub = _sub;
     this->nodeId = 0;
     this->subNet = 0;
+    this->diagnostic = _diagnostic;
     for(int i=0; i<MTU_DATA; i++) {
         this->netNodeList[i] = 0x00;
         this->nodes[i] = NULL;
@@ -238,8 +239,6 @@ void Net485Network::loopServer(unsigned long _thisTime) {
 
     if(lastNodeListPoll == 0 ||  MILLISECDIFF(_thisTime,this->lastNodeListPoll) > NODELIST_REPOLLTIME)
     {
-        // Address Confirmation broadcast - NetV1
-        this->issueR2RNetV1();
         //
         // Poll for new nodes
         //
@@ -614,6 +613,21 @@ void Net485Network::loop() {
             break;
     }
 }
+void Net485Network::sendVirtDevMacMsg() {
+    char buf[SDMSG_LEN];
+    Net485Packet sendPkt;
+    sprintf(buf,"MAC:%02X %02X %02X %02X %02X %02X %02X %02X"
+    ,net485dl->getMacAddr().mac[0]
+    ,net485dl->getMacAddr().mac[1]
+    ,net485dl->getMacAddr().mac[2]
+    ,net485dl->getMacAddr().mac[3]
+    ,net485dl->getMacAddr().mac[4]
+    ,net485dl->getMacAddr().mac[5]
+    ,net485dl->getMacAddr().mac[6]
+    ,net485dl->getMacAddr().mac[7]
+    );
+    this->sub->send(this->setDisplayMessage(&sendPkt, buf));
+}
 /// Returns true if CAVA message
 bool Net485Network::becomeClient(Net485Packet *pkt, unsigned long _thisTime) {
     Net485DataVersion netVer;
@@ -634,8 +648,11 @@ bool Net485Network::becomeClient(Net485Packet *pkt, unsigned long _thisTime) {
             if(this->sub != NULL) {
                 net485dl->setPacketFilter(NULL,NULL,NULL,NULL);
                 this->state = Net485State::ANClient;
+                if(this->diagnostic >= Net485Diagnostic::INFO_LOW) {
+                    this->sendVirtDevMacMsg();
+                }
             }
-            // MOTE: otherwise, go quiet - left as client becoming until reset
+            // NOTE: otherwise, go quiet - left as client becoming until reset
         }
         this->lasttimeOfMessage = _thisTime;
     }
@@ -715,6 +732,10 @@ void Net485Network::warmStart(unsigned long _thisTime) {
                     if(this->sub != NULL) {
                         this->netNodeList[0] = this->net485dl->getNodeType();
                         this->netNodeListHighest = 0;
+                        
+                        if(this->diagnostic >= Net485Diagnostic::INFO_LOW) {
+                            this->sendVirtDevMacMsg();
+                        }
                     }
                 }
                 break;
