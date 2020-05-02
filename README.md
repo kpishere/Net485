@@ -20,7 +20,11 @@ Layers 3-5:
 - Data packets infrastructure in place along with 4 types of packet routing. Next items are Token Offer Broadcast and correct handling of devices on coordinator side in case of device timeouts.
 - Getting very close to usefull, with the pending addition of MSGTYP_TOKEN usage, it will be time to 'switch gears' to adding a real virtual device.  All debugging messages from the network coordinator will have to be piped through a diagnostic message type of 15 characters (may use a "manufacturer's" specific message type here too as 15 characters is very tiny window for debugging info).
 
-Still not quite usefull but almost. A work in progress ... 
+Milestone 1 : 
+
+A big change in project structure now.  Now, with the coordinator services running (test_network_furnace and test_network_thermostat), their 2nd serial lines are expected to be communicating with the respective device's application process.  The communication is the exact same packet structure as on the RS485 wire but is only the data packets relevant to the application (and some header values are switched as defined in CT documentation).
+
+Presently, one can use the net485Listener tool to see packets to the device.  I'll be making respective utilities to emulate some devices.  This may be close to being useful for those that wish to make HVAC devices communicate now.
 
 # Net485Listen
 
