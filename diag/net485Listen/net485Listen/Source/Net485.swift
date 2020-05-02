@@ -7,6 +7,7 @@
 //
 
 import Foundation
+import ORSSerial
 
 enum MsgType:UInt8 {
     //
@@ -114,6 +115,18 @@ struct net485Packet {
         return "\(self.msgType) isDataFlow:\(self.isDataFlow) Ver:\(self.version) Chunk:\(self.chunk) len:\(self.pktLength)"
     }
 }
+enum HeaderStructure : Int {
+    case HeaderDestAddr = 0x00
+    case HeaderSrcAddr = 0x01
+    case HeaderSubnet = 0x02
+    case HeaderSndMethd = 0x03
+    case HeaderSndParam = 0x04
+    case HeaderSndParam1 = 0x05 /* Msg from coordinator = Nth node in all nodes of same type, Msg from subordinate == Zero */
+    case HeaderSrcNodeType = 0x06
+    case PacketMsgType = 0x07
+    case PacketNumber = 0x08
+    case PacketLength = 0x09
+}
 struct net485MsgHeader {
     let addrDestination: UInt8
     let addrSource: UInt8
@@ -124,13 +137,13 @@ struct net485MsgHeader {
     let packet: net485Packet
     
     init(_ data:Data) {
-        self.addrDestination = data[0]
-        self.addrSource = data[1]
-        self.subnet = data[2]
-        self.sendMethod = SendMethod( rawValue:data[3] ) ?? .NODETYPROUTING
-        self.sendParameter.0 = data[4]
-        self.sendParameter.1 = data[5]
-        self.nodeTypeSource = data[6]
+        self.addrDestination = data[HeaderStructure.HeaderDestAddr.rawValue]
+        self.addrSource = data[HeaderStructure.HeaderSrcAddr.rawValue]
+        self.subnet = data[HeaderStructure.HeaderSubnet.rawValue]
+        self.sendMethod = SendMethod( rawValue:data[HeaderStructure.HeaderSndMethd.rawValue] ) ?? .NODETYPROUTING
+        self.sendParameter.0 = data[HeaderStructure.HeaderSndParam.rawValue]
+        self.sendParameter.1 = data[HeaderStructure.HeaderSndParam1.rawValue]
+        self.nodeTypeSource = data[HeaderStructure.HeaderSrcNodeType.rawValue]
         self.packet = net485Packet.init(data)
     }
     var description: String {
@@ -140,29 +153,65 @@ struct net485MsgHeader {
 
 
 class PacketProcessor : NSObject, ORSSerialPortDelegate {
+    let maxPktSize : UInt = 252
+    let pktHeaderSize : UInt = 10
+    let pktCrcSize : UInt = 2
+    var accumlPacket : Data = Data()
     var dateTimePrior : Date = Date()
     
     convenience init(_ port: ORSSerialPort) {
         self.init()
         port.delegate = self
     }
-    
     func serialPortWasRemovedFromSystem(_ serialPort: ORSSerialPort) {
         exit(2)
     }
     
     func serialPort(_ serialPort: ORSSerialPort, didReceive data: Data) {
-        let currentDateTime = Date();
-        let isOK = self.passCRC(data: data)
-        let fmdTimediffSec = String(format: "%.3f", currentDateTime.timeIntervalSince(self.dateTimePrior))
-        print("\n\(currentDateTime) \(fmdTimediffSec) Bytes:\(data.count) Pkt:\(data.asHexString) \(isOK ? "CRCOK":"CRCERR")")
-        if isOK {
-            let msg = net485MsgHeader.init(data)
+        if(data.count > 0) {
+            self.accumlPacket += data;
+        }
+        let pktLen = self.isValid(data: self.accumlPacket)
+        print("\nnew:\(data.count) acum:\(self.accumlPacket.count) crc:\(pktLen)");
+        if(pktLen>0) {
+            let currentDateTime = Date();
+            let validPktPart = Range(0...Int(pktLen-1))
+            let partialData = self.accumlPacket.subdata(in: validPktPart)
+            
+            // check packet is complete
+            let fmdTimediffSec = String(format: "%.3f", currentDateTime.timeIntervalSince(self.dateTimePrior))
+            print("\n\(currentDateTime) \(fmdTimediffSec) Bytes:\(pktLen) Pkt:\(partialData.asHexString)")
+
+            let msg = net485MsgHeader.init(partialData)
             print(msg.description)
             let msgOfType = CT485MessageCreator.shared.create(msg)
             msgOfType?.description()
+            
+            self.accumlPacket.removeSubrange(validPktPart)
+
+            self.dateTimePrior = currentDateTime
         }
-        self.dateTimePrior = currentDateTime
+        // Recover from an invalid packet -- note that with one invalid packet, others can be lost too
+        // this isn't ideal
+        if(self.accumlPacket.count > maxPktSize) {
+            print("\n CRCERR Bytes:\(self.accumlPacket.count) Pkt:\(self.accumlPacket.asHexString)")
+            self.accumlPacket.removeAll()
+        }
+    }
+    
+    // Returns 0 if not valid, calculated length of valid data otherwise
+    func isValid(data: Data) -> UInt {
+        // Minimum packet size
+        if( data.count < (self.pktHeaderSize + self.pktCrcSize)) {
+            return 0;
+        }
+        // Calculated size requirement
+        let payloadLen = UInt(data[HeaderStructure.PacketLength.rawValue])
+        if( data.count < ( payloadLen + self.pktHeaderSize + self.pktCrcSize)) {
+            return 0;
+        }
+        // CRC is OK
+        return (self.passCRC(data: data) ? payloadLen + self.pktHeaderSize + self.pktCrcSize : 0)
     }
     
     func passCRC(data: Data) -> Bool {
