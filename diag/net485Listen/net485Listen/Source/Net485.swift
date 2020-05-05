@@ -9,6 +9,18 @@
 import Foundation
 import ORSSerial
 
+enum HeaderStructure : Int {
+    case HeaderDestAddr = 0x00
+    case HeaderSrcAddr = 0x01
+    case HeaderSubnet = 0x02
+    case HeaderSndMethd = 0x03
+    case HeaderSndParam = 0x04
+    case HeaderSndParam1 = 0x05 /* Msg from coordinator = Nth node in all nodes of same type, Msg from subordinate == Zero */
+    case HeaderSrcNodeType = 0x06
+    case PacketMsgType = 0x07
+    case PacketNumber = 0x08
+    case PacketLength = 0x09
+}
 enum MsgType:UInt8 {
     //
     // CT-CIM Application message types
@@ -96,6 +108,21 @@ enum R2RCode: UInt8 {
     case REQ = 0x00
     case ACK = 0x06
 }
+struct net485Routing {
+    let sendMethod : SendMethod
+    let sendParameter: (UInt8, UInt8)
+    let nodeTypeSource : UInt8 // If not set, RFD/FFD sets
+    
+    init(_ data:Data) {
+        self.sendMethod = SendMethod( rawValue:data[HeaderStructure.HeaderSndMethd.rawValue] ) ?? .NODETYPROUTING
+        self.sendParameter.0 = data[HeaderStructure.HeaderSndParam.rawValue]
+        self.sendParameter.1 = data[HeaderStructure.HeaderSndParam1.rawValue]
+        self.nodeTypeSource = data[HeaderStructure.HeaderSrcNodeType.rawValue]
+    }
+    var description: String {
+        return "SendMethd:\(self.sendMethod) Params:\(self.sendParameter) SrcNodeType:\(self.nodeTypeSource)"
+    }
+}
 struct net485Packet {
     let msgType: MsgType
     let pktNumber: UInt8
@@ -115,42 +142,24 @@ struct net485Packet {
         return "\(self.msgType) isDataFlow:\(self.isDataFlow) Ver:\(self.version) Chunk:\(self.chunk) len:\(self.pktLength)"
     }
 }
-enum HeaderStructure : Int {
-    case HeaderDestAddr = 0x00
-    case HeaderSrcAddr = 0x01
-    case HeaderSubnet = 0x02
-    case HeaderSndMethd = 0x03
-    case HeaderSndParam = 0x04
-    case HeaderSndParam1 = 0x05 /* Msg from coordinator = Nth node in all nodes of same type, Msg from subordinate == Zero */
-    case HeaderSrcNodeType = 0x06
-    case PacketMsgType = 0x07
-    case PacketNumber = 0x08
-    case PacketLength = 0x09
-}
 struct net485MsgHeader {
     let addrDestination: UInt8
     let addrSource: UInt8
     let subnet: UInt8
-    let sendMethod: SendMethod
-    let sendParameter: (UInt8, UInt8)
-    let nodeTypeSource: UInt8
+    let route: net485Routing
     let packet: net485Packet
     
     init(_ data:Data) {
         self.addrDestination = data[HeaderStructure.HeaderDestAddr.rawValue]
         self.addrSource = data[HeaderStructure.HeaderSrcAddr.rawValue]
         self.subnet = data[HeaderStructure.HeaderSubnet.rawValue]
-        self.sendMethod = SendMethod( rawValue:data[HeaderStructure.HeaderSndMethd.rawValue] ) ?? .NODETYPROUTING
-        self.sendParameter.0 = data[HeaderStructure.HeaderSndParam.rawValue]
-        self.sendParameter.1 = data[HeaderStructure.HeaderSndParam1.rawValue]
-        self.nodeTypeSource = data[HeaderStructure.HeaderSrcNodeType.rawValue]
+        self.route = net485Routing.init(data)
         self.packet = net485Packet.init(data)
     }
     var description: String {
-        return "Dest:\(self.addrDestination) Src:\(self.addrSource) Sub:\(self.subnet) SendMethd:\(self.sendMethod) Params:\(self.sendParameter) SrcNodeType:\(self.nodeTypeSource) :: \(self.packet.description)"
+        return "Dest:\(self.addrDestination) Src:\(self.addrSource) Sub:\(self.subnet) \(self.route.description) :: \(self.packet.description)"
     }
 }
-
 
 class PacketProcessor : NSObject, ORSSerialPortDelegate {
     let maxPktSize : UInt = 252

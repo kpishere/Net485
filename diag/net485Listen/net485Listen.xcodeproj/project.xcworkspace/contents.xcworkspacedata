@@ -2,6 +2,9 @@
 <Workspace
    version = "1.0">
    <FileRef
-      location = "self:net485Listen.xcodeproj">
+      location = "group:../net485Furnace.xcworkspace">
+   </FileRef>
+   <FileRef
+      location = "self:">
    </FileRef>
 </Workspace>

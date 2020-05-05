@@ -7,25 +7,25 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		0FD44EF824612EB500E98DE7 /* Package.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0FD44EB324612EB500E98DE7 /* Package.swift */; };
+		0FD44EF924612EB500E98DE7 /* CT485API.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0FD44EB624612EB500E98DE7 /* CT485API.swift */; };
+		0FD44EFA24612EB500E98DE7 /* main.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0FD44EB724612EB500E98DE7 /* main.swift */; };
+		0FD44EFB24612EB500E98DE7 /* Net485.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0FD44EB824612EB500E98DE7 /* Net485.swift */; };
+		0FD44F2E246130AD00E98DE7 /* ORSSerial.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 0FD44F0C2461303E00E98DE7 /* ORSSerial.framework */; };
 		0FEFFD3B241B25FB00E09C17 /* net485Listen in CopyFiles */ = {isa = PBXBuildFile; fileRef = 0FEFFC5F2414A2A600E09C17 /* net485Listen */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
-		0FF08BBF242905DE0058B5E1 /* CT485API.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0FF08BB9242905DE0058B5E1 /* CT485API.swift */; };
-		0FF08BC0242905DE0058B5E1 /* main.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0FF08BBA242905DE0058B5E1 /* main.swift */; };
-		0FF08BC1242905DE0058B5E1 /* Net485.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0FF08BBB242905DE0058B5E1 /* Net485.swift */; };
-		0FF08BC2242905DE0058B5E1 /* Package.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0FF08BBD242905DE0058B5E1 /* Package.swift */; };
-		0FF08BCE242926ED0058B5E1 /* ORSSerial.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 0FF08BCB2429211C0058B5E1 /* ORSSerial.framework */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
-		0FF08BCA2429211C0058B5E1 /* PBXContainerItemProxy */ = {
+		0FD44F0B2461303E00E98DE7 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
-			containerPortal = 0FF08BC52429211B0058B5E1 /* ORSSerialPort.xcodeproj */;
+			containerPortal = 0FD44F062461303E00E98DE7 /* ORSSerialPort.xcodeproj */;
 			proxyType = 2;
 			remoteGlobalIDString = 9DCA89121A2BB106009285EB;
 			remoteInfo = ORSSerial;
 		};
-		0FF08BCC2429211C0058B5E1 /* PBXContainerItemProxy */ = {
+		0FD44F0D2461303E00E98DE7 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
-			containerPortal = 0FF08BC52429211B0058B5E1 /* ORSSerialPort.xcodeproj */;
+			containerPortal = 0FD44F062461303E00E98DE7 /* ORSSerialPort.xcodeproj */;
 			proxyType = 2;
 			remoteGlobalIDString = 9D7472131B6D7767002D8B10;
 			remoteInfo = "ORSSerialPort Tests";
@@ -46,14 +46,14 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		0FD44EB324612EB500E98DE7 /* Package.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Package.swift; sourceTree = "<group>"; };
+		0FD44EB424612EB500E98DE7 /* README.md */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = "<group>"; };
+		0FD44EB624612EB500E98DE7 /* CT485API.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CT485API.swift; sourceTree = "<group>"; };
+		0FD44EB724612EB500E98DE7 /* main.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = main.swift; sourceTree = "<group>"; };
+		0FD44EB824612EB500E98DE7 /* Net485.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Net485.swift; sourceTree = "<group>"; };
+		0FD44EB924612EB500E98DE7 /* Swift-Bridging-Header.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "Swift-Bridging-Header.h"; sourceTree = "<group>"; };
+		0FD44F062461303E00E98DE7 /* ORSSerialPort.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = ORSSerialPort.xcodeproj; path = "net485Listen/Frameworks/ORSSerialPort/Framework Project/ORSSerialPort.xcodeproj"; sourceTree = "<group>"; };
 		0FEFFC5F2414A2A600E09C17 /* net485Listen */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = net485Listen; sourceTree = BUILT_PRODUCTS_DIR; };
-		0FF08BB9242905DE0058B5E1 /* CT485API.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CT485API.swift; sourceTree = "<group>"; };
-		0FF08BBA242905DE0058B5E1 /* main.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = main.swift; sourceTree = "<group>"; };
-		0FF08BBB242905DE0058B5E1 /* Net485.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Net485.swift; sourceTree = "<group>"; };
-		0FF08BBC242905DE0058B5E1 /* Swift-Bridging-Header.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "Swift-Bridging-Header.h"; path = "../../net485Furnace/Source/Swift-Bridging-Header.h"; sourceTree = "<group>"; };
-		0FF08BBD242905DE0058B5E1 /* Package.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = Package.swift; path = net485Listen/Package.swift; sourceTree = "<group>"; };
-		0FF08BBE242905DE0058B5E1 /* README.md */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = net.daringfireball.markdown; name = README.md; path = net485Listen/README.md; sourceTree = "<group>"; };
-		0FF08BC52429211B0058B5E1 /* ORSSerialPort.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = ORSSerialPort.xcodeproj; path = "net485Listen/Frameworks/ORSSerialPort/Framework Project/ORSSerialPort.xcodeproj"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -61,21 +61,57 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				0FF08BCE242926ED0058B5E1 /* ORSSerial.framework in Frameworks */,
+				0FD44F2E246130AD00E98DE7 /* ORSSerial.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		0FD44DFD24612EB400E98DE7 /* net485Listen */ = {
+			isa = PBXGroup;
+			children = (
+				0FD44EB324612EB500E98DE7 /* Package.swift */,
+				0FD44EB424612EB500E98DE7 /* README.md */,
+				0FD44EB524612EB500E98DE7 /* Source */,
+			);
+			path = net485Listen;
+			sourceTree = "<group>";
+		};
+		0FD44EB524612EB500E98DE7 /* Source */ = {
+			isa = PBXGroup;
+			children = (
+				0FD44EB624612EB500E98DE7 /* CT485API.swift */,
+				0FD44EB724612EB500E98DE7 /* main.swift */,
+				0FD44EB824612EB500E98DE7 /* Net485.swift */,
+				0FD44EB924612EB500E98DE7 /* Swift-Bridging-Header.h */,
+			);
+			path = Source;
+			sourceTree = "<group>";
+		};
+		0FD44F052461303D00E98DE7 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				0FD44F062461303E00E98DE7 /* ORSSerialPort.xcodeproj */,
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
+		0FD44F072461303E00E98DE7 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				0FD44F0C2461303E00E98DE7 /* ORSSerial.framework */,
+				0FD44F0E2461303E00E98DE7 /* ORSSerialPort Tests.xctest */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
 		0FEFFC562414A2A600E09C17 = {
 			isa = PBXGroup;
 			children = (
-				0FF08BBD242905DE0058B5E1 /* Package.swift */,
-				0FF08BBE242905DE0058B5E1 /* README.md */,
-				0FF08BB8242905DE0058B5E1 /* Source */,
+				0FD44DFD24612EB400E98DE7 /* net485Listen */,
 				0FEFFC602414A2A600E09C17 /* Products */,
-				0FEFFC692414A3CD00E09C17 /* Frameworks */,
+				0FD44F052461303D00E98DE7 /* Frameworks */,
 			);
 			sourceTree = "<group>";
 		};
@@ -83,35 +119,6 @@
 			isa = PBXGroup;
 			children = (
 				0FEFFC5F2414A2A600E09C17 /* net485Listen */,
-			);
-			name = Products;
-			sourceTree = "<group>";
-		};
-		0FEFFC692414A3CD00E09C17 /* Frameworks */ = {
-			isa = PBXGroup;
-			children = (
-				0FF08BC52429211B0058B5E1 /* ORSSerialPort.xcodeproj */,
-			);
-			name = Frameworks;
-			sourceTree = "<group>";
-		};
-		0FF08BB8242905DE0058B5E1 /* Source */ = {
-			isa = PBXGroup;
-			children = (
-				0FF08BB9242905DE0058B5E1 /* CT485API.swift */,
-				0FF08BBA242905DE0058B5E1 /* main.swift */,
-				0FF08BBB242905DE0058B5E1 /* Net485.swift */,
-				0FF08BBC242905DE0058B5E1 /* Swift-Bridging-Header.h */,
-			);
-			name = Source;
-			path = net485Listen/Source;
-			sourceTree = "<group>";
-		};
-		0FF08BC62429211B0058B5E1 /* Products */ = {
-			isa = PBXGroup;
-			children = (
-				0FF08BCB2429211C0058B5E1 /* ORSSerial.framework */,
-				0FF08BCD2429211C0058B5E1 /* ORSSerialPort Tests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -164,8 +171,8 @@
 			projectDirPath = "";
 			projectReferences = (
 				{
-					ProductGroup = 0FF08BC62429211B0058B5E1 /* Products */;
-					ProjectRef = 0FF08BC52429211B0058B5E1 /* ORSSerialPort.xcodeproj */;
+					ProductGroup = 0FD44F072461303E00E98DE7 /* Products */;
+					ProjectRef = 0FD44F062461303E00E98DE7 /* ORSSerialPort.xcodeproj */;
 				},
 			);
 			projectRoot = "";
@@ -176,18 +183,18 @@
 /* End PBXProject section */
 
 /* Begin PBXReferenceProxy section */
-		0FF08BCB2429211C0058B5E1 /* ORSSerial.framework */ = {
+		0FD44F0C2461303E00E98DE7 /* ORSSerial.framework */ = {
 			isa = PBXReferenceProxy;
 			fileType = wrapper.framework;
 			path = ORSSerial.framework;
-			remoteRef = 0FF08BCA2429211C0058B5E1 /* PBXContainerItemProxy */;
+			remoteRef = 0FD44F0B2461303E00E98DE7 /* PBXContainerItemProxy */;
 			sourceTree = BUILT_PRODUCTS_DIR;
 		};
-		0FF08BCD2429211C0058B5E1 /* ORSSerialPort Tests.xctest */ = {
+		0FD44F0E2461303E00E98DE7 /* ORSSerialPort Tests.xctest */ = {
 			isa = PBXReferenceProxy;
 			fileType = wrapper.cfbundle;
 			path = "ORSSerialPort Tests.xctest";
-			remoteRef = 0FF08BCC2429211C0058B5E1 /* PBXContainerItemProxy */;
+			remoteRef = 0FD44F0D2461303E00E98DE7 /* PBXContainerItemProxy */;
 			sourceTree = BUILT_PRODUCTS_DIR;
 		};
 /* End PBXReferenceProxy section */
@@ -197,10 +204,10 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				0FF08BC2242905DE0058B5E1 /* Package.swift in Sources */,
-				0FF08BC0242905DE0058B5E1 /* main.swift in Sources */,
-				0FF08BC1242905DE0058B5E1 /* Net485.swift in Sources */,
-				0FF08BBF242905DE0058B5E1 /* CT485API.swift in Sources */,
+				0FD44EF924612EB500E98DE7 /* CT485API.swift in Sources */,
+				0FD44EFA24612EB500E98DE7 /* main.swift in Sources */,
+				0FD44EFB24612EB500E98DE7 /* Net485.swift in Sources */,
+				0FD44EF824612EB500E98DE7 /* Package.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -334,7 +341,6 @@
 					"=",
 					"$(TOOLCHAIN_DIR)/usr/lib/swift/macosx",
 					"@executable_path",
-					/Users/kevinpeck/Documents/mhs52xxA/build/mhs52xxA_bin,
 				);
 				LIBRARY_SEARCH_PATHS = "";
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -357,7 +363,6 @@
 					"=",
 					"$(TOOLCHAIN_DIR)/usr/lib/swift/macosx",
 					"@executable_path",
-					/Users/kevinpeck/Documents/mhs52xxA/build/mhs52xxA_bin,
 				);
 				LIBRARY_SEARCH_PATHS = "";
 				PRODUCT_NAME = "$(TARGET_NAME)";
