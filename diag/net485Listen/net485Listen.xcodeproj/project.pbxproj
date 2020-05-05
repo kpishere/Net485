@@ -12,6 +12,14 @@
 		0FD44EFA24612EB500E98DE7 /* main.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0FD44EB724612EB500E98DE7 /* main.swift */; };
 		0FD44EFB24612EB500E98DE7 /* Net485.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0FD44EB824612EB500E98DE7 /* Net485.swift */; };
 		0FD44F2E246130AD00E98DE7 /* ORSSerial.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 0FD44F0C2461303E00E98DE7 /* ORSSerial.framework */; };
+		0FD44F322461BF7700E98DE7 /* CT485API.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0FD44EB624612EB500E98DE7 /* CT485API.swift */; };
+		0FD44F342461BF7700E98DE7 /* Net485.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0FD44EB824612EB500E98DE7 /* Net485.swift */; };
+		0FD44F372461BF7700E98DE7 /* ORSSerial.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 0FD44F0C2461303E00E98DE7 /* ORSSerial.framework */; };
+		0FD44F442461BFA100E98DE7 /* CTCommand.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0FD44F422461BFA100E98DE7 /* CTCommand.swift */; };
+		0FD44F452461BFA100E98DE7 /* main.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0FD44F432461BFA100E98DE7 /* main.swift */; };
+		0FD44F472461C0B600E98DE7 /* net485Furnace in CopyFiles */ = {isa = PBXBuildFile; fileRef = 0FD44F3D2461BF7700E98DE7 /* net485Furnace */; };
+		0FD44F4C2461E35C00E98DE7 /* Global.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0FD44F4B2461E35C00E98DE7 /* Global.swift */; };
+		0FD44F4D2461E35C00E98DE7 /* Global.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0FD44F4B2461E35C00E98DE7 /* Global.swift */; };
 		0FEFFD3B241B25FB00E09C17 /* net485Listen in CopyFiles */ = {isa = PBXBuildFile; fileRef = 0FEFFC5F2414A2A600E09C17 /* net485Listen */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
 /* End PBXBuildFile section */
 
@@ -33,6 +41,16 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXCopyFilesBuildPhase section */
+		0FD44F382461BF7700E98DE7 /* CopyFiles */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 12;
+			dstPath = "${PROJECT_DIR}/bin";
+			dstSubfolderSpec = 0;
+			files = (
+				0FD44F472461C0B600E98DE7 /* net485Furnace in CopyFiles */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		0FEFFC5D2414A2A600E09C17 /* CopyFiles */ = {
 			isa = PBXCopyFilesBuildPhase;
 			buildActionMask = 12;
@@ -53,10 +71,22 @@
 		0FD44EB824612EB500E98DE7 /* Net485.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Net485.swift; sourceTree = "<group>"; };
 		0FD44EB924612EB500E98DE7 /* Swift-Bridging-Header.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "Swift-Bridging-Header.h"; sourceTree = "<group>"; };
 		0FD44F062461303E00E98DE7 /* ORSSerialPort.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = ORSSerialPort.xcodeproj; path = "net485Listen/Frameworks/ORSSerialPort/Framework Project/ORSSerialPort.xcodeproj"; sourceTree = "<group>"; };
+		0FD44F3D2461BF7700E98DE7 /* net485Furnace */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = net485Furnace; sourceTree = BUILT_PRODUCTS_DIR; };
+		0FD44F422461BFA100E98DE7 /* CTCommand.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CTCommand.swift; sourceTree = "<group>"; };
+		0FD44F432461BFA100E98DE7 /* main.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = main.swift; sourceTree = "<group>"; };
+		0FD44F4B2461E35C00E98DE7 /* Global.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Global.swift; sourceTree = "<group>"; };
 		0FEFFC5F2414A2A600E09C17 /* net485Listen */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = net485Listen; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
+		0FD44F362461BF7700E98DE7 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				0FD44F372461BF7700E98DE7 /* ORSSerial.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		0FEFFC5C2414A2A600E09C17 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
@@ -81,6 +111,7 @@
 		0FD44EB524612EB500E98DE7 /* Source */ = {
 			isa = PBXGroup;
 			children = (
+				0FD44F4B2461E35C00E98DE7 /* Global.swift */,
 				0FD44EB624612EB500E98DE7 /* CT485API.swift */,
 				0FD44EB724612EB500E98DE7 /* main.swift */,
 				0FD44EB824612EB500E98DE7 /* Net485.swift */,
@@ -106,9 +137,27 @@
 			name = Products;
 			sourceTree = "<group>";
 		};
+		0FD44F402461BFA100E98DE7 /* net485Furnace */ = {
+			isa = PBXGroup;
+			children = (
+				0FD44F412461BFA100E98DE7 /* Source */,
+			);
+			path = net485Furnace;
+			sourceTree = "<group>";
+		};
+		0FD44F412461BFA100E98DE7 /* Source */ = {
+			isa = PBXGroup;
+			children = (
+				0FD44F422461BFA100E98DE7 /* CTCommand.swift */,
+				0FD44F432461BFA100E98DE7 /* main.swift */,
+			);
+			path = Source;
+			sourceTree = "<group>";
+		};
 		0FEFFC562414A2A600E09C17 = {
 			isa = PBXGroup;
 			children = (
+				0FD44F402461BFA100E98DE7 /* net485Furnace */,
 				0FD44DFD24612EB400E98DE7 /* net485Listen */,
 				0FEFFC602414A2A600E09C17 /* Products */,
 				0FD44F052461303D00E98DE7 /* Frameworks */,
@@ -119,6 +168,7 @@
 			isa = PBXGroup;
 			children = (
 				0FEFFC5F2414A2A600E09C17 /* net485Listen */,
+				0FD44F3D2461BF7700E98DE7 /* net485Furnace */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -126,6 +176,23 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
+		0FD44F302461BF7700E98DE7 /* net485Furnace */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 0FD44F3A2461BF7700E98DE7 /* Build configuration list for PBXNativeTarget "net485Furnace" */;
+			buildPhases = (
+				0FD44F312461BF7700E98DE7 /* Sources */,
+				0FD44F362461BF7700E98DE7 /* Frameworks */,
+				0FD44F382461BF7700E98DE7 /* CopyFiles */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = net485Furnace;
+			productName = net485Listen;
+			productReference = 0FD44F3D2461BF7700E98DE7 /* net485Furnace */;
+			productType = "com.apple.product-type.tool";
+		};
 		0FEFFC5E2414A2A600E09C17 /* net485Listen */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = 0FEFFC662414A2A600E09C17 /* Build configuration list for PBXNativeTarget "net485Listen" */;
@@ -178,6 +245,7 @@
 			projectRoot = "";
 			targets = (
 				0FEFFC5E2414A2A600E09C17 /* net485Listen */,
+				0FD44F302461BF7700E98DE7 /* net485Furnace */,
 			);
 		};
 /* End PBXProject section */
@@ -200,6 +268,18 @@
 /* End PBXReferenceProxy section */
 
 /* Begin PBXSourcesBuildPhase section */
+		0FD44F312461BF7700E98DE7 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				0FD44F322461BF7700E98DE7 /* CT485API.swift in Sources */,
+				0FD44F452461BFA100E98DE7 /* main.swift in Sources */,
+				0FD44F442461BFA100E98DE7 /* CTCommand.swift in Sources */,
+				0FD44F4D2461E35C00E98DE7 /* Global.swift in Sources */,
+				0FD44F342461BF7700E98DE7 /* Net485.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		0FEFFC5B2414A2A600E09C17 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -207,6 +287,7 @@
 				0FD44EF924612EB500E98DE7 /* CT485API.swift in Sources */,
 				0FD44EFA24612EB500E98DE7 /* main.swift in Sources */,
 				0FD44EFB24612EB500E98DE7 /* Net485.swift in Sources */,
+				0FD44F4C2461E35C00E98DE7 /* Global.swift in Sources */,
 				0FD44EF824612EB500E98DE7 /* Package.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -214,6 +295,50 @@
 /* End PBXSourcesBuildPhase section */
 
 /* Begin XCBuildConfiguration section */
+		0FD44F3B2461BF7700E98DE7 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = GYAG48J958;
+				FRAMEWORK_SEARCH_PATHS = "";
+				HEADER_SEARCH_PATHS = net485Listen/Frameworks/ORSSerialPort/Source/;
+				LD_RUNPATH_SEARCH_PATHS = (
+					LD_RUNPATH_SEARCH_PATHS,
+					"=",
+					"$(TOOLCHAIN_DIR)/usr/lib/swift/macosx",
+					"@executable_path",
+				);
+				LIBRARY_SEARCH_PATHS = "";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_FORCE_DYNAMIC_LINK_STDLIB = YES;
+				SWIFT_FORCE_STATIC_LINK_STDLIB = NO;
+				SWIFT_OBJC_BRIDGING_HEADER = "net485Listen/Source/Swift-Bridging-Header.h";
+				SWIFT_VERSION = 4.2;
+			};
+			name = Debug;
+		};
+		0FD44F3C2461BF7700E98DE7 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = GYAG48J958;
+				FRAMEWORK_SEARCH_PATHS = "";
+				HEADER_SEARCH_PATHS = net485Listen/Frameworks/ORSSerialPort/Source/;
+				LD_RUNPATH_SEARCH_PATHS = (
+					LD_RUNPATH_SEARCH_PATHS,
+					"=",
+					"$(TOOLCHAIN_DIR)/usr/lib/swift/macosx",
+					"@executable_path",
+				);
+				LIBRARY_SEARCH_PATHS = "";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_FORCE_DYNAMIC_LINK_STDLIB = YES;
+				SWIFT_FORCE_STATIC_LINK_STDLIB = NO;
+				SWIFT_OBJC_BRIDGING_HEADER = "net485Listen/Source/Swift-Bridging-Header.h";
+				SWIFT_VERSION = 4.2;
+			};
+			name = Release;
+		};
 		0FEFFC642414A2A600E09C17 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -376,6 +501,15 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
+		0FD44F3A2461BF7700E98DE7 /* Build configuration list for PBXNativeTarget "net485Furnace" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				0FD44F3B2461BF7700E98DE7 /* Debug */,
+				0FD44F3C2461BF7700E98DE7 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
 		0FEFFC5A2414A2A600E09C17 /* Build configuration list for PBXProject "net485Listen" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (

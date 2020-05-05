@@ -7,6 +7,7 @@
 //
 
 import Foundation
+import ORSSerial
 
 /*
 TODO:
@@ -85,5 +86,38 @@ c. Request Status data (optional)
 
 
 */
-print("Hello, World!")
+
+func printUsage() {
+    let msg: Array<String> = ["Usage of '\(CommandLine.arguments[0])' <serial device path>"]
+    
+    print(msg.joined(separator:"\n"))
+}
+//
+// MAIN
+//
+let baudRate = 9600
+let timeoutSerialSeconds:Double = 0.000200 // 200 micro-second minimum packet hold time
+let maxResponseLength:UInt = 252  // Maximum packet size with 2-byte checksum
+
+setbuf(stdout, nil)
+
+if CommandLine.argc < 2 {
+    printUsage();
+    exit(1);
+}
+
+let serialDevice = CommandLine.arguments[1]
+
+let port = ORSSerialPort(path: serialDevice)
+port?.baudRate = NSNumber(value: baudRate)
+port?.parity = .none
+port?.numberOfStopBits = 1
+port?.numberOfDataBits = 8
+port?.usesDTRDSRFlowControl = false
+port?.usesRTSCTSFlowControl = false
+
+var packet = PacketProcessor.init(port!);
+port?.open()
+
+RunLoop.current.run() // loop
 
