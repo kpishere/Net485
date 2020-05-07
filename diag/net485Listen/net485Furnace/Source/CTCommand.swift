@@ -34,6 +34,7 @@ enum CTConfig_Opt_ID0B10 : UInt8 {
     case CompLockOut = 0x04 // Compressor lockout Enabled/Disabled
     case AdjHeatCycleRate = 0x02 // 1 == Fast, 0 == Slow (Unused)
     case AdjCoolCycleRate = 0x01 // 1 == Fast, 0 == Slow (Unused)
+    case DisableDegCOffSlow = 0x00
 }
 enum CTSensorWeight : UInt8 {
     case NONE = 0
@@ -41,71 +42,163 @@ enum CTSensorWeight : UInt8 {
     case Med = 2
     case High = 3
 }
-enum CTProgInterval : UInt8 {
-    case Steps4 = 0
-    case Steps2 = 1
-    case NonProg = 2
-    case Reserved = 3
+enum CTConfig_ID0B12 : UInt8 {
+    case LocalSensWtHi = 0xC0 // Default
+    case LocalSensWtMed = 0x80
+    case LocalSensWtLo = 0x40
+
+    case Commercial = 0x10 // Unset is Default (Residential)
+
+    case ProgProf_5Day11 = 0x04
+    case ProgProf_7Day = 0x08
+    case ProgProf_5Day2 = 0x0C
+
+    case ProgInerval_Steps2 = 0x01
+    case ProgInerval_NonProg = 0x02
+    case ProgInerval_Reserved = 0x03
+
+    case LocalSensWtNone_Residential_NonProg_Steps4 = 0x00
 }
-enum CTProgProfile : UInt8 {
-    case NonProg = 0
-    case P5Day11 = 1
-    case P7Day = 2
-    case P5Day2 = 3
-    
+enum CTConfig_ID0B22 : UInt8 {
+    case DST = 0x01
+    case KeypadLockTotal = 0x02
+    case KeypadLockPartial = 0x04
+    case BeeperEnabled = 0x20
+    case BModeEnabled = 0x40
+    case RTClockChangeLockout = 0x80
+    case SDT_KeypadEnabled_BeeperDisabled_OMode_RTClockChange = 0x00
 }
-enum CTUse : UInt8 {
-    case Residential = 0 // Default
-    case Commercial = 1
+enum CTConfig_ID0B27 : UInt8 {
+    case PhoneNumDisplayOnCommsFault = 0x01
+    case None = 0x00
+}
+enum CTConfig_ID0B30 : UInt8 {
+    case HUMCapable = 0x08
+    case DHMCapable = 0x04
+    case IndepHUMCapable = 0x02
+    case IndepDHMCapable = 0x01
+    case None = 0x00
+}
+enum CTConfig_ID0B31 : UInt8 {
+    case ProgProf5Day2Capable = 0x08
+    case ProgProf7DayCapable = 0x04
+    case ProgProf5Day11Capable = 0x02
+    case NonProgProfCapable = 0x01
+    case NotCapable = 0x00
+}
+enum CTConfig_ID0B32 : UInt8 {
+    case Steps2Capable = 0x04
+    case NonProgCapableSteps1 = 0x02
+    case Steps4Capable = 0x01
+    case NotCapable = 0x00
 }
 struct CTConfig_Thermostat_ID0 {
-    var SystemType : CTSysType_ID0B0
-    var _StagesHeatCool : UInt8
-    var BalancePointSetTemp : UInt8 // 0-127 valid (Units?), 0xFF === Default (Unused)
-    var FilterTimeHrs : UInt16 // 0 === Disabled, 0xFFFF === Default (Unused)
-    var TempDispAdjFctr : Int8 // 0 === Unused or zero offset
-    var ProgHoldTimeHrs : UInt16 // 0 === Disabled, 0xFFFF === Default (Unused)
-    var RangeHeatLimitTemp : UInt8 // 0xFF === Default (Unused)
-    var RangeCoolLimitTemp : UInt8 // 0xFF === Default (Unused)
-    var OptionFlags : CTConfig_Opt_ID0B10 // see enum CTConfig_Opt_ID0B10 above
-    var _RmtSensWeight : UInt8 // [A, B, C, D], 4 weight options, 0 == Default/None/NA, 1 == Low, 2 == med, 3 == Hi
-    var _ThermConfig : UInt8 // [CTProgInterval, CTProgProfile, CTUse, CTSensorWeight]
-    var AirHandleLockoutTemp : UInt8 // 0-127 valid (Units?), 0xFF === Default (Unused)
-    var UVLampDays : UInt16 // 0 = Disabled; 0xFFFF = Default/Unused value indicating that it is not being used
-    var HumidPadHours : UInt16 // 0 = Disabled; 0xFFFF = Default/Unused value indicating that it is not being used.
-    var _StagesAuxFan : UInt8
-    
-    var StagesHeatCool : [UInt8] {
-        get { return [_StagesHeatCool >> 4,  _StagesHeatCool & 0x0F] }
+    var SystemType_0 : CTSysType_ID0B0
+    var _StagesHeatCool_1 : UInt8
+    var StagesHeatCool_1 : [UInt8] {
+        get { return [_StagesHeatCool_1 >> 4,  _StagesHeatCool_1 & 0x0F] }
         set { if( newValue.count > 1 ) {
-                _StagesHeatCool = (newValue[0] & 0x0F) << 4 + (newValue[1] & 0x0F)
+                _StagesHeatCool_1 = (newValue[0] & 0x0F) << 4 + (newValue[1] & 0x0F)
             }
         }
     }
-    var RmtSensWeight : [UInt8]  {
-        get { return [ _RmtSensWeight & 0x03, (_RmtSensWeight & 0x0C) >> 2
-                , (_RmtSensWeight & 0x30) >> 4, (_RmtSensWeight & 0xC0) >> 6 ] }
-        set { if( newValue.count > 3 ) {
-                _RmtSensWeight = newValue[0] & 0x03 + (newValue[1] & 0x03) << 2
-                + (newValue[2] & 0x03) << 4  + (newValue[0] & 0x03) << 6
+    var BalancePointSetTemp_2 : UInt8 // 0-127 valid (Units?), 0xFF === Default (Unused)
+    var FilterTimeHrs_3_4 : UInt16 // 0 === Disabled, 0xFFFF === Default (Unused)
+    var TempDispAdjFctr_5 : Int8 // 0 === Unused or zero offset
+    var ProgHoldTimeHrs_6_7 : UInt16 // 0 === Disabled, 0xFFFF === Default (Unused)
+    var RangeHeatLimitTemp_8 : UInt8 // 0xFF === Default (Unused)
+    var RangeCoolLimitTemp_9 : UInt8 // 0xFF === Default (Unused)
+    var _OptionFlags_10 : UInt8 // see enum CTConfig_Opt_ID0B10 above
+    var OptionFlags_10 : [CTConfig_Opt_ID0B10] {
+        get { return [CTConfig_Opt_ID0B10(rawValue: _OptionFlags_10 & CTConfig_Opt_ID0B10.AdjCoolCycleRate.rawValue) ?? .DisableDegCOffSlow
+            , CTConfig_Opt_ID0B10(rawValue: _OptionFlags_10 & CTConfig_Opt_ID0B10.AdjHeatCycleRate.rawValue) ?? .DisableDegCOffSlow
+            , CTConfig_Opt_ID0B10(rawValue: _OptionFlags_10 & CTConfig_Opt_ID0B10.CompLockOut.rawValue) ?? .DisableDegCOffSlow
+            , CTConfig_Opt_ID0B10(rawValue: _OptionFlags_10 & CTConfig_Opt_ID0B10.DispForceOn.rawValue) ?? .DisableDegCOffSlow
+            , CTConfig_Opt_ID0B10(rawValue: _OptionFlags_10 & CTConfig_Opt_ID0B10.FastStage2.rawValue) ?? .DisableDegCOffSlow
+            , CTConfig_Opt_ID0B10(rawValue: _OptionFlags_10 & CTConfig_Opt_ID0B10.TempIsFarheight.rawValue) ?? .DisableDegCOffSlow
+            , CTConfig_Opt_ID0B10(rawValue: _OptionFlags_10 & CTConfig_Opt_ID0B10.KeypadLock.rawValue) ?? .DisableDegCOffSlow
+            , CTConfig_Opt_ID0B10(rawValue: _OptionFlags_10 & CTConfig_Opt_ID0B10.EMR.rawValue) ?? .DisableDegCOffSlow
+           ] }
+        set { _OptionFlags_10 = newValue.reduce(0, {x,y in x + y.rawValue }) }
+    }
+    var _RmtSensWeight_11 : UInt8 // [A, B, C, D], 4 weight options, 0 == Default/None/NA, 1 == Low, 2 == med, 3 == Hi
+    var RmtSensWeight_11 : [CTSensorWeight]  {
+        get { return [ CTSensorWeight( rawValue: _RmtSensWeight_11 & 0x03) ?? .NONE
+            , CTSensorWeight( rawValue: (_RmtSensWeight_11 & 0x0C) >> 2) ?? .NONE
+            , CTSensorWeight( rawValue: (_RmtSensWeight_11 & 0x30) >> 4) ?? .NONE
+            , CTSensorWeight( rawValue: (_RmtSensWeight_11 & 0xC0) >> 6) ?? .NONE ] }
+        set { if(newValue.count > 3) {
+                _RmtSensWeight_11 = newValue[0].rawValue + newValue[1].rawValue << 2
+                    + newValue[2].rawValue << 4  + newValue[3].rawValue << 6
             }
         }
     }
-    var ThermConfig : [UInt8] {
-        get { return [ _ThermConfig & 0x03, (_ThermConfig & 0x0C) >> 2, (_ThermConfig & 0x10) >> 4
-            , _ThermConfig & 0xC0 >> 6 ]}
-        set { if( newValue.count > 3 ) {
-                _ThermConfig = newValue[0] & 0x03 + (newValue[1] & 0x03) << 2
-                + (newValue[2] & 0x01) << 4  + (newValue[3] & 0x03) << 6
-            }
-        }
+    // Depending on the profile and Step type, DBID 1 shall be populated
+    var _ThermConfig_12 : UInt8 // [CTProgInterval, CTProgProfile, CTUse, CTSensorWeight]
+    var ThermConfig_12 : [CTConfig_ID0B12] {
+        get { return [CTConfig_ID0B12(rawValue: _ThermConfig_12 & CTConfig_ID0B12.ProgInerval_Reserved.rawValue) ?? .LocalSensWtNone_Residential_NonProg_Steps4
+        , CTConfig_ID0B12(rawValue: _ThermConfig_12 & CTConfig_ID0B12.ProgProf_5Day2.rawValue) ?? .LocalSensWtNone_Residential_NonProg_Steps4
+        , CTConfig_ID0B12(rawValue: _ThermConfig_12 & CTConfig_ID0B12.Commercial.rawValue) ?? .LocalSensWtNone_Residential_NonProg_Steps4
+        , CTConfig_ID0B12(rawValue: _ThermConfig_12 & CTConfig_ID0B12.LocalSensWtHi.rawValue) ?? .LocalSensWtNone_Residential_NonProg_Steps4
+           ] }
+        set { _ThermConfig_12 = newValue.reduce(0, {x,y in x + y.rawValue }) }
     }
-    var StagesAuxFan : [UInt8] {
-        get { return [_StagesAuxFan >> 4,  _StagesAuxFan & 0x0F] }
+    var AirHandleLockoutTemp_13 : UInt8 // 0-127 valid (Units?), 0xFF === Default (Unused)
+    var UVLampDays_14_15 : UInt16 // 0 = Disabled; 0xFFFF = Default/Unused value indicating that it is not being used
+    var HumidPadHours_16_17 : UInt16 // 0 = Disabled; 0xFFFF = Default/Unused value indicating that it is not being used.
+    var _StagesAuxFan_18 : UInt8
+    var StagesAuxFan_18 : [UInt8] {
+        get { return [_StagesAuxFan_18 >> 4,  _StagesAuxFan_18 & 0x0F] }
         set { if( newValue.count > 1 ) {
-                _StagesAuxFan = (newValue[0] & 0x0F) << 4 + (newValue[1] & 0x0F)
+                _StagesAuxFan_18 = (newValue[0] & 0x0F) << 4 + (newValue[1] & 0x0F)
             }
         }
+    }
+    var AdjAuxCycleRates_19 : UInt8 // Default/Unused is 0; Percentage - 0.5% Increments. (Refer to Control Command 0x48 for details).
+    var AdjHeatCycleRates_20 : UInt8 // IF > 0, DB ID 0 Byte 10 Bit 1 Ignored; Percentage - 0.5% Increments. (Refer to Control Command 0x48 for details).
+    var AdjCoolCycleRates_21 : UInt8 // IF > 0, DB ID 0 Byte 10 Bit 0 Ignored; Percentage - 0.5% Increments. (Refer to Control Command 0x48 for details).
+    var _ThermConfig_22 : UInt8
+    var ThermConfig_22 : [CTConfig_ID0B22] {
+        get {  return [CTConfig_ID0B22(rawValue: _ThermConfig_22 & CTConfig_ID0B22.DST.rawValue) ?? .SDT_KeypadEnabled_BeeperDisabled_OMode_RTClockChange
+        , CTConfig_ID0B22(rawValue: _ThermConfig_22 & CTConfig_ID0B22.KeypadLockTotal.rawValue) ?? .SDT_KeypadEnabled_BeeperDisabled_OMode_RTClockChange
+        , CTConfig_ID0B22(rawValue: _ThermConfig_22 & CTConfig_ID0B22.KeypadLockPartial.rawValue) ?? .SDT_KeypadEnabled_BeeperDisabled_OMode_RTClockChange
+        , CTConfig_ID0B22(rawValue: _ThermConfig_22 & CTConfig_ID0B22.BeeperEnabled.rawValue) ?? .SDT_KeypadEnabled_BeeperDisabled_OMode_RTClockChange
+        , CTConfig_ID0B22(rawValue: _ThermConfig_22 & CTConfig_ID0B22.BModeEnabled.rawValue) ?? .SDT_KeypadEnabled_BeeperDisabled_OMode_RTClockChange
+        , CTConfig_ID0B22(rawValue: _ThermConfig_22 & CTConfig_ID0B22.RTClockChangeLockout.rawValue) ?? .SDT_KeypadEnabled_BeeperDisabled_OMode_RTClockChange] }
+        set { _ThermConfig_22 = newValue.reduce(0, {x,y in x + y.rawValue }) }
+    }
+    var GMTOffset_23 : Int8 // Signed Byte (Scale 4) (15min increments)
+    var DisplayContrast_24 : UInt8 // 0% (Lowest) to 100% (Highest)
+    var CommsFaultTimer_25_26 : UInt16 // 30 Seconds to 900 Seconds (15Minutes). This indicates the time that the controls shall wait before reacting to a communication fault.
+    var _ThermConfig_27 : UInt8
+    var ThermConfig_27 : [CTConfig_ID0B27] {
+        get { return [CTConfig_ID0B27(rawValue: _ThermConfig_27 & CTConfig_ID0B27.PhoneNumDisplayOnCommsFault.rawValue) ?? .None] }
+        set { _ThermConfig_27 = newValue.reduce(0, {x,y in x + y.rawValue }) }
+    }
+    var NodeTypeIndoorUnit_28 : UInt8 // 0xFF = Default/Unused value indicating that it is not being used
+    var NodeTypeOutdoorUnit_29 : UInt8 // 0xFF = Default/Unused value indicating that it is not being used
+    var _ThermConfig_30 : UInt8
+    var Thermconfig_30 : [CTConfig_ID0B30] {
+        get {return [CTConfig_ID0B30(rawValue: _ThermConfig_30 & CTConfig_ID0B30.HUMCapable.rawValue) ?? .None
+        , CTConfig_ID0B30(rawValue: _ThermConfig_30 & CTConfig_ID0B30.DHMCapable.rawValue) ?? .None
+        , CTConfig_ID0B30(rawValue: _ThermConfig_30 & CTConfig_ID0B30.IndepHUMCapable.rawValue) ?? .None
+        , CTConfig_ID0B30(rawValue: _ThermConfig_30 & CTConfig_ID0B30.IndepDHMCapable.rawValue) ?? .None] }
+        set { _ThermConfig_30 = newValue.reduce(0, {x,y in x + y.rawValue }) }
+    }
+    var _ThermConfig_31 : UInt8
+    var Thermconfig_31 : [CTConfig_ID0B31] {
+        get {return [CTConfig_ID0B31(rawValue: _ThermConfig_31 & CTConfig_ID0B31.ProgProf5Day2Capable.rawValue) ?? .NotCapable
+        , CTConfig_ID0B31(rawValue: _ThermConfig_31 & CTConfig_ID0B31.ProgProf7DayCapable.rawValue) ?? .NotCapable
+        , CTConfig_ID0B31(rawValue: _ThermConfig_31 & CTConfig_ID0B31.ProgProf5Day11Capable.rawValue) ?? .NotCapable
+        , CTConfig_ID0B31(rawValue: _ThermConfig_31 & CTConfig_ID0B31.NonProgProfCapable.rawValue) ?? .NotCapable] }
+        set { _ThermConfig_31 = newValue.reduce(0, {x,y in x + y.rawValue }) }
+    }
+    var _ThermConfig_32 : UInt8
+    var Thermconfig_32 : [CTConfig_ID0B32] {
+        get {return [CTConfig_ID0B32(rawValue: _ThermConfig_32 & CTConfig_ID0B32.Steps2Capable.rawValue) ?? .NotCapable
+        , CTConfig_ID0B32(rawValue: _ThermConfig_32 & CTConfig_ID0B32.NonProgCapableSteps1.rawValue) ?? .NotCapable
+        , CTConfig_ID0B32(rawValue: _ThermConfig_32 & CTConfig_ID0B32.Steps4Capable.rawValue) ?? .NotCapable] }
+        set { _ThermConfig_32 = newValue.reduce(0, {x,y in x + y.rawValue }) }
     }
 }
 
