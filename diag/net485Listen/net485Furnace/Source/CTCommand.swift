@@ -201,6 +201,195 @@ struct CTConfig_Thermostat_ID0 {
         set { _ThermConfig_32 = newValue.reduce(0, {x,y in x + y.rawValue }) }
     }
 }
+enum CTProgTime : UInt8 {
+    case H00M00 = 0
+    case H00M15 = 1
+    case H00M30 = 2
+    case H00M45 = 3
+    case H01M00 = 4
+    case H01M15 = 5
+    case H01M30 = 6
+    case H01M45 = 7
+    case H02M00 = 8
+    case H02M15 = 9
+    case H02M30 = 10
+    case H02M45 = 11
+    case H03M00 = 12
+    case H03M15 = 13
+    case H03M30 = 14
+    case H03M45 = 15
+    case H04M00 = 16
+    case H04M15 = 17
+    case H04M30 = 18
+    case H04M45 = 19
+    case H05M00 = 20
+    case H05M15 = 21
+    case H05M30 = 22
+    case H05M45 = 23
+    case H06M00 = 24
+    case H06M15 = 25
+    case H06M30 = 26
+    case H06M45 = 27
+    case H07M00 = 28
+    case H07M15 = 29
+    case H07M30 = 30
+    case H07M45 = 31
+    case H08M00 = 32
+    case H08M15 = 33
+    case H08M30 = 34
+    case H08M45 = 35
+    case H09M00 = 36
+    case H09M15 = 37
+    case H09M30 = 38
+    case H09M45 = 39
+    case H10M00 = 40
+    case H10M15 = 41
+    case H10M30 = 42
+    case H10M45 = 43
+    case H11M00 = 44
+    case H11M15 = 45
+    case H11M30 = 46
+    case H11M45 = 47
+    case H12M00 = 48
+    case H12M15 = 49
+    case H12M30 = 50
+    case H12M45 = 51
+    case H13M00 = 52
+    case H13M15 = 53
+    case H13M30 = 54
+    case H13M45 = 55
+    case H14M00 = 56
+    case H14M15 = 57
+    case H14M30 = 58
+    case H14M45 = 59
+    case H15M00 = 60
+    case H15M15 = 61
+    case H15M30 = 62
+    case H15M45 = 63
+    case H16M00 = 64
+    case H16M15 = 65
+    case H16M30 = 66
+    case H16M45 = 67
+    case H17M00 = 68
+    case H17M15 = 69
+    case H17M30 = 70
+    case H17M45 = 71
+    case H18M00 = 72
+    case H18M15 = 73
+    case H18M30 = 74
+    case H18M45 = 75
+    case H19M00 = 76
+    case H19M15 = 77
+    case H19M30 = 78
+    case H19M45 = 79
+    case H20M00 = 80
+    case H20M15 = 81
+    case H20M30 = 82
+    case H20M45 = 83
+    case H21M00 = 84
+    case H21M15 = 85
+    case H21M30 = 86
+    case H21M45 = 87
+    case H22M00 = 88
+    case H22M15 = 89
+    case H22M30 = 90
+    case H22M45 = 91
+    case H23M00 = 92
+    case H23M15 = 93
+    case H23M30 = 94
+    case H23M45 = 95
+}
+struct CTProgSetting {
+    var _dampTime : UInt8 // Heat Profile b7 Damper bit (Commercial Only), b6-b2 Hour b1,b0 Min
+    var Damper : Bool {
+        get { return (_dampTime & 0x80) > 0 }
+        set { _fanSetPt = _dampTime & ( newValue ? 0x80 : 0x00 ) }
+    }
+    var Time : CTProgTime {
+        get { return CTProgTime( rawValue: _dampTime & 0x7F) ?? .H00M00 }
+        set { _fanSetPt = _dampTime & ( newValue.rawValue & 0x7F )}
+    }
+    var _fanSetPt : UInt8 // Heat Profile b7 Prg Fan b6-b0 Set Point
+    var ProgFan : Bool {
+        get { return (_fanSetPt & 0x80) > 0 }
+        set { _fanSetPt = _fanSetPt & ( newValue ? 0x80 : 0x00 ) }
+    }
+    var SetPointTemp : UInt8 {
+        get { return _fanSetPt & 0x7F }
+        set { _fanSetPt = _fanSetPt & ( newValue & 0x7F )}
+    }
+}
+struct CTConfig_Thermostat_ID1 {
+    var Heat_Mon_MOR_OCC1 : CTProgSetting
+    var Heat_Mon_DAY_UNO1 : CTProgSetting
+    var Heat_Mon_EVE_OCC2 : CTProgSetting
+    var Heat_Mon_NHT_UNO2 : CTProgSetting
+
+    var Heat_Tue_MOR_OCC1 : CTProgSetting
+    var Heat_Tue_DAY_UNO1 : CTProgSetting
+    var Heat_Tue_EVE_OCC2 : CTProgSetting
+    var Heat_Tue_NHT_UNO2 : CTProgSetting
+
+    var Heat_Wed_MOR_OCC1 : CTProgSetting
+    var Heat_Wed_DAY_UNO1 : CTProgSetting
+    var Heat_Wed_EVE_OCC2 : CTProgSetting
+    var Heat_Wed_NHT_UNO2 : CTProgSetting
+
+    var Heat_Thr_MOR_OCC1 : CTProgSetting
+    var Heat_Thr_DAY_UNO1 : CTProgSetting
+    var Heat_Thr_EVE_OCC2 : CTProgSetting
+    var Heat_Thr_NHT_UNO2 : CTProgSetting
+
+    var Heat_Fri_MOR_OCC1 : CTProgSetting
+    var Heat_Fri_DAY_UNO1 : CTProgSetting
+    var Heat_Fri_EVE_OCC2 : CTProgSetting
+    var Heat_Fri_NHT_UNO2 : CTProgSetting
+
+    var Heat_WE1_MOR_OCC1 : CTProgSetting
+    var Heat_WE1_DAY_UNO1 : CTProgSetting
+    var Heat_WE1_EVE_OCC2 : CTProgSetting
+    var Heat_WE1_NHT_UNO2 : CTProgSetting
+
+    var Heat_WE2_MOR_OCC1 : CTProgSetting
+    var Heat_WE2_DAY_UNO1 : CTProgSetting
+    var Heat_WE2_EVE_OCC2 : CTProgSetting
+    var Heat_WE2_NHT_UNO2 : CTProgSetting
+    
+    var Cool_Mon_MOR_OCC1 : CTProgSetting
+    var Cool_Mon_DAY_UNO1 : CTProgSetting
+    var Cool_Mon_EVE_OCC2 : CTProgSetting
+    var Cool_Mon_NHT_UNO2 : CTProgSetting
+
+    var Cool_Tue_MOR_OCC1 : CTProgSetting
+    var Cool_Tue_DAY_UNO1 : CTProgSetting
+    var Cool_Tue_EVE_OCC2 : CTProgSetting
+    var Cool_Tue_NHT_UNO2 : CTProgSetting
+
+    var Cool_Wed_MOR_OCC1 : CTProgSetting
+    var Cool_Wed_DAY_UNO1 : CTProgSetting
+    var Cool_Wed_EVE_OCC2 : CTProgSetting
+    var Cool_Wed_NHT_UNO2 : CTProgSetting
+
+    var Cool_Thr_MOR_OCC1 : CTProgSetting
+    var Cool_Thr_DAY_UNO1 : CTProgSetting
+    var Cool_Thr_EVE_OCC2 : CTProgSetting
+    var Cool_Thr_NHT_UNO2 : CTProgSetting
+
+    var Cool_Fri_MOR_OCC1 : CTProgSetting
+    var Cool_Fri_DAY_UNO1 : CTProgSetting
+    var Cool_Fri_EVE_OCC2 : CTProgSetting
+    var Cool_Fri_NHT_UNO2 : CTProgSetting
+
+    var Cool_WE1_MOR_OCC1 : CTProgSetting
+    var Cool_WE1_DAY_UNO1 : CTProgSetting
+    var Cool_WE1_EVE_OCC2 : CTProgSetting
+    var Cool_WE1_NHT_UNO2 : CTProgSetting
+
+    var Cool_WE2_MOR_OCC1 : CTProgSetting
+    var Cool_WE2_DAY_UNO1 : CTProgSetting
+    var Cool_WE2_EVE_OCC2 : CTProgSetting
+    var Cool_WE2_NHT_UNO2 : CTProgSetting
+}
 
 class CTCommand {
     // 5.1 Get Configuration
