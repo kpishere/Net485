@@ -124,10 +124,10 @@ struct net485Routing {
     }
 }
 struct net485Packet {
-    let msgType: MsgType
-    let pktNumber: UInt8
-    let pktLength: UInt8
-    let data: Data
+    var msgType: MsgType
+    var pktNumber: UInt8
+    var pktLength: UInt8
+    var data: Data
     
     init(_ data:Data) {
         self.msgType = MsgType(rawValue:data[7]) ?? .RSVD_DEFAULT
@@ -143,11 +143,11 @@ struct net485Packet {
     }
 }
 struct net485MsgHeader {
-    let addrDestination: UInt8
-    let addrSource: UInt8
-    let subnet: UInt8
-    let route: net485Routing
-    let packet: net485Packet
+    var addrDestination: UInt8
+    var addrSource: UInt8
+    var subnet: UInt8
+    var route: net485Routing
+    var packet: net485Packet
     
     init(_ data:Data) {
         self.addrDestination = data[HeaderStructure.HeaderDestAddr.rawValue]

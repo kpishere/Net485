@@ -205,7 +205,15 @@ class CT485Message_NetEncap :CT485Message, CT485DeclareMessageTypes
 }
 class CT485Message_Data :CT485Message, CT485DeclareMessageTypes
 {
-    var msgData : [UInt8]? { return [UInt8](self.data!.packet.data.subdata(in:(0..<self.data!.packet.data.count))) }
+    var msgData : [UInt8]? {
+        get {return [UInt8](self.data!.packet.data.subdata(in:(0..<self.data!.packet.data.count))) }
+        set {
+            self.data!.packet.data.removeAll()
+            if(( newValue ) != nil) {
+                self.data!.packet.data.append(contentsOf: newValue!)
+            }
+        }
+    }
     
     override func members() -> [String:Any] { return ["msgData":msgData ?? []]
     }
@@ -213,21 +221,47 @@ class CT485Message_Data :CT485Message, CT485DeclareMessageTypes
 }
 class CT485Message_Command :CT485Message, CT485DeclareMessageTypes
 {
-    var commandCode : UInt16? { return UInt16(self.data!.packet.data[0] + (0xFF * self.data!.packet.data[1])) }
-    var commandData : UInt16? { return UInt16(self.data!.packet.data[2] + (0xFF * self.data!.packet.data[3])) }
+    var commandCode : UInt16? {
+        get { return UInt16(self.data!.packet.data[0] + (0xFF * self.data!.packet.data[1])) }
+        set {
+            self.data!.packet.data[0] = UInt8.init(truncatingIfNeeded: newValue ?? 0x0000)
+            self.data!.packet.data[1] = UInt8.init(truncatingIfNeeded: newValue!.byteSwapped)
+        }
+    }
+    var commandData : [UInt8]? {
+        get {return [UInt8](self.data!.packet.data.subdata(in:(2..<(self.data!.packet.data.count)-2))) }
+        set {
+            self.data!.packet.data.removeSubrange(2..<(self.data!.packet.data.count-2))
+            self.data!.packet.data.append(contentsOf: newValue ?? [])
+        }
+    }
     
     override func members() -> [String:Any] { return [
                       "commandCode": commandCode ?? 0x00
-                      , "commandData": commandData ?? 0x00]
+                      , "commandData": commandData ?? []]
     }
     static func getMsgTypes() -> NSArray { return [MsgType.VRANNC,MsgType.CCMD,MsgType.CCMDACK] }
 }
 class CT485Message_SetDisplay :CT485Message, CT485DeclareMessageTypes
 {
-    var nodeType : UInt8? { return self.data!.packet.data[0] }
-    var dspMsgLen : UInt8? { return self.data!.packet.data[1] }
-    var dspMsg : String? { return String(data: Data(bytes: self.data!.packet.data.subdata(in:(2..<self.data!.packet.data.count))), encoding: .ascii) }
-    
+    var nodeType : UInt8? {
+        get { return self.data!.packet.data[0] }
+        set { self.data!.packet.data[0] = newValue ?? 0x00 }
+    }
+    var dspMsgLen : UInt8? {
+        get { return self.data!.packet.data[1] }
+    }
+    var dspMsg : String? {
+        get {return String(data: Data(bytes: self.data!.packet.data.subdata(in:             (2..<self.data!.packet.data.count))), encoding: .ascii) }
+        set {
+            let msg : Data
+            self.data!.packet.data[2] = ( UInt8((newValue ?? "").count) < 30 ? UInt8((newValue ?? "").count) : 30 )
+            msg = newValue!.data(using:String.Encoding.ascii) ?? Data.init()
+            for i in 2...(2+self.data!.packet.data[2]) {
+                self.data!.packet.data[Int(i)] = msg[Int(i)]
+            }
+        }
+    }
     override func members() -> [String:Any] { return [
             "nodeType": nodeType ?? 0x00
             , "dspMsgLen": dspMsgLen ?? 0x00
@@ -237,12 +271,32 @@ class CT485Message_SetDisplay :CT485Message, CT485DeclareMessageTypes
 }
 class CT485Message_SetDiagnostics :CT485Message, CT485DeclareMessageTypes
 {
-    var nodeType : UInt8? { return self.data!.packet.data[0] }
-    var faultMajor : UInt8? { return self.data!.packet.data[1] }
-    var faultMinor : UInt8? { return self.data!.packet.data[2] }
-    var dspMsgLen : UInt8? { return self.data!.packet.data[3] }
-    var dspMsg : String? { return String(data: Data(bytes: self.data!.packet.data.subdata(in:(4..<self.data!.packet.data.count))), encoding: .ascii) }
-
+    var nodeType : UInt8? {
+        get {return self.data!.packet.data[0]}
+        set {self.data!.packet.data[0] = newValue ?? 0xFF }
+    }
+    var faultMajor : UInt8? {
+        get { return self.data!.packet.data[1] }
+        set { self.data!.packet.data[1] = newValue ?? 0x00 }
+    }
+    var faultMinor : UInt8? {
+        get { return self.data!.packet.data[2] }
+        set { self.data!.packet.data[2] = newValue ?? 0x00 }
+    }
+    var dspMsgLen : UInt8? {
+        get {return self.data!.packet.data[3] }
+    }
+    var dspMsg : String? {
+        get {return String(data: Data(bytes: self.data!.packet.data.subdata(in:             (4..<self.data!.packet.data.count))), encoding: .ascii) }
+        set {
+            let msg : Data
+            self.data!.packet.data[3] = ( UInt8((newValue ?? "").count) < 15 ? UInt8((newValue ?? "").count) : 15 )
+            msg = newValue!.data(using:String.Encoding.ascii) ?? Data.init()
+            for i in 4...(4+self.data!.packet.data[3]) {
+                self.data!.packet.data[Int(i)] = msg[Int(i)]
+            }
+        }
+    }
     override func members() -> [String:Any] { return [
             "nodeType": nodeType ?? 0x00
             , "faultMajor": faultMajor ?? 0x00

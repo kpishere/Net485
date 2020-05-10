@@ -319,82 +319,141 @@ struct CTProgSetting {
         set { _fanSetPt = _fanSetPt & ( newValue & 0x7F )}
     }
 }
-struct CTConfig_Thermostat_ID1 {
-    var Heat_Mon_MOR_OCC1 : CTProgSetting
-    var Heat_Mon_DAY_UNO1 : CTProgSetting
-    var Heat_Mon_EVE_OCC2 : CTProgSetting
-    var Heat_Mon_NHT_UNO2 : CTProgSetting
+struct CTConfig_ProgProfile {
+    var Mon_MOR_OCC1 : CTProgSetting
+    var Mon_DAY_UNO1 : CTProgSetting
+    var Mon_EVE_OCC2 : CTProgSetting
+    var Mon_NHT_UNO2 : CTProgSetting
 
-    var Heat_Tue_MOR_OCC1 : CTProgSetting
-    var Heat_Tue_DAY_UNO1 : CTProgSetting
-    var Heat_Tue_EVE_OCC2 : CTProgSetting
-    var Heat_Tue_NHT_UNO2 : CTProgSetting
+    var Tue_MOR_OCC1 : CTProgSetting
+    var Tue_DAY_UNO1 : CTProgSetting
+    var Tue_EVE_OCC2 : CTProgSetting
+    var Tue_NHT_UNO2 : CTProgSetting
 
-    var Heat_Wed_MOR_OCC1 : CTProgSetting
-    var Heat_Wed_DAY_UNO1 : CTProgSetting
-    var Heat_Wed_EVE_OCC2 : CTProgSetting
-    var Heat_Wed_NHT_UNO2 : CTProgSetting
+    var Wed_MOR_OCC1 : CTProgSetting
+    var Wed_DAY_UNO1 : CTProgSetting
+    var Wed_EVE_OCC2 : CTProgSetting
+    var Wed_NHT_UNO2 : CTProgSetting
 
-    var Heat_Thr_MOR_OCC1 : CTProgSetting
-    var Heat_Thr_DAY_UNO1 : CTProgSetting
-    var Heat_Thr_EVE_OCC2 : CTProgSetting
-    var Heat_Thr_NHT_UNO2 : CTProgSetting
+    var Thr_MOR_OCC1 : CTProgSetting
+    var Thr_DAY_UNO1 : CTProgSetting
+    var Thr_EVE_OCC2 : CTProgSetting
+    var Thr_NHT_UNO2 : CTProgSetting
 
-    var Heat_Fri_MOR_OCC1 : CTProgSetting
-    var Heat_Fri_DAY_UNO1 : CTProgSetting
-    var Heat_Fri_EVE_OCC2 : CTProgSetting
-    var Heat_Fri_NHT_UNO2 : CTProgSetting
+    var Fri_MOR_OCC1 : CTProgSetting
+    var Fri_DAY_UNO1 : CTProgSetting
+    var Fri_EVE_OCC2 : CTProgSetting
+    var Fri_NHT_UNO2 : CTProgSetting
 
-    var Heat_WE1_MOR_OCC1 : CTProgSetting
-    var Heat_WE1_DAY_UNO1 : CTProgSetting
-    var Heat_WE1_EVE_OCC2 : CTProgSetting
-    var Heat_WE1_NHT_UNO2 : CTProgSetting
+    var WE1_MOR_OCC1 : CTProgSetting
+    var WE1_DAY_UNO1 : CTProgSetting
+    var WE1_EVE_OCC2 : CTProgSetting
+    var WE1_NHT_UNO2 : CTProgSetting
 
-    var Heat_WE2_MOR_OCC1 : CTProgSetting
-    var Heat_WE2_DAY_UNO1 : CTProgSetting
-    var Heat_WE2_EVE_OCC2 : CTProgSetting
-    var Heat_WE2_NHT_UNO2 : CTProgSetting
-    
-    var Cool_Mon_MOR_OCC1 : CTProgSetting
-    var Cool_Mon_DAY_UNO1 : CTProgSetting
-    var Cool_Mon_EVE_OCC2 : CTProgSetting
-    var Cool_Mon_NHT_UNO2 : CTProgSetting
-
-    var Cool_Tue_MOR_OCC1 : CTProgSetting
-    var Cool_Tue_DAY_UNO1 : CTProgSetting
-    var Cool_Tue_EVE_OCC2 : CTProgSetting
-    var Cool_Tue_NHT_UNO2 : CTProgSetting
-
-    var Cool_Wed_MOR_OCC1 : CTProgSetting
-    var Cool_Wed_DAY_UNO1 : CTProgSetting
-    var Cool_Wed_EVE_OCC2 : CTProgSetting
-    var Cool_Wed_NHT_UNO2 : CTProgSetting
-
-    var Cool_Thr_MOR_OCC1 : CTProgSetting
-    var Cool_Thr_DAY_UNO1 : CTProgSetting
-    var Cool_Thr_EVE_OCC2 : CTProgSetting
-    var Cool_Thr_NHT_UNO2 : CTProgSetting
-
-    var Cool_Fri_MOR_OCC1 : CTProgSetting
-    var Cool_Fri_DAY_UNO1 : CTProgSetting
-    var Cool_Fri_EVE_OCC2 : CTProgSetting
-    var Cool_Fri_NHT_UNO2 : CTProgSetting
-
-    var Cool_WE1_MOR_OCC1 : CTProgSetting
-    var Cool_WE1_DAY_UNO1 : CTProgSetting
-    var Cool_WE1_EVE_OCC2 : CTProgSetting
-    var Cool_WE1_NHT_UNO2 : CTProgSetting
-
-    var Cool_WE2_MOR_OCC1 : CTProgSetting
-    var Cool_WE2_DAY_UNO1 : CTProgSetting
-    var Cool_WE2_EVE_OCC2 : CTProgSetting
-    var Cool_WE2_NHT_UNO2 : CTProgSetting
+    var WE2_MOR_OCC1 : CTProgSetting
+    var WE2_DAY_UNO1 : CTProgSetting
+    var WE2_EVE_OCC2 : CTProgSetting
+    var WE2_NHT_UNO2 : CTProgSetting
 }
+struct CTConfig_Thermostat_ID1 {
+    var Heat : CTConfig_ProgProfile
+    var Cool : CTConfig_ProgProfile
+}
+enum CTCtlCmdCode : UInt8 {
+// 6.2.1 HVAC Profile Control Command Codes & 6.2.2 Zone Profile Control Command Codes
+    case HeatSetPointTemp = 0x01 // 1 Heat Set Point Temperature Modify
+    case CoolSetPointTemp = 0x02 // 2 Cool Set Point Temperature Modify
+    case HeatProfileChange = 0x03 // 3 Heat Profile Change
+    case CoolProfileChange = 0x04 // 4 Cool Profile Change
+    case SystemSwitchModify = 0x05 // 5 System Switch Modify
+    case PermSetPointTemp = 0x06 // 6 Permanent Set Point Temp & Hold Modify
+    case HoldOverride = 0x08 // 8 Hold Override
+    case RealTimeDayOverride = 0x0F // 15 Real Time/Day Override
+    case RestoreFactoryDefaults = 0x45 // 69 Restore Factory Defaults
+    case TestMode = 0x50 // 80 Test Mode
+    case SubsysInstallTest = 0x51 // 81 Subsystem Installation Test
+    case SubsysBusyStatus = 0x61 // 97 Subsystem Busy Status
+    case DemandDehumid = 0x62 // 98 Dehumidification Demand
+    case DemandHumid = 0x63 // 99 Humidification Demand
+    case DemandHeat = 0x64 // 100 Heat Demand
+    case DemandCool = 0x65 // 101 Cool Demand
+    case DemandFan = 0x66 // 102 Fan Demand
+    case DemandBackupHeat = 0x67 // 103 Back-Up Heat Demand
+    case DemandDefrost = 0x68 // 104 Defrost Demand
+    case DemandAuxHeat = 0x69 // 105 Aux Heat Demand
+    case PublishPrice = 0xE0 // 224 Publish Price
+    // 6.2.2 Zone Profile Control Command Codes
+    case AutoPairReq = 0x52 // 82 Auto-Pairing Request
+    case PairOwnerReq = 0x53 // 83 Pair Ownership Request
+    case DemandDamperPos = 0x60 // 96 Damper Position Demand
 
+// 6.2.3 Motor Profile Control Command Codes
+    case SetMotorSpeed = 0x6A // 106 Set Motor Speed
+    case SetMotorTorque = 0x6B // 107 Set Motor Torque
+    case SetAirflowDemand = 0x6C // 108 Set Airflow Demand
+    case SetCtrlMode = 0x6D // 109 Set Control Mode
+    case SetDemandRampRate = 0x6E // 110 Set Demand Ramp Rate
+    case SetMotorDirection = 0x6F // 111 Set Motor Direction
+    case SetMotorTorquePerc = 0x70 // 112 Set Motor Torque Percent
+    case SetMotorPosDemand = 0x71 // 113 Set Motor Position Demand
+    case SetBlowerCoeff_1 = 0x72 // 114 Set Blower Coefficient 1
+    case SetBlowerCoeff_2 = 0x73 // 115 Set Blower Coefficient 2
+    case SetBlowerCoeff_3 = 0x74 // 116 Set Blower Coefficient 3
+    case SetBlowerCoeff_4 = 0x75 // 117 Set Blower Coefficient 4
+    case SetBlowerCoeff_5 = 0x76 // 118 Set Blower Coefficient 5
+    case SetBlowerId_0 = 0x77 // 119 Set Blower Identification 0
+    case SetBlowerId_1 = 0x78 // 120 Set Blower Identification 1
+    case SetBlowerId_2 = 0x79 // 121 Set Blower Identification 2
+    case SetBlowerId_3 = 0x7A // 122 Set Blower Identification 3
+    case SetBlowerId_4 = 0x7B // 123 Set Blower Identification 4
+    case SetBlowerId_5 = 0x7C // 124 Set Blower Identification 5
+    case SetSpeedLimit = 0x7F // 127 Set Speed Limit
+    case SetTorqueLimit = 0x80 // 128 Set Torque Limit
+    case SetAirflowLimit = 0x81 // 129 Set Airflow Limit
+    case SetPowerOutputLimit = 0x82 // 130 Set Power Output Limit
+    case SetDeviceTempLimit = 0x83 // 131 Set Device Temperature Limit
+    case StopMotorByBrake = 0x85 // 133 STOP Motor by Braking
+    case RunStopMotor = 0x86 // 134 RUN/STOP Motor
+    case SetDemandRampTime = 0x88 // 136 Set Demand Ramp Time
+    case SetInducerRampTime = 0x89 // 137 Set Inducer Ramp Rate
+    case SetBlowerCoeff_6 = 0x8A // 138 Set Blower Coefficient 6
+    case SetBlowerCoeff_7 = 0x8B // 139 Set Blower Coefficient 7
+    case SetBlowerCoeff_8 = 0x8C // 140 Set Blower Coefficient 8
+    case SetBlowerCoeff_9 = 0x8D // 141 Set Blower Coefficient 9
+    case SetBlowerCoeff_10 = 0x8E // 142 Set Blower Coefficient 10
+}
 class CTCommand {
     // 5.1 Get Configuration
-    func GetConfiguration( _ route: net485Routing,_ callback:(_ data: net485Packet) -> Void) -> Void {
-    
+    func GetConfiguration( _ route: net485Routing,_ callback:(_ data: CT485Message) -> Void) -> Void {
     }
-    
+    func GiveConfiguration(_ callback:(_ data: CT485Message) -> Void) -> CT485Message_Data {
+        return CT485Message_Data.init(data: net485MsgHeader.init(Data.init()))
+    }
+    // 5.2 Get Status
+    func GetStatus( _ route: net485Routing,_ callback:(_ data: CT485Message) -> Void) -> Void {
+    }
+    func GiveStatus(_ callback:(_ data: CT485Message) -> Void) -> CT485Message_Data {
+        return CT485Message_Data.init(data: net485MsgHeader.init(Data.init()))
+    }
+    // 5.3 Set Control Command
+    func SetControlCommand(_ route: net485Routing,_ callback:(_ data: CT485Message) -> Void
+    , _ command : CT485Message_Command ) -> Void {
+    }
+    func ConfirmControlCommand(_ callback:(_ data: CT485Message) -> Void) -> CT485Message_Command {
+        return CT485Message_Command.init(data: net485MsgHeader.init(Data.init()))
+    }
+    // 5.4 Set Display Message
+    func SetDisplayMessage(_ route: net485Routing,_ callback:(_ data: CT485Message) -> Void
+    , _ message : CT485Message_SetDisplay) -> Void {
+    }
+    func ConfirmDisplayMessage(_ callback:(_ data: CT485Message) -> Void) -> CT485Message_SetDisplay {
+        return CT485Message_SetDisplay.init(data: net485MsgHeader.init(Data.init()))
+    }
+    // 5.5 Set Diagnostics
+    func SetDiagnosticMessage(_ route: net485Routing,_ callback:(_ data: CT485Message) -> Void
+    , _ faultMessage : CT485Message_SetDiagnostics) -> Void {
+    }
+    func ConfirmDisplayMessage(_ callback:(_ data: CT485Message) -> Void) -> CT485Message_SetDiagnostics {
+        return CT485Message_SetDiagnostics.init(data: net485MsgHeader.init(Data.init()))
+    }
 }
