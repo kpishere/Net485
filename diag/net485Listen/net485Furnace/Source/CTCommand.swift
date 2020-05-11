@@ -453,7 +453,63 @@ class CTCommand {
     func SetDiagnosticMessage(_ route: net485Routing,_ callback:(_ data: CT485Message) -> Void
     , _ faultMessage : CT485Message_SetDiagnostics) -> Void {
     }
-    func ConfirmDisplayMessage(_ callback:(_ data: CT485Message) -> Void) -> CT485Message_SetDiagnostics {
+    func ConfirmDiagnosticMessage(_ callback:(_ data: CT485Message) -> Void) -> CT485Message_SetDiagnostics {
         return CT485Message_SetDiagnostics.init(data: net485MsgHeader.init(Data.init()))
     }
+    // 5.6 Get Diagnostics
+    func GetDiagnostics(_ route: net485Routing,_ callback:(_ data: CT485Message) -> Void, _ faultIndex : UInt8) -> Void {
+    }
+    func GiveDiagnostics(_ callback:(_ data: CT485Message) -> Void) -> CT485Message_SetDiagnostics {
+        return CT485Message_SetDiagnostics.init(data: net485MsgHeader.init(Data.init()))
+    }
+    // 5.7 Get Sensor Data
+    func GetSensor(_ route: net485Routing,_ callback:(_ data: CT485Message) -> Void) -> Void {
+    }
+    func GiveSensor(_ callback:(_ data: CT485Message) -> Void) -> CT485Message_Data {
+        return CT485Message_Data.init(data: net485MsgHeader.init(Data.init()))
+    }
+    // 5.8 Set Identification
+    func SetIdent(_ route: net485Routing,_ callback:(_ data: CT485Message) -> Void, optionalIdent: CT485Message_SetIdentification) -> Void {
+    }
+    func ConfirmIdent(_ callback:(_ data: CT485Message) -> Void) ->CT485Message_SetIdentification {
+        return CT485Message_SetIdentification.init(data: net485MsgHeader.init(Data.init()))
+    }
+    // 5.9 Get Identification
+    func GetIdent(_ route: net485Routing,_ callback:(_ data: CT485Message) -> Void) -> Void {
+    }
+    func GiveIdent(_ callback:(_ data: CT485Message) -> Void) -> CT485Message_GetIdentification {
+        return CT485Message_GetIdentification.init(data: net485MsgHeader.init(Data.init()))
+    }
+    // 5.10 Set Application Shared Data to Network
+    func SetAppNetSharedData(_ route: net485Routing,_ callback:(_ data: CT485Message) -> Void, appSD: CT485Message_SetDevNetData ) -> Void {
+    }
+    func ConfirmAppNetSharedData(_ callback:(_ data: CT485Message) -> Void) -> CT485Message_SetDevNetData {
+        return CT485Message_SetDevNetData.init(data: net485MsgHeader.init(Data.init()))
+    }
+    // 5.11 Get Application Shared Data from Network
+    func GetAppNetSD(_ route: net485Routing,_ callback:(_ data: CT485Message) -> Void, sectorNodeType: CT485Message_GetDevNetData) -> Void {
+    }
+    func GiveAppNetSD(_ callback:(_ data: CT485Message) -> Void) -> CT485Message_SetDevNetData {
+        return CT485Message_SetDevNetData.init(data: net485MsgHeader.init(Data.init()))
+    }
+    // 5.12 Set Manufacturer Device Data
+    func SetMfgDeviceData (_ route: net485Routing,_ callback:(_ data: CT485Message) -> Void, mfgData : CT485Message_Data) -> Void {
+    }
+    func ConfirmMfgDeviceData(_ callback:(_ data: CT485Message) -> Void) -> CT485Message_Data {
+        return CT485Message_Data.init(data: net485MsgHeader.init(Data.init()))
+    }
+    // 5.13 Get Manufacturer Device Data
+    func GetMfgDeviceData(_ route: net485Routing,_ callback:(_ data: CT485Message) -> Void) {
+    }
+    func GiveMfgDeviceData(_ callback:(_ data: CT485Message) -> Void) -> CT485Message_Data {
+        return CT485Message_Data.init(data: net485MsgHeader.init(Data.init()))
+    }
+    // 5.14 Set Network Node List
+    func SetNetworkNodeList(_ route: net485Routing,_ callback:(_ data: CT485Message) -> Void, nodeList : CT485Message_NodeList) -> Void {
+    }
+    func ConfirmNetworkNodeList(_ callback:(_ data: CT485Message) -> Void) -> CT485Message_NodeList {
+        return CT485Message_NodeList.init(data: net485MsgHeader.init(Data.init()))
+    }
+    // 5.15 Get Direct Memory Access (DMA) Read
+    //void GetDMARead(Routing, RequestFunctPtr callback, MessageReadCode, MDIPacketID, DBID, Range)
 }

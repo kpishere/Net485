@@ -26,6 +26,17 @@ struct ctCIMFault {
         self.dspMsg = String(data: Data(bytes: data.subdata(in:(start+3..<Int(self.dspMsgLen+3)))), encoding: .ascii) ?? ""
     }
 }
+struct CTDateCode {
+    let Month : UInt8
+    let Day : UInt8
+    let Year : UInt8
+    
+    init(_ data: Data) {
+        self.Month = data[0]
+        self.Day = data[1]
+        self.Year = data[2]
+    }
+}
 enum MDI: UInt8 {
     case configuration = 0x00
     case status = 0x02
@@ -35,6 +46,27 @@ enum MDI: UInt8 {
 enum PASS: UInt8 {
     case ACK = 0x06
     case NAK = 0x15
+}
+enum CTAddressToRevision : Int {
+    case Address = 0
+    case ZipCode = 1
+    case Manufacturer = 2
+    case ControlName = 3
+    case Model = 4
+    case ModelVersion = 5
+    case ModelRevision = 7
+}
+enum CTAddressToModel : Int {
+    case Address = 0
+    case ZipCode = 1
+    case Manufacturer = 2
+    case ControlName = 3
+    case Model = 4
+}
+enum CTSectorNodeType : UInt8 {
+    case ZoneOrThermostat = 0
+    case IndoorUnit = 1
+    case OutdoorUnit = 2
 }
 //
 // Base class of all message data types
@@ -217,7 +249,196 @@ class CT485Message_Data :CT485Message, CT485DeclareMessageTypes
     
     override func members() -> [String:Any] { return ["msgData":msgData ?? []]
     }
-    static func getMsgTypes() -> NSArray { return [MsgType.ECHO, MsgType.ECHOACK, MsgType.GCONFACK, MsgType.GSTATACK, MsgType.GSENSRACK, MsgType.SIDENT, MsgType.GIDENTACK, MsgType.SMFGDAT, MsgType.SMFGDATACK, MsgType.GMFGDATACK, MsgType.DMARACK, MsgType.DMAW, MsgType.DMAWACK] }
+    static func getMsgTypes() -> NSArray { return [MsgType.ECHO, MsgType.ECHOACK, MsgType.GCONFACK, MsgType.GSTATACK, MsgType.GSENSRACK, MsgType.SMFGDAT, MsgType.SMFGDATACK, MsgType.GMFGDATACK, MsgType.DMARACK, MsgType.DMAW, MsgType.DMAWACK] }
+}
+class CT485Message_GetIdentification :CT485Message, CT485DeclareMessageTypes
+{
+    var manfacturerId : UInt16 {
+        get { return UInt16(self.data!.packet.data[0] + (0xFF * self.data!.packet.data[1])) }
+        set {
+            self.data!.packet.data[0] = UInt8.init(truncatingIfNeeded: newValue )
+            self.data!.packet.data[1] = UInt8.init(truncatingIfNeeded: newValue.byteSwapped)
+        }
+    }
+    var CTStdVer : UInt8 {
+        get { return UInt8(self.data!.packet.data[2] >> 4) }
+        set { self.data!.packet.data[2] = (self.data!.packet.data[2] & 0x0F) | (newValue << 4) }
+    }
+    var CTStdRev : UInt8 {
+        get { return UInt8(self.data!.packet.data[2] & 0x0F) }
+        set { self.data!.packet.data[2] = (self.data!.packet.data[2] & 0xF0) | (newValue & 0x0F) }
+    }
+    var NumberOfMicros : UInt8 {
+        get { return self.data!.packet.data[3] }
+        set { self.data!.packet.data[3] = newValue }
+    }
+    var SWVersionRevision : [String] {
+        get {
+            var tmpStrings = [String]()
+            var startIndex = 4
+            for _ in 0..<(self.NumberOfMicros * 2) {
+                let endIndex = self.data!.packet.data.subdata(in: startIndex..<self.data!.packet.data.count).firstIndex(of: 0x00) ?? startIndex
+                tmpStrings.append( String(data: Data(bytes: self.data!.packet.data.subdata(in:             (startIndex..<endIndex))), encoding: .ascii) ?? "" )
+                startIndex = endIndex + 1;
+            }
+            return tmpStrings
+        }
+        set {
+            for i in 0..<(self.NumberOfMicros * 2) {
+                var msg : Data = NSData() as Data
+                msg = newValue[Int(i)].data(using:String.Encoding.ascii) ?? Data.init()
+                let startPos = nextDataPos(startAt: 4,pos: Int(i))
+                for i in startPos..<(startPos+msg.count) {
+                    self.data!.packet.data[Int(i)] = msg[Int(i)]
+                }
+                self.data!.packet.data[startPos+msg.count] = 0x00
+            }
+        }
+    }
+    var SerialNumber : String {
+        get {
+            let serPosStart = nextDataPos(startAt: 4, pos: Int(self.NumberOfMicros * 2))
+            let serPosEnd = nextDataPos(startAt: serPosStart, pos: 1)
+            return String(data: Data(bytes: self.data!.packet.data.subdata(in:             (serPosStart..<serPosEnd))), encoding: .ascii) ?? ""
+        }
+    }
+    var ManufDate : CTDateCode {
+        get { return getDate(pos: 0) }
+        set { setDate(pos: 0, date: newValue) }
+    }
+    var VerifDate : CTDateCode {
+        get { return getDate(pos: 3) }
+        set { setDate(pos: 3, date: newValue) }
+    }
+    var InstallDate : CTDateCode {
+        get { return getDate(pos: 6) }
+        set { setDate(pos: 6, date: newValue) }
+    }
+    var AddressToRevision : [String] {
+        // Note: Use enum CTAddressToRevision for index to array
+        get {
+            var tmpStrings = [String]()
+            var startIndex = nextDataPos(startAt: 4, pos: 7) + 9
+            for _ in 0..<7 {
+                let endIndex = self.data!.packet.data.subdata(in: startIndex..<self.data!.packet.data.count).firstIndex(of: 0x00) ?? startIndex
+                tmpStrings.append( String(data: Data(bytes: self.data!.packet.data.subdata(in:             (startIndex..<endIndex))), encoding: .ascii) ?? "" )
+                startIndex = endIndex + 1;
+            }
+            return tmpStrings
+        }
+        set {
+            let startIndex = nextDataPos(startAt: 4, pos: 7) + 9
+            for i in 0..<7 {
+                var msg : Data
+                msg = newValue[Int(i)].data(using:String.Encoding.ascii) ?? Data.init()
+                let startPos = nextDataPos(startAt: startIndex,pos: Int(i))
+                for i in startPos..<(startPos+msg.count) {
+                    self.data!.packet.data[Int(i)] = msg[Int(i)]
+                }
+                self.data!.packet.data[startPos+msg.count] = 0x00
+            }
+        }
+    }
+    
+    private func nextDataPos(startAt: Int, pos : Int) -> Int {
+        var nextPos = startAt
+        // Let indexing searching up to n fields for serial # and address fields
+        for _ in 0..<( pos < Int(self.NumberOfMicros * 2 + 7) ? pos : Int(self.NumberOfMicros * 2) ) {
+            let endIndex = self.data!.packet.data.subdata(in: nextPos..<self.data!.packet.data.count).firstIndex(of: 0x00) ?? nextPos
+            nextPos = endIndex + 1;
+        }
+        return nextPos
+    }
+    private func getDate(pos: Int) -> CTDateCode {
+        let datePosStart = nextDataPos(startAt: 4, pos: Int(self.NumberOfMicros * 2)+1) + pos
+        return CTDateCode.init( self.data!.packet.data.subdata(in: ((datePosStart)..<(datePosStart+3))) )
+    }
+    private func setDate(pos: Int, date: CTDateCode) -> Void {
+        let datePosStart = nextDataPos(startAt: 4, pos: Int(self.NumberOfMicros * 2)+1) + pos
+        self.data!.packet.data[datePosStart] = date.Month
+        self.data!.packet.data[datePosStart+1] = date.Day
+        self.data!.packet.data[datePosStart+2] = date.Year
+    }
+    override func members() -> [String:Any] { return [
+        "manfacturerId":manfacturerId,
+        "CTStdVer":CTStdVer,
+        "CTStdRev":CTStdRev,
+        "NumberOfMicros":NumberOfMicros,
+        "SWVersionRevision":SWVersionRevision,
+        "SerialNumber":SerialNumber,
+        "ManufDate":ManufDate,
+        "VerifDate":VerifDate,
+        "InstallDate":InstallDate,
+        "AddressToRevision":AddressToRevision
+        ]
+    }
+    static func getMsgTypes() -> NSArray { return [MsgType.GIDENTACK] }
+}
+class CT485Message_SetIdentification :CT485Message, CT485DeclareMessageTypes
+{
+    var ManufDate : CTDateCode {
+        get { return getDate(pos: 0) }
+        set { setDate(pos: 0, date: newValue) }
+    }
+    var VerifDate : CTDateCode {
+        get { return getDate(pos: 3) }
+        set { setDate(pos: 3, date: newValue) }
+    }
+    var InstallDate : CTDateCode {
+        get { return getDate(pos: 6) }
+        set { setDate(pos: 6, date: newValue) }
+    }
+    var AddressToModel : [String] {
+        // Note: Use enum CTAddressToModel for index to array
+        get {
+            var tmpStrings = [String]()
+            var startIndex = nextDataPos(startAt: 10, pos: 0)
+            for _ in 0..<5 {
+                let endIndex = self.data!.packet.data.subdata(in: startIndex..<self.data!.packet.data.count).firstIndex(of: 0x00) ?? startIndex
+                tmpStrings.append( String(data: Data(bytes: self.data!.packet.data.subdata(in:             (startIndex..<endIndex))), encoding: .ascii) ?? "" )
+                startIndex = endIndex + 1;
+            }
+            return tmpStrings
+        }
+        set {
+            let startIndex = nextDataPos(startAt: 10, pos: 0)
+            for i in 0..<5 {
+                var msg : Data
+                msg = newValue[Int(i)].data(using:String.Encoding.ascii) ?? Data.init()
+                let startPos = nextDataPos(startAt: startIndex,pos: Int(i))
+                for i in startPos..<(startPos+msg.count) {
+                    self.data!.packet.data[Int(i)] = msg[Int(i)]
+                }
+                self.data!.packet.data[startPos+msg.count] = 0x00
+            }
+        }
+    }
+    
+    private func nextDataPos(startAt: Int, pos : Int) -> Int {
+        var nextPos = startAt
+        // Let indexing searching up to n fields for serial # and address fields
+        for _ in 0..<( pos < 5 ? pos : 5 ) {
+            let endIndex = self.data!.packet.data.subdata(in: nextPos..<self.data!.packet.data.count).firstIndex(of: 0x00) ?? nextPos
+            nextPos = endIndex + 1;
+        }
+        return nextPos
+    }
+    private func getDate(pos: Int) -> CTDateCode {
+        return CTDateCode.init( self.data!.packet.data.subdata(in: ((pos)..<(pos+3))) )
+    }
+    private func setDate(pos: Int, date: CTDateCode) -> Void {
+        self.data!.packet.data[pos] = date.Month
+        self.data!.packet.data[pos+1] = date.Day
+        self.data!.packet.data[pos+2] = date.Year
+    }
+    override func members() -> [String:Any] { return [
+        "ManufDate":ManufDate,
+        "VerifDate":VerifDate,
+        "InstallDate":InstallDate,
+        "AddressToModel":AddressToModel
+        ]
+    }
+    static func getMsgTypes() -> NSArray { return [MsgType.SIDENT] }
 }
 class CT485Message_Command :CT485Message, CT485DeclareMessageTypes
 {
@@ -345,16 +566,34 @@ class CT485Message_GetDiagnosticsResp :CT485Message, CT485DeclareMessageTypes
 }
 class CT485Message_SetDevNetData :CT485Message, CT485DeclareMessageTypes
 {
-    var sectNodeType : UInt8? { return self.data!.packet.data[0] }
+    var sectNodeType : CTSectorNodeType? {
+        get {return CTSectorNodeType(rawValue: self.data!.packet.data[0]) }
+        set { assertionFailure("implement setter")}
+    }
     // Shared data section
-    var devDataLen : UInt8? { return self.data!.packet.data[1] }
-    var controlId : UInt16? { return UInt16(self.data!.packet.data[2] + (0xFF * self.data!.packet.data[3])) }
-    var manufId : UInt16? { return UInt16(self.data!.packet.data[4] + (0xFF * self.data!.packet.data[5])) }
-    var appNodeType : UInt8? { return self.data!.packet.data[6] }
-    var devData : [UInt8]? { return [UInt8](self.data!.packet.data.subdata(in:(7..<Int(self.data!.packet.data[1])))) }
+    var devDataLen : UInt8? {
+        get { return self.data!.packet.data[1] }
+        set { assertionFailure("implement setter")}
+    }
+    var controlId : UInt16? {
+        get { return UInt16(self.data!.packet.data[2] + (0xFF * self.data!.packet.data[3])) }
+        set { assertionFailure("implement setter")}
+    }
+    var manufId : UInt16? {
+        get {return UInt16(self.data!.packet.data[4] + (0xFF * self.data!.packet.data[5])) }
+        set { assertionFailure("implement setter")}
+    }
+    var appNodeType : UInt8? {
+        get {return self.data!.packet.data[6] }
+        set { assertionFailure("implement setter")}
+    }
+    var devData : [UInt8]? {
+        get {return [UInt8](self.data!.packet.data.subdata(in:(7..<Int(self.data!.packet.data[1])))) }
+        set { assertionFailure("implement setter")}
+    }
     
     override func members() -> [String:Any] { return [
-                      "sectNodeType": sectNodeType ?? 0x00
+                      "sectNodeType": sectNodeType ?? .ZoneOrThermostat
                       , "devDataLen": devDataLen ?? 0x00
                       , "controlId": controlId ?? 0x00
                       , "manufId": manufId ?? 0x00
@@ -366,10 +605,10 @@ class CT485Message_SetDevNetData :CT485Message, CT485DeclareMessageTypes
 }
 class CT485Message_GetDevNetData :CT485Message, CT485DeclareMessageTypes
 {
-    var sectNodeType : UInt8? { return self.data!.packet.data[0] }
+    var sectNodeType : CTSectorNodeType? { return CTSectorNodeType(rawValue: self.data!.packet.data[0]) }
 
     override func members() -> [String:Any] { return [
-            "sectNodeType": sectNodeType ?? 0x00
+            "sectNodeType": sectNodeType ?? .ZoneOrThermostat
             ]
     }
     static func getMsgTypes() -> NSArray { return [MsgType.GDEVDATA] }

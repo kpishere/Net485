@@ -26,6 +26,8 @@ A big change in project structure now.  Now, with the coordinator services runni
 
 Presently, one can use the net485Listener tool to see packets to the device.  I'll be making respective utilities to emulate some devices.  This may be close to being useful for those that wish to make HVAC devices communicate now.
 
+NOTE: Network shared data feature still is not implemented and remains to be done
+
 # Net485Listen
 
 Do check out the sub-project under 'diag' folder - a very handy snooper tool for existing networks.  You got one of the following brands?  They all use the same protocol (albeit with their own extensions).  If any of you all are interested, I'm down for logging network activity and reverse-engineering and documenting all of these extensions and ultimately adding support to this library.  You can help out by snooping your own network and submitting samples of what is logged.
