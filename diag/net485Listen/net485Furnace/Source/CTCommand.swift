@@ -511,5 +511,39 @@ class CTCommand {
         return CT485Message_NodeList.init(data: net485MsgHeader.init(Data.init()))
     }
     // 5.15 Get Direct Memory Access (DMA) Read
-    //void GetDMARead(Routing, RequestFunctPtr callback, MessageReadCode, MDIPacketID, DBID, Range)
+    func GetDMARead(_ route: net485Routing,_ callback:(_ data: CT485Message) -> Void, dmaRequest : CT485Message_DMAReq)-> Void {
+    }
+    func GiveDMARead(_ callback:(_ data: CT485Message) -> Void) -> CT485Message_Data {
+            return CT485Message_Data.init(data: net485MsgHeader.init(Data.init()))
+    }
+    // 5.16 Set Direct Memory Access (DMA) Write
+    func SetDMAWrite(_ route: net485Routing,_ callback:(_ data: CT485Message) -> Void, dmaData: CT485Message_DMAWReq) -> Void {
+    }
+    func ConfirmDMAWrite(_ callback:(_ data: CT485Message) -> Void) -> CT485Message_DMAWReq {
+            return CT485Message_DMAWReq.init(data: net485MsgHeader.init(Data.init()))
+    }
+    // 5.17 Set Manufacturer Generic Data
+    func SetMfgGenericData(_ route: net485Routing,_ callback:(_ data: CT485Message) -> Void, mfgData: CT485Message_MfgData) {
+    }
+    func ConfirmMfgGenericData(_ callback:(_ data: CT485Message) -> Void) -> CT485Message_MfgData {
+        return CT485Message_MfgData.init(data: net485MsgHeader.init(Data.init()))
+    }
+    // 5.18 Get Manufacturer Generic Data
+    func GetMfgGenericData(_ route: net485Routing,_ callback:(_ data: CT485Message) -> Void, mfgData: CT485Message_MfgData) {
+    }
+    func GiveMfgGenericData(_ callback:(_ data: CT485Message) -> Void) -> CT485Message_MfgData {
+        return CT485Message_MfgData(data: net485MsgHeader.init(Data.init()))
+    }
+    // 5.19 Get User Menu
+    func GetUserMenu(_ route: net485Routing,_ callback:(_ data: CT485Message) -> Void, userMenuReq: CT485Message_GetUserMenu ) -> Void {
+    }
+    func GiveUserMenu(_ callback:(_ data: CT485Message) -> Void) -> CT485Message_UserMenu {
+        return CT485Message_UserMenu.init(data: net485MsgHeader.init(Data.init()))
+    }
+    // 5.20 Set User Menu Update
+    func SetUMUpdateData(_ route: net485Routing,_ callback:(_ data: CT485Message) -> Void, umenuData: CT485Message_SetUserMenu) -> Void {
+    }
+    func ConfirmUMUpdateData(_ callback:(_ data: CT485Message) -> Void) ->CT485Message_SetUserMenu {
+        return CT485Message_SetUserMenu.init(data: net485MsgHeader.init(Data.init()))
+    }
 }

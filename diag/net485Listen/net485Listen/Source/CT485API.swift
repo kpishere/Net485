@@ -249,7 +249,7 @@ class CT485Message_Data :CT485Message, CT485DeclareMessageTypes
     
     override func members() -> [String:Any] { return ["msgData":msgData ?? []]
     }
-    static func getMsgTypes() -> NSArray { return [MsgType.ECHO, MsgType.ECHOACK, MsgType.GCONFACK, MsgType.GSTATACK, MsgType.GSENSRACK, MsgType.SMFGDAT, MsgType.SMFGDATACK, MsgType.GMFGDATACK, MsgType.DMARACK, MsgType.DMAW, MsgType.DMAWACK] }
+    static func getMsgTypes() -> NSArray { return [MsgType.ECHO, MsgType.ECHOACK, MsgType.GCONFACK, MsgType.GSTATACK, MsgType.GSENSRACK, MsgType.SMFGDAT, MsgType.SMFGDATACK, MsgType.GMFGDATACK, MsgType.DMARACK, MsgType.DMAWACK] }
 }
 class CT485Message_GetIdentification :CT485Message, CT485DeclareMessageTypes
 {
@@ -615,13 +615,24 @@ class CT485Message_GetDevNetData :CT485Message, CT485DeclareMessageTypes
 }
 class CT485Message_DMAReq :CT485Message, CT485DeclareMessageTypes
 {
-    var mdi : MDI? { return MDI(rawValue: self.data!.packet.data[0]) ?? .configuration }
-    var pktNumber : UInt8? { return self.data!.packet.data[1] }
-    var startDBId : UInt8? { return self.data!.packet.data[2] }
-    var range : UInt8? { return self.data!.packet.data[3] }
-
+    var mdi : MDI? {
+        get {return MDI(rawValue: self.data!.packet.data[0]) ?? .configuration }
+        set { self.data!.packet.data[0] = newValue?.rawValue ?? MDI.configuration.rawValue }
+    }
+    var pktNumber : UInt8? {
+        get { return self.data!.packet.data[1] }
+        set { self.data!.packet.data[1] = newValue ?? 0x00 }
+    }
+    var startDBId : UInt8? {
+        get { return self.data!.packet.data[2] }
+        set { self.data!.packet.data[2] = newValue ?? 0x00 }
+    }
+    var range : UInt8? {
+        get { return self.data!.packet.data[3] }
+        set { self.data!.packet.data[3] = newValue ?? 0x00 }
+    }
     override func members() -> [String:Any] { return [
-            "mdi": mdi ?? 0x00
+            "mdi": mdi ?? MDI.configuration.rawValue
             , "pktNumber": pktNumber ?? 0x00
             , "startDBId": startDBId ?? 0x00
             , "range": range ?? 0x00
@@ -629,10 +640,50 @@ class CT485Message_DMAReq :CT485Message, CT485DeclareMessageTypes
     }
     static func getMsgTypes() -> NSArray { return [MsgType.DMAR] }
 }
+class CT485Message_DMAWReq :CT485Message, CT485DeclareMessageTypes
+{
+    var mdi : MDI? {
+        get {return MDI(rawValue: self.data!.packet.data[0]) ?? .configuration }
+        set { self.data!.packet.data[0] = newValue?.rawValue ?? MDI.configuration.rawValue }
+    }
+    var pktNumber : UInt8? {
+        get { return self.data!.packet.data[1] }
+        set { self.data!.packet.data[1] = newValue ?? 0x00 }
+    }
+    var startDBId : UInt8? {
+        get { return self.data!.packet.data[2] }
+        set { self.data!.packet.data[2] = newValue ?? 0x00 }
+    }
+    var dbIdValues : [UInt8]? {
+        get { return [UInt8](self.data!.packet.data.subdata(in:(3..<(self.data!.packet.data.count-3)))) }
+        set { self.data!.packet.data.replaceSubrange((3..<(self.data!.packet.data.count-3)), with: newValue ?? [])
+        }
+    }
+    override func members() -> [String:Any] { return [
+            "mdi": mdi ?? MDI.configuration.rawValue
+            , "pktNumber": pktNumber ?? 0x00
+            , "startDBId": startDBId ?? 0x00
+            , "dbIdValues": dbIdValues ?? []
+            ]
+    }
+    static func getMsgTypes() -> NSArray { return [MsgType.DMAW] }
+}
 class CT485Message_MfgData :CT485Message, CT485DeclareMessageTypes
 {
-    var manufId : UInt16? { return UInt16(self.data!.packet.data[0] + (0xFF * self.data!.packet.data[1])) }
-    var mfgData : [UInt8]? { return [UInt8](self.data!.packet.data.subdata(in:(2..<self.data!.packet.data.count))) }
+    var manufId : UInt16? {
+        get {return UInt16(self.data!.packet.data[0] + (0xFF * self.data!.packet.data[1])) }
+        set {
+            self.data!.packet.data[0] = UInt8.init(truncatingIfNeeded: newValue ?? 0x00 )
+            self.data!.packet.data[1] = UInt8.init(truncatingIfNeeded: (newValue ?? 0x00).byteSwapped)
+        }
+    }
+    var mfgData : [UInt8]? {
+        get { return [UInt8](self.data!.packet.data.subdata(in:(2..<self.data!.packet.data.count))) }
+        set {
+            self.data!.packet.data.removeLast(self.data!.packet.data.count - 2)
+            self.data!.packet.data.append(contentsOf: newValue ?? [])
+        }
+    }
     
     override func members() -> [String:Any] { return [
         "manufId":manufId ?? 0x00
@@ -643,12 +694,29 @@ class CT485Message_MfgData :CT485Message, CT485DeclareMessageTypes
 }
 class CT485Message_GetUserMenu :CT485Message, CT485DeclareMessageTypes
 {
-    var menuFile : UInt8? { return self.data!.packet.data[0] }
-    var manuMain : UInt8? { return self.data!.packet.data[1] }
-    var manuSub : UInt8? { return self.data!.packet.data[2] }
-    var fetchOffset : UInt16? { return UInt16(self.data!.packet.data[3] + (0xFF * self.data!.packet.data[4])) }
-    var maxReturnBytes : UInt8? { return self.data!.packet.data[5] }
-
+    var menuFile : UInt8? {
+        get { return self.data!.packet.data[0] }
+        set { self.data!.packet.data[0] = newValue ?? 0x00 }
+    }
+    var manuMain : UInt8? {
+        get { return self.data!.packet.data[1] }
+        set { self.data!.packet.data[1] = newValue ?? 0x00 }
+    }
+    var manuSub : UInt8? {
+        get { return self.data!.packet.data[2] }
+        set { self.data!.packet.data[2] = newValue ?? 0x00 }
+    }
+    var fetchOffset : UInt16? {
+        get { return UInt16(self.data!.packet.data[3] + (0xFF * self.data!.packet.data[4])) }
+        set {
+            self.data!.packet.data[3] = UInt8.init(truncatingIfNeeded: newValue ?? 0x00 )
+            self.data!.packet.data[4] = UInt8.init(truncatingIfNeeded: (newValue ?? 0x0000).byteSwapped)
+        }
+    }
+    var maxReturnBytes : UInt8? {
+        get { return self.data!.packet.data[5] }
+        set { self.data!.packet.data[5] = newValue ?? 0x00 }
+    }
     override func members() -> [String:Any] { return [
             "menuFile": menuFile ?? 0x00
             , "manuMain": manuMain ?? 0x00
@@ -661,12 +729,36 @@ class CT485Message_GetUserMenu :CT485Message, CT485DeclareMessageTypes
 }
 class CT485Message_UserMenu :CT485Message, CT485DeclareMessageTypes
 {
-    var menuFile : UInt8? { return self.data!.packet.data[0] }
-    var manuMain : UInt8? { return self.data!.packet.data[1] }
-    var manuSub : UInt8? { return self.data!.packet.data[2] }
-    var fetchOffset : UInt16? { return UInt16(self.data!.packet.data[3] + (0xFF * self.data!.packet.data[4])) }
-    var maxReturnBytes : UInt8? { return self.data!.packet.data[5] }
-    var menuData : [UInt8]? { return [UInt8](self.data!.packet.data.subdata(in:(6..<Int(self.data!.packet.data[5])))) }
+    var menuFile : UInt8? {
+        get { return self.data!.packet.data[0] }
+        set { self.data!.packet.data[0] = newValue ?? 0x00 }
+    }
+    var manuMain : UInt8? {
+        get { return self.data!.packet.data[1] }
+        set { self.data!.packet.data[1] = newValue ?? 0x00 }
+    }
+    var manuSub : UInt8? {
+        get { return self.data!.packet.data[2] }
+        set { self.data!.packet.data[2] = newValue ?? 0x00 }
+    }
+    var fetchOffset : UInt16? {
+        get { return UInt16(self.data!.packet.data[3] + (0xFF * self.data!.packet.data[4])) }
+        set {
+            self.data!.packet.data[3] = UInt8.init(truncatingIfNeeded: newValue ?? 0x00 )
+            self.data!.packet.data[4] = UInt8.init(truncatingIfNeeded: (newValue ?? 0x0000).byteSwapped)
+        }
+    }
+    var maxReturnBytes : UInt8? {
+        get { return self.data!.packet.data[5] }
+        set { self.data!.packet.data[5] = newValue ?? 0x00 }
+    }
+    var menuData : [UInt8]? {
+        get { return [UInt8](self.data!.packet.data.subdata(in:(6..<Int(self.data!.packet.data[5])))) }
+        set {
+            self.data!.packet.data.removeLast(self.data!.packet.data.count - 7)
+            self.data!.packet.data.append(contentsOf: newValue ?? [])
+        }
+    }
 
     override func members() -> [String:Any] { return [
             "menuFile": menuFile ?? 0x00
@@ -697,7 +789,7 @@ class CT485Message_SetUserMenu :CT485Message, CT485DeclareMessageTypes
             , "fileCode2": fileCode2 ?? 0x00
             ]
     }
-    static func getMsgTypes() -> NSArray { return [MsgType.GUMENU,MsgType.UUMENU] }
+    static func getMsgTypes() -> NSArray { return [MsgType.UUMENU] }
 }
 class CT485Message_SetUserMenuResp :CT485Message, CT485DeclareMessageTypes
 {
@@ -719,7 +811,7 @@ class CT485Message_SetUserMenuResp :CT485Message, CT485DeclareMessageTypes
             , "status": status ?? PASS.NAK
             ]
     }
-    static func getMsgTypes() -> NSArray { return [MsgType.GUMENUACK,MsgType.UUMENUACK] }
+    static func getMsgTypes() -> NSArray { return [MsgType.UUMENUACK] }
 }
 
 class CT485Message_SetFacNetData :CT485Message, CT485DeclareMessageTypes
