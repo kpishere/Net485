@@ -154,9 +154,25 @@
 			path = Source;
 			sourceTree = "<group>";
 		};
+		0FE41E6E246CF1E2005B357E /* net485Thermostat */ = {
+			isa = PBXGroup;
+			children = (
+				0FE41E6F246CF1E2005B357E /* Source */,
+			);
+			path = net485Thermostat;
+			sourceTree = "<group>";
+		};
+		0FE41E6F246CF1E2005B357E /* Source */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			path = Source;
+			sourceTree = "<group>";
+		};
 		0FEFFC562414A2A600E09C17 = {
 			isa = PBXGroup;
 			children = (
+				0FE41E6E246CF1E2005B357E /* net485Thermostat */,
 				0FD44F402461BFA100E98DE7 /* net485Furnace */,
 				0FD44DFD24612EB400E98DE7 /* net485Listen */,
 				0FEFFC602414A2A600E09C17 /* Products */,

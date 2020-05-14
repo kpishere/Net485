@@ -546,4 +546,22 @@ class CTCommand {
     func ConfirmUMUpdateData(_ callback:(_ data: CT485Message) -> Void) ->CT485Message_SetUserMenu {
         return CT485Message_SetUserMenu.init(data: net485MsgHeader.init(Data.init()))
     }
+    // 5.21 Set Factory Shared Data to Application
+    func SetFactoryAppSharedData(_ route: net485Routing,_ callback:(_ data: CT485Message) -> Void, factoryAppData : CT485Message_SetFacNetData) -> Void {
+    }
+    func ConfirmFactoryAppSharedData(_ callback:(_ data: CT485Message) -> Void) -> CT485Message_SetFacNetData {
+        return CT485Message_SetFacNetData.init(data: net485MsgHeader.init(Data.init()))
+    }
+    // 5.22 Get Shared Data from Application
+    func GetSDfromApp(_ route: net485Routing,_ callback:(_ data: CT485Message) -> Void) -> Void {
+    }
+    func GiveAppSD(_ callback:(_ data: CT485Message) -> Void) -> CT485Message_SetDevNetData {
+        return CT485Message_SetDevNetData.init(data: net485MsgHeader.init(Data.init()))
+    }
+    // 5.23 Set Echo Data
+    func SetEchoData(_ route: net485Routing,_ callback:(_ data: CT485Message) -> Void, echoData: CT485Message_Data) -> Void {
+    }
+    func ConfirmEchoData(_ callback:(_ data: CT485Message) -> Void) -> CT485Message_Data {
+        return CT485Message_Data.init(data: net485MsgHeader.init(Data.init()))
+    }
 }
