@@ -7,7 +7,7 @@
 //
 
 import Foundation
-import ORSSerial
+import POSIXSerialPort
 
 enum HeaderStructure : Int {
     case HeaderDestAddr = 0x00
@@ -161,22 +161,22 @@ struct net485MsgHeader {
     }
 }
 
-class PacketProcessor : NSObject, ORSSerialPortDelegate {
+class PacketProcessor : NSObject, POSIXSerialPortDelegate {
     let maxPktSize : UInt = 252
     let pktHeaderSize : UInt = 10
     let pktCrcSize : UInt = 2
     var accumlPacket : Data = Data()
     var dateTimePrior : Date = Date()
     
-    convenience init(_ port: ORSSerialPort) {
+    convenience init(_ port: POSIXSerialPort) {
         self.init()
         port.delegate = self
     }
-    func serialPortWasRemovedFromSystem(_ serialPort: ORSSerialPort) {
+    func serialPortWasRemovedFromSystem(_ serialPort: POSIXSerialPort) {
         exit(2)
     }
     
-    func serialPort(_ serialPort: ORSSerialPort, didReceive data: Data) {
+    func serialPort(_ serialPort: POSIXSerialPort, didReceive data: Data) {
         if(data.count > 0) {
             self.accumlPacket += data;
         }

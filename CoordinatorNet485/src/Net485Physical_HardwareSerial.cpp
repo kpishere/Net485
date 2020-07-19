@@ -6,16 +6,26 @@
 #include "Net485Physical_HardwareSerial.hpp"
 
 #if defined(__AVR__)
-// TICKS PER us for MEGA 2560
-#define IR_SEND_ADJ 0.0625 //0.1300
+    // TICKS PER us for MEGA 2560
+    #define IR_SEND_ADJ 0.0625 //0.1300
 #elif defined(ESP8266)
-// Ticks per us for ESP8266
-#define IR_SEND_ADJ 5.008
+    // Ticks per us for ESP8266
+    #define IR_SEND_ADJ 5.008
+#elif __APPLE__
+#elif __linux__
+    // linux
+#elif __unix__ // all unices not caught above
+    // Unix
+#elif defined(_POSIX_VERSION)
+    // POSIX
+#else
+    #error "Unknown compiler"
 #endif
+
 
 #define SERIALBUFFERSIZE 256
 
-#define RINGBUFLOC(loc) ((void *)ringbuf + ( (((uint32_t)loc) % ringbufSize) * sizeof(Net485Packet) ))
+#define RINGBUFLOC(loc) (&ringbuf[((((uint32_t)loc) % ringbufSize) * sizeof(Net485Packet))])
 
 #if defined(__AVR__)
 ISR(TIMER1_COMPA_vect){
@@ -28,6 +38,9 @@ void ISRHandlerTimer() {
         Net485Physical_HardwareSerial::lastInstance->packetSequencer();
 }
 #endif
+
+#if defined(__AVR__) || defined(ESP8266)
+#endif /* defined(__AVR__) || defined(ESP8266) */
 
 Net485Physical_HardwareSerial *Net485Physical_HardwareSerial::lastInstance;
 
@@ -87,7 +100,7 @@ void Net485Physical_HardwareSerial::clearTimer() {
 }
 bool valueInVector(uint8_t val, uint8_t *ptrNullTerm) {
     bool found = false;
-    for( int i = 0; ptrNullTerm[i] != NULL && !found; i++) {
+    for( int i = 0; ptrNullTerm[i] != 0x00 && !found; i++) {
         found = found || ptrNullTerm[i] == val;
     }
     return found;
@@ -143,16 +156,16 @@ void Net485Physical_HardwareSerial::packetSequencer() {
             driveState = DriveStateE::Ready;
             break;
         }
+        case Ready: break;
     }
 }
 void Net485Physical_HardwareSerial::readData() {
     char *buffer;
     const int bytes = hwSerial->available();
-    const int zero = 0;
     if(bytes > 0) {
         buffer = (char *)RINGBUFLOC(ringbufPktCurrent+1);
 
-        hwSerial->readBytes((char *)(buffer+((Net485Packet *)buffer)->dataSize), bytes);
+        hwSerial->readBytes((uint8_t *)(&buffer[((Net485Packet *)buffer)->dataSize]), bytes);
 
         ((Net485Packet *)buffer)->dataSize += bytes;
         driveState = DriveStateE::ReadingPacket;
@@ -241,7 +254,6 @@ Net485Packet *Net485Physical_HardwareSerial::getNextPacket(bool peek) {
 void Net485Physical_HardwareSerial::setPacketFilter(uint8_t *destAddr,
                                                     uint8_t *subNet,
                                                     uint8_t *srcNodeTyp,
-                                                    uint8_t *pktMsgTyp) {
-    msgTypeFilterList = pktMsgTyp;
+                                                    const uint8_t *pktMsgTyp) {
+    msgTypeFilterList = (uint8_t *)pktMsgTyp;
 }
-

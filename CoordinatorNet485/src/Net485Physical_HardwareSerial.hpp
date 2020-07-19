@@ -10,13 +10,6 @@
 
 #include "Net485API.hpp"
 
-#if defined(__AVR__)
-#define OUTPUT_DRIVE_ENABLE_PIN 2
-#elif defined(ESP8266)
-#define OUTPUT_DRIVE_ENABLE_PIN D6
-#endif
-
-
 #define BITS_START 1
 #define BITS_STOP 1
 #define BITS_DATA 8
@@ -86,7 +79,7 @@ public:
     void setPacketFilter(uint8_t *destAddr,
                          uint8_t *subNet,
                          uint8_t *srcNodeTyp,
-                         uint8_t *pktMsgTyp);
+                         const uint8_t *pktMsgTyp);
 };
 
 #endif /*Net485Physical_HardwareSerial_hpp*/

@@ -121,3 +121,24 @@ port?.open()
 
 RunLoop.current.run() // loop
 
+/*
+    Stateful Diagram
+    ================
+
+0) off
+1) default offline
+2) online idle
+3) test mode
+4) run induce mode
+5) run high mode
+6) run low mode
+7) run air mode
+
+0->1 Cold start
+    - initialize devices
+
+1->2 Warm start
+    - configure device to idle state
+    - validate node list
+
+*/

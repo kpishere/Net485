@@ -9,7 +9,6 @@
 #ifndef Swift_Bridging_Header_h
 #define Swift_Bridging_Header_h
 
-#import <ORSSerialPort.h>
-#import <ORSSerialPortManager.h>
+#import <POSIXSerialPort/POSIXSerialPort.h>
 
 #endif /* Swift_Bridging_Header_h */
