@@ -2,8 +2,8 @@
 //  POSIXSerialPort.h
 //  POSIXSerialPort
 //
-//  Created by Kevin Peck on 2020-07-17.
-//  Copyright © 2020 Kevin Peck. All rights reserved.
+//  Created by kpishere on 2020-07-17.
+//  Copyright © 2020  GPL-2.0 License
 //
 
 #ifndef POSIXSerialPort_h
