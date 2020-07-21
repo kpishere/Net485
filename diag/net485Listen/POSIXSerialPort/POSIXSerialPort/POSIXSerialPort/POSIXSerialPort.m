@@ -26,7 +26,7 @@ static __strong NSMutableArray *allSerialPorts;
 @property (copy, readwrite) NSString *path;
 @property dispatch_fd_t fileDescriptor;
 @property size_t readChunk;
-@property int readBlockMs;
+@property float readBlockMs;
 @property dispatch_data_t _data;
 @property int baudRate;
 @property (nonatomic) BOOL allowsNonStandardBaudRates;
@@ -119,7 +119,7 @@ print("Output: "+strData1)
     return [[self class] serialPortWithPath:devicePath baudRate:br readChunk:DEFAULT_READ_CHUNK readBlockMs:DEFAULT_READ_BLOCKTIME_MS];
 }
 
-+ (POSIXSerialPort *)serialPortWithPath:(NSString *)devicePath baudRate:(int)br readChunk:(size_t)rc readBlockMs:(int)rbms
++ (POSIXSerialPort *)serialPortWithPath:(NSString *)devicePath baudRate:(int)br readChunk:(size_t)rc readBlockMs:(float)rbms
 {
     POSIXSerialPort *o = [self alloc];
     o.baudRate = br;
@@ -245,10 +245,10 @@ print("Output: "+strData1)
     }
     
     // Turn off any options that might interfere with our ability to send and
-    // receive raw binary bytes.
+    // receive raw binary bytes. VMIN & VTIME settubgs are controlled further down by dispatch_io_...
     cfmakeraw(&options);
     options.c_cc[VMIN] = 0; // Wait for at least N character(s) before returning
-    options.c_cc[VTIME] = 1; // Wait N * 100 milliseconds between bytes before returning from read
+    options.c_cc[VTIME] = 0; // Wait N * 100 milliseconds between bytes before returning from read
     
     // Set 8 data bits
     options.c_cflag &= ~CSIZE;
@@ -402,7 +402,8 @@ print("Output: "+strData1)
 {
     if(self._data && self._data != dispatch_data_empty) {
         // Create contingent region of memory
-        dispatch_data_apply(self._data, ^bool(dispatch_data_t region, size_t offset, const void *buffer, size_t size) {
+        dispatch_data_t refRegion = dispatch_data_create_map(self._data,nil,nil);        
+        dispatch_data_apply(refRegion, ^bool(dispatch_data_t region, size_t offset, const void *buffer, size_t size) {
             
             NSData *bufferRef = [NSData dataWithBytesNoCopy:(void *)(buffer+offset) length:size freeWhenDone:NO];
             
@@ -421,7 +422,8 @@ print("Output: "+strData1)
                 NSData *packetRef = [NSData dataWithBytesNoCopy:(void *)(buffer+ds.offset) length:ds.size freeWhenDone:NO];
             
                 dispatch_async(dispatch_get_main_queue(), ^(void){
-                    if ([self.delegate respondsToSelector:@selector(serialPort:didReceiveData:)])
+                    if ([self.delegate respondsToSelector:@selector(serialPort:didReceiveData:)]
+                        && ds.size > 0 )
                     {
                         [self.delegate serialPort:self didReceiveData:packetRef];
                     }
@@ -429,8 +431,8 @@ print("Output: "+strData1)
                     // Update data reference, removing consumed data
                     dispatch_async(dispatch_get_main_queue(), ^(void){
                         if(ds.offset != offset || ds.size != size) {
-                            self._data = dispatch_data_create_subrange(region, offset+ds.size+(ds.offset-offset)
-                                , size - (ds.size + (ds.offset-offset)));
+                            self._data = dispatch_data_create_map(dispatch_data_create_subrange(region, offset+ds.size+(ds.offset-offset)
+                                , size - (ds.size + (ds.offset-offset))),nil,nil);
                         }
                     });
                 });

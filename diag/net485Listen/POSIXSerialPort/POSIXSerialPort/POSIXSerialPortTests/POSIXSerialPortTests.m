@@ -11,6 +11,8 @@
 
 #define PORT_PATH @"/dev/ttys001"
 #define BAUD_RATE 9600
+#define TEST_MTU 252
+#define INTERCHAR_TIMEOUT_MS 3.5f
 
 @class POSIXSerialPortDelegate_TEST;
 
@@ -27,6 +29,7 @@
 - (void)serialPortWasClosed:(POSIXSerialPort *)serialPort;
 
 @property (nullable,weak) XCTestExpectation *portOpen;
+@property (nullable,weak) XCTestExpectation *firstWrite;
 @property (nullable,weak) XCTestExpectation *readWriteTestComplete;
 @end
 
@@ -35,11 +38,15 @@
 {
     NSLog(@"serialPort didReceiveData (%s): %@", [[serialPort description] UTF8String]
         , data );
-    [self.readWriteTestComplete fulfill];
+    if(self.readWriteTestComplete !=nil ) [self.readWriteTestComplete fulfill];
+    if(self.firstWrite !=nil ) [self.firstWrite fulfill];
 }
 - (DataSegment)serialPort:(POSIXSerialPort *)serialPort nextDataSegmentValidIn:(NSData *)data;
 {
-    DataSegment ds = {0, [data length]};
+    NSData *spaceData = [NSData dataWithBytes:(unsigned char[]){0x20} length:1];
+    NSRange rv = [data rangeOfData:spaceData options:kNilOptions range:NSMakeRange(0u, [data length])];
+    
+    DataSegment ds = {0, rv.location + rv.length};
     NSLog(@"serialPort nextDataSegmentValidIn (%s): %zu, %zu", [[serialPort description] UTF8String]
     , ds.offset, ds.size );
     return ds;
@@ -52,7 +59,7 @@
 - (void)serialPortWasOpened:(POSIXSerialPort *)serialPort;
 {
     NSLog(@"serialPortWasOpened (%s)", [[serialPort description] UTF8String] );
-    [self.portOpen fulfill];
+    if(self.portOpen !=nil) [self.portOpen fulfill];
 }
 - (void)serialPortWasClosed:(POSIXSerialPort *)serialPort;
 {
@@ -71,11 +78,9 @@
     socat pty,raw,nonblock,ispeed=115200,echo=0,link=/dev/ttys000 EXEC:/bin/cat &
     echo $! > /tmp/socat_000.pid
 */
-    self.port = [POSIXSerialPort serialPortWithPath:PORT_PATH baudRate:BAUD_RATE];
+    self.port = [POSIXSerialPort serialPortWithPath:PORT_PATH baudRate:BAUD_RATE readChunk:TEST_MTU readBlockMs:INTERCHAR_TIMEOUT_MS];
     self.pDelegate = [POSIXSerialPortDelegate_TEST alloc];
     self.port.delegate = self.pDelegate;
-    self.pDelegate.portOpen = [self expectationWithDescription:@"Port open"];
-    self.pDelegate.readWriteTestComplete = [self expectationWithDescription:@"Read complete"];
 }
 
 - (void)tearDown {
@@ -102,13 +107,24 @@
 }
 
 - (void)test_writeRead {
+    self.pDelegate.portOpen = [self expectationWithDescription:@"Port open"];
+    self.pDelegate.firstWrite = [self expectationWithDescription:@"Read incomplete packet"];
+    self.pDelegate.firstWrite.expectedFulfillmentCount = 1;
+    self.pDelegate.readWriteTestComplete = [self expectationWithDescription:@"Read complete"];
+    self.pDelegate.readWriteTestComplete.expectedFulfillmentCount = 2;
+
     NSData *sendData = [@"FEED BEEF" dataUsingEncoding:NSUTF8StringEncoding];
     
     [self.port open];
     [self waitForExpectations:@[self.pDelegate.portOpen] timeout:5];
 
     [self.port sendData:sendData];
-    [self waitForExpectations:@[self.pDelegate.readWriteTestComplete] timeout:10];
+    [self waitForExpectations:@[self.pDelegate.firstWrite] timeout:10];
+
+    sendData = [@" " dataUsingEncoding:NSUTF8StringEncoding];
+    [self.port sendData:sendData];
+ 
+    [self waitForExpectations:@[self.pDelegate.readWriteTestComplete] timeout:20];
 
     [self.port close];
 }

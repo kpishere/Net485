@@ -29,7 +29,7 @@ typedef struct DataSegmentS {
 
 @interface POSIXSerialPort : NSObject
 + (nullable POSIXSerialPort *)serialPortWithPath:(NSString *)devicePath baudRate:(int)br;
-+ (nullable POSIXSerialPort *)serialPortWithPath:(NSString *)devicePath baudRate:(int)br readChunk:(size_t)rc readBlockMs:(int)rbms;
++ (nullable POSIXSerialPort *)serialPortWithPath:(NSString *)devicePath baudRate:(int)br readChunk:(size_t)rc readBlockMs:(float)rbms;
 - (nullable instancetype)initWithPath:(NSString *)devicePath;
 - (void)open;
 - (void)close;
