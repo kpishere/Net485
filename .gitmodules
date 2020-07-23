@@ -1,0 +1,3 @@
+[submodule "diag/net485Listen/POSIXSerialPort"]
+	path = diag/net485Listen/POSIXSerialPort
+	url = https://github.com/kpishere/POSIXSerialPort.git
