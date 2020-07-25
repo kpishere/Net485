@@ -1,0 +1,135 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Scheme
+   LastUpgradeVersion = "1010"
+   version = "1.7">
+   <BuildAction
+      parallelizeBuildables = "YES"
+      buildImplicitDependencies = "YES">
+      <BuildActionEntries>
+         <BuildActionEntry
+            buildForTesting = "YES"
+            buildForRunning = "YES"
+            buildForProfiling = "YES"
+            buildForArchiving = "YES"
+            buildForAnalyzing = "NO">
+            <BuildableReference
+               BuildableIdentifier = "primary"
+               BlueprintIdentifier = "0FFFB70924BF264B005F2DC5"
+               BuildableName = "Test_HardwareSerial.xctest"
+               BlueprintName = "Test_HardwareSerial"
+               ReferencedContainer = "container:CoordinatorNet485.xcodeproj">
+            </BuildableReference>
+         </BuildActionEntry>
+      </BuildActionEntries>
+   </BuildAction>
+   <TestAction
+      buildConfiguration = "Debug"
+      selectedDebuggerIdentifier = "Xcode.DebuggerFoundation.Debugger.LLDB"
+      selectedLauncherIdentifier = "Xcode.DebuggerFoundation.Launcher.LLDB"
+      shouldUseLaunchSchemeArgsEnv = "YES">
+      <PreActions>
+         <ExecutionAction
+            ActionType = "Xcode.IDEStandardExecutionActionsCore.ExecutionActionType.ShellScriptAction">
+            <ActionContent
+               title = "Run Script"
+               scriptText = "# You&apos;ll have to do this to allow test to run :&#10;# sudo chmod o+rw /dev&#10;#&#10;socat pty,raw,nonblock,ispeed=115200,echo=0,link=/dev/ttys000 EXEC:/bin/cat &amp;&#10;echo $! &gt; /tmp/socat_000.pid&#10;&#10;socat pty,raw,nonblock,echo=0,link=/dev/ttys010 pty,raw,echo=0,link=/dev/ttys020 &amp;&#10;echo $! &gt; /tmp/socat_010.pid&#10;&#10;socat pty,raw,nonblock,echo=0,link=/dev/ttys030 pty,raw,echo=0,link=/dev/ttys040 &amp;&#10;echo $! &gt; /tmp/socat_030.pid&#10;">
+               <EnvironmentBuildable>
+                  <BuildableReference
+                     BuildableIdentifier = "primary"
+                     BlueprintIdentifier = "0FFFB70924BF264B005F2DC5"
+                     BuildableName = "Test_HardwareSerial.xctest"
+                     BlueprintName = "Test_HardwareSerial"
+                     ReferencedContainer = "container:CoordinatorNet485.xcodeproj">
+                  </BuildableReference>
+               </EnvironmentBuildable>
+            </ActionContent>
+         </ExecutionAction>
+      </PreActions>
+      <PostActions>
+         <ExecutionAction
+            ActionType = "Xcode.IDEStandardExecutionActionsCore.ExecutionActionType.ShellScriptAction">
+            <ActionContent
+               title = "Run Script"
+               scriptText = "PID=$(&lt;/tmp/socat_000.pid)&#10;kill -9 $PID&#10;PID=$(&lt;/tmp/socat_010.pid)&#10;kill -9 $PID&#10;PID=$(&lt;/tmp/socat_030.pid)&#10;kill -9 $PID&#10;rm /dev/ttys00* /dev/ttys01* /dev/ttys02* /dev/ttys03* /dev/ttys04*&#10;">
+               <EnvironmentBuildable>
+                  <BuildableReference
+                     BuildableIdentifier = "primary"
+                     BlueprintIdentifier = "0FFFB70924BF264B005F2DC5"
+                     BuildableName = "Test_HardwareSerial.xctest"
+                     BlueprintName = "Test_HardwareSerial"
+                     ReferencedContainer = "container:CoordinatorNet485.xcodeproj">
+                  </BuildableReference>
+               </EnvironmentBuildable>
+            </ActionContent>
+         </ExecutionAction>
+      </PostActions>
+      <Testables>
+         <TestableReference
+            skipped = "NO">
+            <BuildableReference
+               BuildableIdentifier = "primary"
+               BlueprintIdentifier = "0FFFB70924BF264B005F2DC5"
+               BuildableName = "Test_HardwareSerial.xctest"
+               BlueprintName = "Test_HardwareSerial"
+               ReferencedContainer = "container:CoordinatorNet485.xcodeproj">
+            </BuildableReference>
+         </TestableReference>
+      </Testables>
+      <MacroExpansion>
+         <BuildableReference
+            BuildableIdentifier = "primary"
+            BlueprintIdentifier = "0FFFB70924BF264B005F2DC5"
+            BuildableName = "Test_HardwareSerial.xctest"
+            BlueprintName = "Test_HardwareSerial"
+            ReferencedContainer = "container:CoordinatorNet485.xcodeproj">
+         </BuildableReference>
+      </MacroExpansion>
+      <AdditionalOptions>
+      </AdditionalOptions>
+   </TestAction>
+   <LaunchAction
+      buildConfiguration = "Debug"
+      selectedDebuggerIdentifier = "Xcode.DebuggerFoundation.Debugger.LLDB"
+      selectedLauncherIdentifier = "Xcode.DebuggerFoundation.Launcher.LLDB"
+      launchStyle = "0"
+      useCustomWorkingDirectory = "NO"
+      ignoresPersistentStateOnLaunch = "NO"
+      debugDocumentVersioning = "YES"
+      debugServiceExtension = "internal"
+      allowLocationSimulation = "YES">
+      <MacroExpansion>
+         <BuildableReference
+            BuildableIdentifier = "primary"
+            BlueprintIdentifier = "0FFFB70924BF264B005F2DC5"
+            BuildableName = "Test_HardwareSerial.xctest"
+            BlueprintName = "Test_HardwareSerial"
+            ReferencedContainer = "container:CoordinatorNet485.xcodeproj">
+         </BuildableReference>
+      </MacroExpansion>
+      <AdditionalOptions>
+      </AdditionalOptions>
+   </LaunchAction>
+   <ProfileAction
+      buildConfiguration = "Release"
+      shouldUseLaunchSchemeArgsEnv = "YES"
+      savedToolIdentifier = ""
+      useCustomWorkingDirectory = "NO"
+      debugDocumentVersioning = "YES">
+      <MacroExpansion>
+         <BuildableReference
+            BuildableIdentifier = "primary"
+            BlueprintIdentifier = "0FFFB70924BF264B005F2DC5"
+            BuildableName = "Test_HardwareSerial.xctest"
+            BlueprintName = "Test_HardwareSerial"
+            ReferencedContainer = "container:CoordinatorNet485.xcodeproj">
+         </BuildableReference>
+      </MacroExpansion>
+   </ProfileAction>
+   <AnalyzeAction
+      buildConfiguration = "Debug">
+   </AnalyzeAction>
+   <ArchiveAction
+      buildConfiguration = "Release"
+      revealArchiveInOrganizer = "YES">
+   </ArchiveAction>
+</Scheme>

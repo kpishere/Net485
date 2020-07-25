@@ -1,8 +1,6 @@
 Doc/
-Thermostat/
 *.DS_Store
 *.bin
-*.xcodeproj
 *.json
 .build
 xcuserdata/

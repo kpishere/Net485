@@ -1,0 +1,623 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 50;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		0F2CED9224CB5F1E00906ED2 /* CT485API.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0F75465224CAE68400104AA4 /* CT485API.swift */; };
+		0F2CED9324CB5F1E00906ED2 /* Package.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0FD44EB324612EB500E98DE7 /* Package.swift */; };
+		0F2CED9424CB5F1E00906ED2 /* Global.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0F75465324CAE68400104AA4 /* Global.swift */; };
+		0F2CED9524CB5F1E00906ED2 /* Net485.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0F75465424CAE68400104AA4 /* Net485.swift */; };
+		0F2CED9724CB5F1E00906ED2 /* POSIXSerial.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 0FBF732824CB0D7E00B0182E /* POSIXSerial.framework */; };
+		0F2CED9F24CB5F4200906ED2 /* CTCommand.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0FD44F422461BFA100E98DE7 /* CTCommand.swift */; };
+		0F2CEDA024CB5F4700906ED2 /* main.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0FD44F432461BFA100E98DE7 /* main.swift */; };
+		0F2CEDA124CB5F4A00906ED2 /* CTHVACFurnace.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0FE41E72246F10D8005B357E /* CTHVACFurnace.swift */; };
+		0F2CEDA224CB64B800906ED2 /* net485Furnace in CopyFiles */ = {isa = PBXBuildFile; fileRef = 0F2CED9D24CB5F1E00906ED2 /* net485Furnace */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
+		0F75465624CAE68500104AA4 /* CT485API.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0F75465224CAE68400104AA4 /* CT485API.swift */; };
+		0F75465824CAE68500104AA4 /* Global.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0F75465324CAE68400104AA4 /* Global.swift */; };
+		0F75465A24CAE68500104AA4 /* Net485.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0F75465424CAE68400104AA4 /* Net485.swift */; };
+		0FBF734F24CB126700B0182E /* POSIXSerial.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 0FBF732824CB0D7E00B0182E /* POSIXSerial.framework */; };
+		0FD44EF824612EB500E98DE7 /* Package.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0FD44EB324612EB500E98DE7 /* Package.swift */; };
+		0FD44EFA24612EB500E98DE7 /* main.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0FD44EB724612EB500E98DE7 /* main.swift */; };
+		0FEFFD3B241B25FB00E09C17 /* net485Listen in CopyFiles */ = {isa = PBXBuildFile; fileRef = 0FEFFC5F2414A2A600E09C17 /* net485Listen */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		0F2CEDAA24CBDC4F00906ED2 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 0F2CEDA524CBDC4F00906ED2 /* CoordinatorNet485.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 0F56DD4524B3B9D900873573;
+			remoteInfo = CoordinatorNet485;
+		};
+		0F2CEDAC24CBDC4F00906ED2 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 0F2CEDA524CBDC4F00906ED2 /* CoordinatorNet485.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 0FFFB70A24BF264B005F2DC5;
+			remoteInfo = Test_HardwareSerial;
+		};
+		0FBF732724CB0D7E00B0182E /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 0FBF732224CB0D7D00B0182E /* POSIXSerial.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 0F997C7324C21DCB004005A9;
+			remoteInfo = POSIXSerial;
+		};
+		0FBF732924CB0D7E00B0182E /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 0FBF732224CB0D7D00B0182E /* POSIXSerial.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 0F997C7C24C21DCD004005A9;
+			remoteInfo = POSIXSerialTests;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		0F2CED9824CB5F1E00906ED2 /* CopyFiles */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 12;
+			dstPath = "${PROJECT_DIR}/bin";
+			dstSubfolderSpec = 0;
+			files = (
+				0F2CEDA224CB64B800906ED2 /* net485Furnace in CopyFiles */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		0FEFFC5D2414A2A600E09C17 /* CopyFiles */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 12;
+			dstPath = "${PROJECT_DIR}/bin";
+			dstSubfolderSpec = 0;
+			files = (
+				0FEFFD3B241B25FB00E09C17 /* net485Listen in CopyFiles */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
+/* Begin PBXFileReference section */
+		0F2CED9D24CB5F1E00906ED2 /* net485Furnace */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = net485Furnace; sourceTree = BUILT_PRODUCTS_DIR; };
+		0F2CEDA324CBD60800906ED2 /* README.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; name = README.md; path = ../README.md; sourceTree = "<group>"; };
+		0F2CEDA424CBD61B00906ED2 /* LICENSE */ = {isa = PBXFileReference; lastKnownFileType = text; name = LICENSE; path = ../LICENSE; sourceTree = "<group>"; };
+		0F2CEDA524CBDC4F00906ED2 /* CoordinatorNet485.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = CoordinatorNet485.xcodeproj; path = libs/CoordinatorNet485/CoordinatorNet485.xcodeproj; sourceTree = "<group>"; };
+		0F75464A24C9B9EE00104AA4 /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		0F75465224CAE68400104AA4 /* CT485API.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CT485API.swift; sourceTree = "<group>"; };
+		0F75465324CAE68400104AA4 /* Global.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Global.swift; sourceTree = "<group>"; };
+		0F75465424CAE68400104AA4 /* Net485.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Net485.swift; sourceTree = "<group>"; };
+		0FBF730024CAEC7800B0182E /* Swift-Bridging-Header.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "Swift-Bridging-Header.h"; sourceTree = "<group>"; };
+		0FBF732224CB0D7D00B0182E /* POSIXSerial.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = POSIXSerial.xcodeproj; path = "libs/POSIXSerialPort/Framework Project/POSIXSerial.xcodeproj"; sourceTree = "<group>"; };
+		0FD44EB324612EB500E98DE7 /* Package.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Package.swift; sourceTree = "<group>"; };
+		0FD44EB424612EB500E98DE7 /* README.md */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = "<group>"; };
+		0FD44EB724612EB500E98DE7 /* main.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = main.swift; sourceTree = "<group>"; };
+		0FD44F422461BFA100E98DE7 /* CTCommand.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CTCommand.swift; sourceTree = "<group>"; };
+		0FD44F432461BFA100E98DE7 /* main.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = main.swift; sourceTree = "<group>"; };
+		0FE41E72246F10D8005B357E /* CTHVACFurnace.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CTHVACFurnace.swift; sourceTree = "<group>"; };
+		0FEFFC5F2414A2A600E09C17 /* net485Listen */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = net485Listen; sourceTree = BUILT_PRODUCTS_DIR; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		0F2CED9624CB5F1E00906ED2 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				0F2CED9724CB5F1E00906ED2 /* POSIXSerial.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		0FEFFC5C2414A2A600E09C17 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				0FBF734F24CB126700B0182E /* POSIXSerial.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		0F2CEDA624CBDC4F00906ED2 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				0F2CEDAB24CBDC4F00906ED2 /* libCoordinatorNet485.a */,
+				0F2CEDAD24CBDC4F00906ED2 /* Test_HardwareSerial.xctest */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		0FBF732324CB0D7D00B0182E /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				0FBF732824CB0D7E00B0182E /* POSIXSerial.framework */,
+				0FBF732A24CB0D7E00B0182E /* POSIXSerialTests.xctest */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		0FD44DFD24612EB400E98DE7 /* net485Listen */ = {
+			isa = PBXGroup;
+			children = (
+				0FD44EB324612EB500E98DE7 /* Package.swift */,
+				0FD44EB424612EB500E98DE7 /* README.md */,
+				0FD44EB524612EB500E98DE7 /* Source */,
+			);
+			path = net485Listen;
+			sourceTree = "<group>";
+		};
+		0FD44EB524612EB500E98DE7 /* Source */ = {
+			isa = PBXGroup;
+			children = (
+				0FBF730024CAEC7800B0182E /* Swift-Bridging-Header.h */,
+				0F75465224CAE68400104AA4 /* CT485API.swift */,
+				0F75465324CAE68400104AA4 /* Global.swift */,
+				0F75465424CAE68400104AA4 /* Net485.swift */,
+				0FD44EB724612EB500E98DE7 /* main.swift */,
+			);
+			path = Source;
+			sourceTree = "<group>";
+		};
+		0FD44F052461303D00E98DE7 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				0FBF732224CB0D7D00B0182E /* POSIXSerial.xcodeproj */,
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
+		0FD44F402461BFA100E98DE7 /* net485Furnace */ = {
+			isa = PBXGroup;
+			children = (
+				0FD44F412461BFA100E98DE7 /* Source */,
+			);
+			path = net485Furnace;
+			sourceTree = "<group>";
+		};
+		0FD44F412461BFA100E98DE7 /* Source */ = {
+			isa = PBXGroup;
+			children = (
+				0FD44F422461BFA100E98DE7 /* CTCommand.swift */,
+				0FD44F432461BFA100E98DE7 /* main.swift */,
+				0FE41E72246F10D8005B357E /* CTHVACFurnace.swift */,
+			);
+			path = Source;
+			sourceTree = "<group>";
+		};
+		0FEFFC562414A2A600E09C17 = {
+			isa = PBXGroup;
+			children = (
+				0F2CEDA424CBD61B00906ED2 /* LICENSE */,
+				0F2CEDA324CBD60800906ED2 /* README.md */,
+				0F75464A24C9B9EE00104AA4 /* Info.plist */,
+				0F2CEDA524CBDC4F00906ED2 /* CoordinatorNet485.xcodeproj */,
+				0FD44F402461BFA100E98DE7 /* net485Furnace */,
+				0FD44DFD24612EB400E98DE7 /* net485Listen */,
+				0FEFFC602414A2A600E09C17 /* Products */,
+				0FD44F052461303D00E98DE7 /* Frameworks */,
+			);
+			sourceTree = "<group>";
+		};
+		0FEFFC602414A2A600E09C17 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				0FEFFC5F2414A2A600E09C17 /* net485Listen */,
+				0F2CED9D24CB5F1E00906ED2 /* net485Furnace */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		0F2CED8F24CB5F1E00906ED2 /* net485Furnace */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 0F2CED9A24CB5F1E00906ED2 /* Build configuration list for PBXNativeTarget "net485Furnace" */;
+			buildPhases = (
+				0F2CED9024CB5F1E00906ED2 /* Sources */,
+				0F2CED9624CB5F1E00906ED2 /* Frameworks */,
+				0F2CED9824CB5F1E00906ED2 /* CopyFiles */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = net485Furnace;
+			productName = net485Listen;
+			productReference = 0F2CED9D24CB5F1E00906ED2 /* net485Furnace */;
+			productType = "com.apple.product-type.tool";
+		};
+		0FEFFC5E2414A2A600E09C17 /* net485Listen */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 0FEFFC662414A2A600E09C17 /* Build configuration list for PBXNativeTarget "net485Listen" */;
+			buildPhases = (
+				0FEFFC5B2414A2A600E09C17 /* Sources */,
+				0FEFFC5C2414A2A600E09C17 /* Frameworks */,
+				0FEFFC5D2414A2A600E09C17 /* CopyFiles */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = net485Listen;
+			productName = net485Listen;
+			productReference = 0FEFFC5F2414A2A600E09C17 /* net485Listen */;
+			productType = "com.apple.product-type.tool";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		0FEFFC572414A2A600E09C17 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				LastSwiftUpdateCheck = 1010;
+				LastUpgradeCheck = 1010;
+				ORGANIZATIONNAME = "Kevin Peck";
+				TargetAttributes = {
+					0FEFFC5E2414A2A600E09C17 = {
+						CreatedOnToolsVersion = 10.1;
+					};
+				};
+			};
+			buildConfigurationList = 0FEFFC5A2414A2A600E09C17 /* Build configuration list for PBXProject "Applications" */;
+			compatibilityVersion = "Xcode 9.3";
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+				Base,
+			);
+			mainGroup = 0FEFFC562414A2A600E09C17;
+			productRefGroup = 0FEFFC602414A2A600E09C17 /* Products */;
+			projectDirPath = "";
+			projectReferences = (
+				{
+					ProductGroup = 0F2CEDA624CBDC4F00906ED2 /* Products */;
+					ProjectRef = 0F2CEDA524CBDC4F00906ED2 /* CoordinatorNet485.xcodeproj */;
+				},
+				{
+					ProductGroup = 0FBF732324CB0D7D00B0182E /* Products */;
+					ProjectRef = 0FBF732224CB0D7D00B0182E /* POSIXSerial.xcodeproj */;
+				},
+			);
+			projectRoot = "";
+			targets = (
+				0FEFFC5E2414A2A600E09C17 /* net485Listen */,
+				0F2CED8F24CB5F1E00906ED2 /* net485Furnace */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXReferenceProxy section */
+		0F2CEDAB24CBDC4F00906ED2 /* libCoordinatorNet485.a */ = {
+			isa = PBXReferenceProxy;
+			fileType = archive.ar;
+			path = libCoordinatorNet485.a;
+			remoteRef = 0F2CEDAA24CBDC4F00906ED2 /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		0F2CEDAD24CBDC4F00906ED2 /* Test_HardwareSerial.xctest */ = {
+			isa = PBXReferenceProxy;
+			fileType = wrapper.cfbundle;
+			path = Test_HardwareSerial.xctest;
+			remoteRef = 0F2CEDAC24CBDC4F00906ED2 /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		0FBF732824CB0D7E00B0182E /* POSIXSerial.framework */ = {
+			isa = PBXReferenceProxy;
+			fileType = wrapper.framework;
+			path = POSIXSerial.framework;
+			remoteRef = 0FBF732724CB0D7E00B0182E /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		0FBF732A24CB0D7E00B0182E /* POSIXSerialTests.xctest */ = {
+			isa = PBXReferenceProxy;
+			fileType = wrapper.cfbundle;
+			path = POSIXSerialTests.xctest;
+			remoteRef = 0FBF732924CB0D7E00B0182E /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+/* End PBXReferenceProxy section */
+
+/* Begin PBXSourcesBuildPhase section */
+		0F2CED9024CB5F1E00906ED2 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				0F2CED9F24CB5F4200906ED2 /* CTCommand.swift in Sources */,
+				0F2CEDA024CB5F4700906ED2 /* main.swift in Sources */,
+				0F2CEDA124CB5F4A00906ED2 /* CTHVACFurnace.swift in Sources */,
+				0F2CED9224CB5F1E00906ED2 /* CT485API.swift in Sources */,
+				0F2CED9324CB5F1E00906ED2 /* Package.swift in Sources */,
+				0F2CED9424CB5F1E00906ED2 /* Global.swift in Sources */,
+				0F2CED9524CB5F1E00906ED2 /* Net485.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		0FEFFC5B2414A2A600E09C17 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				0FD44EFA24612EB500E98DE7 /* main.swift in Sources */,
+				0F75465624CAE68500104AA4 /* CT485API.swift in Sources */,
+				0FD44EF824612EB500E98DE7 /* Package.swift in Sources */,
+				0F75465824CAE68500104AA4 /* Global.swift in Sources */,
+				0F75465A24CAE68500104AA4 /* Net485.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		0F2CED9B24CB5F1E00906ED2 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = YES;
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = GYAG48J958;
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(SRCROOT)/libs/**",
+					"$(inereted)",
+					"$(SRCROOT)/libs",
+				);
+				HEADER_SEARCH_PATHS = "$(SRCROOT)/libs/**";
+				INFOPLIST_FILE = "net485Listen copy-Info.plist";
+				LD_RUNPATH_SEARCH_PATHS = (
+					LD_RUNPATH_SEARCH_PATHS,
+					"=",
+					"$(TOOLCHAIN_DIR)/usr/lib/swift/macosx",
+					"@executable_path",
+				);
+				LIBRARY_SEARCH_PATHS = "";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_FORCE_DYNAMIC_LINK_STDLIB = YES;
+				SWIFT_FORCE_STATIC_LINK_STDLIB = NO;
+				SWIFT_INSTALL_OBJC_HEADER = YES;
+				SWIFT_OBJC_BRIDGING_HEADER = "net485Listen/Source/Swift-Bridging-Header.h";
+				SWIFT_PRECOMPILE_BRIDGING_HEADER = YES;
+				SWIFT_VERSION = 4.2;
+			};
+			name = Debug;
+		};
+		0F2CED9C24CB5F1E00906ED2 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = YES;
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = GYAG48J958;
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(SRCROOT)/libs/**",
+					"$(inereted)",
+					"$(SRCROOT)/libs",
+				);
+				HEADER_SEARCH_PATHS = "$(SRCROOT)/libs/**";
+				INFOPLIST_FILE = "net485Listen copy-Info.plist";
+				LD_RUNPATH_SEARCH_PATHS = (
+					LD_RUNPATH_SEARCH_PATHS,
+					"=",
+					"$(TOOLCHAIN_DIR)/usr/lib/swift/macosx",
+					"@executable_path",
+				);
+				LIBRARY_SEARCH_PATHS = "";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_FORCE_DYNAMIC_LINK_STDLIB = YES;
+				SWIFT_FORCE_STATIC_LINK_STDLIB = NO;
+				SWIFT_INSTALL_OBJC_HEADER = YES;
+				SWIFT_OBJC_BRIDGING_HEADER = "net485Listen/Source/Swift-Bridging-Header.h";
+				SWIFT_PRECOMPILE_BRIDGING_HEADER = YES;
+				SWIFT_VERSION = 4.2;
+			};
+			name = Release;
+		};
+		0FEFFC642414A2A600E09C17 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ALLOW_NON_MODULAR_INCLUDES_IN_FRAMEWORK_MODULES = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CODE_SIGN_IDENTITY = "Mac Developer";
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 10.13;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = macosx;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+			};
+			name = Debug;
+		};
+		0FEFFC652414A2A600E09C17 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ALLOW_NON_MODULAR_INCLUDES_IN_FRAMEWORK_MODULES = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CODE_SIGN_IDENTITY = "Mac Developer";
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 10.13;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				SDKROOT = macosx;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+			};
+			name = Release;
+		};
+		0FEFFC672414A2A600E09C17 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = YES;
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = GYAG48J958;
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(SRCROOT)/libs/**",
+					"$(inereted)",
+					"$(SRCROOT)/libs",
+				);
+				HEADER_SEARCH_PATHS = "$(SRCROOT)/libs/**";
+				INFOPLIST_FILE = "$(SRCROOT)/Info.plist";
+				LD_RUNPATH_SEARCH_PATHS = (
+					LD_RUNPATH_SEARCH_PATHS,
+					"=",
+					"$(TOOLCHAIN_DIR)/usr/lib/swift/macosx",
+					"@executable_path",
+				);
+				LIBRARY_SEARCH_PATHS = "";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_FORCE_DYNAMIC_LINK_STDLIB = YES;
+				SWIFT_FORCE_STATIC_LINK_STDLIB = NO;
+				SWIFT_INSTALL_OBJC_HEADER = YES;
+				SWIFT_OBJC_BRIDGING_HEADER = "net485Listen/Source/Swift-Bridging-Header.h";
+				SWIFT_PRECOMPILE_BRIDGING_HEADER = YES;
+				SWIFT_VERSION = 4.2;
+			};
+			name = Debug;
+		};
+		0FEFFC682414A2A600E09C17 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = YES;
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = GYAG48J958;
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(SRCROOT)/libs/**",
+					"$(inereted)",
+					"$(SRCROOT)/libs",
+				);
+				HEADER_SEARCH_PATHS = "$(SRCROOT)/libs/**";
+				INFOPLIST_FILE = "$(SRCROOT)/Info.plist";
+				LD_RUNPATH_SEARCH_PATHS = (
+					LD_RUNPATH_SEARCH_PATHS,
+					"=",
+					"$(TOOLCHAIN_DIR)/usr/lib/swift/macosx",
+					"@executable_path",
+				);
+				LIBRARY_SEARCH_PATHS = "";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_FORCE_DYNAMIC_LINK_STDLIB = YES;
+				SWIFT_FORCE_STATIC_LINK_STDLIB = NO;
+				SWIFT_INSTALL_OBJC_HEADER = YES;
+				SWIFT_OBJC_BRIDGING_HEADER = "net485Listen/Source/Swift-Bridging-Header.h";
+				SWIFT_PRECOMPILE_BRIDGING_HEADER = YES;
+				SWIFT_VERSION = 4.2;
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		0F2CED9A24CB5F1E00906ED2 /* Build configuration list for PBXNativeTarget "net485Furnace" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				0F2CED9B24CB5F1E00906ED2 /* Debug */,
+				0F2CED9C24CB5F1E00906ED2 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		0FEFFC5A2414A2A600E09C17 /* Build configuration list for PBXProject "Applications" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				0FEFFC642414A2A600E09C17 /* Debug */,
+				0FEFFC652414A2A600E09C17 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		0FEFFC662414A2A600E09C17 /* Build configuration list for PBXNativeTarget "net485Listen" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				0FEFFC672414A2A600E09C17 /* Debug */,
+				0FEFFC682414A2A600E09C17 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = 0FEFFC572414A2A600E09C17 /* Project object */;
+}

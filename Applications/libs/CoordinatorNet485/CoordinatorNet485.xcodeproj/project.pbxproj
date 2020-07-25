@@ -1,0 +1,478 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 50;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		0F56DD5F24B3BAD900873573 /* Net485Subord.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 0F56DD5224B3BAD800873573 /* Net485Subord.cpp */; };
+		0F56DD6024B3BAD900873573 /* Net485Subord.hpp in Headers */ = {isa = PBXBuildFile; fileRef = 0F56DD5324B3BAD800873573 /* Net485Subord.hpp */; };
+		0F56DD6124B3BAD900873573 /* Net485Physical_HardwareSerial.hpp in Headers */ = {isa = PBXBuildFile; fileRef = 0F56DD5424B3BAD800873573 /* Net485Physical_HardwareSerial.hpp */; };
+		0F56DD6224B3BAD900873573 /* Net485Subord_APP.hpp in Headers */ = {isa = PBXBuildFile; fileRef = 0F56DD5524B3BAD800873573 /* Net485Subord_APP.hpp */; };
+		0F56DD6324B3BAD900873573 /* Net485Subord_APP.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 0F56DD5624B3BAD800873573 /* Net485Subord_APP.cpp */; };
+		0F56DD6424B3BAD900873573 /* Net485DataLink.hpp in Headers */ = {isa = PBXBuildFile; fileRef = 0F56DD5724B3BAD800873573 /* Net485DataLink.hpp */; };
+		0F56DD6524B3BAD900873573 /* Net485WorkQueue.hpp in Headers */ = {isa = PBXBuildFile; fileRef = 0F56DD5824B3BAD900873573 /* Net485WorkQueue.hpp */; };
+		0F56DD6624B3BAD900873573 /* Net485Network.hpp in Headers */ = {isa = PBXBuildFile; fileRef = 0F56DD5924B3BAD900873573 /* Net485Network.hpp */; };
+		0F56DD6724B3BAD900873573 /* Net485WorkQueue.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 0F56DD5A24B3BAD900873573 /* Net485WorkQueue.cpp */; };
+		0F56DD6824B3BAD900873573 /* Net485Network.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 0F56DD5B24B3BAD900873573 /* Net485Network.cpp */; };
+		0F56DD6924B3BAD900873573 /* Net485API.hpp in Headers */ = {isa = PBXBuildFile; fileRef = 0F56DD5C24B3BAD900873573 /* Net485API.hpp */; };
+		0F56DD6A24B3BAD900873573 /* Net485Physical_HardwareSerial.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 0F56DD5D24B3BAD900873573 /* Net485Physical_HardwareSerial.cpp */; };
+		0F56DD6B24B3BAD900873573 /* Net485DataLink.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 0F56DD5E24B3BAD900873573 /* Net485DataLink.cpp */; };
+		0F56DD6D24B3BC5000873573 /* PhysicalDevice.hpp in Headers */ = {isa = PBXBuildFile; fileRef = 0F56DD6C24B3BC5000873573 /* PhysicalDevice.hpp */; };
+		0FFFB70524BF1BD1005F2DC5 /* HardwareSerial.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 0FFFB70424BF1BD1005F2DC5 /* HardwareSerial.cpp */; };
+		0FFFB70D24BF264B005F2DC5 /* Test_HardwareSerial.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0FFFB70C24BF264B005F2DC5 /* Test_HardwareSerial.mm */; };
+		0FFFB71D24BF788F005F2DC5 /* HardwareSerial.hpp in Headers */ = {isa = PBXBuildFile; fileRef = 0F56DD6E24B40DAE00873573 /* HardwareSerial.hpp */; };
+		0FFFB72024C00021005F2DC5 /* libCoordinatorNet485.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 0F56DD4524B3B9D900873573 /* libCoordinatorNet485.a */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		0FFFB71024BF264C005F2DC5 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 0F56DD3D24B3B9D900873573 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 0F56DD4424B3B9D900873573;
+			remoteInfo = CoordinatorNet485;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXFileReference section */
+		0F56DD4524B3B9D900873573 /* libCoordinatorNet485.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libCoordinatorNet485.a; sourceTree = BUILT_PRODUCTS_DIR; };
+		0F56DD5224B3BAD800873573 /* Net485Subord.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Net485Subord.cpp; sourceTree = "<group>"; };
+		0F56DD5324B3BAD800873573 /* Net485Subord.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = Net485Subord.hpp; sourceTree = "<group>"; };
+		0F56DD5424B3BAD800873573 /* Net485Physical_HardwareSerial.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = Net485Physical_HardwareSerial.hpp; sourceTree = "<group>"; };
+		0F56DD5524B3BAD800873573 /* Net485Subord_APP.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = Net485Subord_APP.hpp; sourceTree = "<group>"; };
+		0F56DD5624B3BAD800873573 /* Net485Subord_APP.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Net485Subord_APP.cpp; sourceTree = "<group>"; };
+		0F56DD5724B3BAD800873573 /* Net485DataLink.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = Net485DataLink.hpp; sourceTree = "<group>"; };
+		0F56DD5824B3BAD900873573 /* Net485WorkQueue.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = Net485WorkQueue.hpp; sourceTree = "<group>"; };
+		0F56DD5924B3BAD900873573 /* Net485Network.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = Net485Network.hpp; sourceTree = "<group>"; };
+		0F56DD5A24B3BAD900873573 /* Net485WorkQueue.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Net485WorkQueue.cpp; sourceTree = "<group>"; };
+		0F56DD5B24B3BAD900873573 /* Net485Network.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Net485Network.cpp; sourceTree = "<group>"; };
+		0F56DD5C24B3BAD900873573 /* Net485API.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = Net485API.hpp; sourceTree = "<group>"; };
+		0F56DD5D24B3BAD900873573 /* Net485Physical_HardwareSerial.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Net485Physical_HardwareSerial.cpp; sourceTree = "<group>"; };
+		0F56DD5E24B3BAD900873573 /* Net485DataLink.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Net485DataLink.cpp; sourceTree = "<group>"; };
+		0F56DD6C24B3BC5000873573 /* PhysicalDevice.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = PhysicalDevice.hpp; sourceTree = "<group>"; };
+		0F56DD6E24B40DAE00873573 /* HardwareSerial.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = HardwareSerial.hpp; sourceTree = "<group>"; };
+		0FFFB70424BF1BD1005F2DC5 /* HardwareSerial.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = HardwareSerial.cpp; sourceTree = "<group>"; };
+		0FFFB70A24BF264B005F2DC5 /* Test_HardwareSerial.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = Test_HardwareSerial.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		0FFFB70C24BF264B005F2DC5 /* Test_HardwareSerial.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = Test_HardwareSerial.mm; sourceTree = "<group>"; };
+		0FFFB70E24BF264C005F2DC5 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		0F56DD4324B3B9D900873573 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		0FFFB70724BF264B005F2DC5 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				0FFFB72024C00021005F2DC5 /* libCoordinatorNet485.a in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		0F56DD3C24B3B9D900873573 = {
+			isa = PBXGroup;
+			children = (
+				0F56DD5124B3BA6C00873573 /* src */,
+				0FFFB70B24BF264B005F2DC5 /* Test_HardwareSerial */,
+				0F56DD4624B3B9D900873573 /* Products */,
+				0FFFB71E24BF8B7B005F2DC5 /* Frameworks */,
+			);
+			sourceTree = "<group>";
+		};
+		0F56DD4624B3B9D900873573 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				0F56DD4524B3B9D900873573 /* libCoordinatorNet485.a */,
+				0FFFB70A24BF264B005F2DC5 /* Test_HardwareSerial.xctest */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		0F56DD5124B3BA6C00873573 /* src */ = {
+			isa = PBXGroup;
+			children = (
+				0F56DD5C24B3BAD900873573 /* Net485API.hpp */,
+				0F56DD5E24B3BAD900873573 /* Net485DataLink.cpp */,
+				0F56DD5724B3BAD800873573 /* Net485DataLink.hpp */,
+				0F56DD5B24B3BAD900873573 /* Net485Network.cpp */,
+				0F56DD5924B3BAD900873573 /* Net485Network.hpp */,
+				0F56DD5D24B3BAD900873573 /* Net485Physical_HardwareSerial.cpp */,
+				0F56DD5424B3BAD800873573 /* Net485Physical_HardwareSerial.hpp */,
+				0F56DD5624B3BAD800873573 /* Net485Subord_APP.cpp */,
+				0F56DD5524B3BAD800873573 /* Net485Subord_APP.hpp */,
+				0F56DD5224B3BAD800873573 /* Net485Subord.cpp */,
+				0F56DD5324B3BAD800873573 /* Net485Subord.hpp */,
+				0F56DD5A24B3BAD900873573 /* Net485WorkQueue.cpp */,
+				0F56DD5824B3BAD900873573 /* Net485WorkQueue.hpp */,
+				0F56DD6C24B3BC5000873573 /* PhysicalDevice.hpp */,
+				0F56DD6E24B40DAE00873573 /* HardwareSerial.hpp */,
+				0FFFB70424BF1BD1005F2DC5 /* HardwareSerial.cpp */,
+			);
+			path = src;
+			sourceTree = "<group>";
+		};
+		0FFFB70B24BF264B005F2DC5 /* Test_HardwareSerial */ = {
+			isa = PBXGroup;
+			children = (
+				0FFFB70C24BF264B005F2DC5 /* Test_HardwareSerial.mm */,
+				0FFFB70E24BF264C005F2DC5 /* Info.plist */,
+			);
+			path = Test_HardwareSerial;
+			sourceTree = "<group>";
+		};
+		0FFFB71E24BF8B7B005F2DC5 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXHeadersBuildPhase section */
+		0F56DD4124B3B9D900873573 /* Headers */ = {
+			isa = PBXHeadersBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				0F56DD6424B3BAD900873573 /* Net485DataLink.hpp in Headers */,
+				0F56DD6224B3BAD900873573 /* Net485Subord_APP.hpp in Headers */,
+				0F56DD6024B3BAD900873573 /* Net485Subord.hpp in Headers */,
+				0F56DD6D24B3BC5000873573 /* PhysicalDevice.hpp in Headers */,
+				0F56DD6124B3BAD900873573 /* Net485Physical_HardwareSerial.hpp in Headers */,
+				0FFFB71D24BF788F005F2DC5 /* HardwareSerial.hpp in Headers */,
+				0F56DD6924B3BAD900873573 /* Net485API.hpp in Headers */,
+				0F56DD6524B3BAD900873573 /* Net485WorkQueue.hpp in Headers */,
+				0F56DD6624B3BAD900873573 /* Net485Network.hpp in Headers */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXHeadersBuildPhase section */
+
+/* Begin PBXNativeTarget section */
+		0F56DD4424B3B9D900873573 /* CoordinatorNet485 */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 0F56DD4924B3B9D900873573 /* Build configuration list for PBXNativeTarget "CoordinatorNet485" */;
+			buildPhases = (
+				0F56DD4124B3B9D900873573 /* Headers */,
+				0F56DD4224B3B9D900873573 /* Sources */,
+				0F56DD4324B3B9D900873573 /* Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = CoordinatorNet485;
+			productName = CoordinatorNet485;
+			productReference = 0F56DD4524B3B9D900873573 /* libCoordinatorNet485.a */;
+			productType = "com.apple.product-type.library.static";
+		};
+		0FFFB70924BF264B005F2DC5 /* Test_HardwareSerial */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 0FFFB71224BF264C005F2DC5 /* Build configuration list for PBXNativeTarget "Test_HardwareSerial" */;
+			buildPhases = (
+				0FFFB70624BF264B005F2DC5 /* Sources */,
+				0FFFB70724BF264B005F2DC5 /* Frameworks */,
+				0FFFB70824BF264B005F2DC5 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				0FFFB71124BF264C005F2DC5 /* PBXTargetDependency */,
+			);
+			name = Test_HardwareSerial;
+			productName = Test_HardwareSerial;
+			productReference = 0FFFB70A24BF264B005F2DC5 /* Test_HardwareSerial.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		0F56DD3D24B3B9D900873573 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				LastUpgradeCheck = 1010;
+				ORGANIZATIONNAME = "Kevin Peck";
+				TargetAttributes = {
+					0F56DD4424B3B9D900873573 = {
+						CreatedOnToolsVersion = 10.1;
+					};
+					0FFFB70924BF264B005F2DC5 = {
+						CreatedOnToolsVersion = 10.1;
+					};
+				};
+			};
+			buildConfigurationList = 0F56DD4024B3B9D900873573 /* Build configuration list for PBXProject "CoordinatorNet485" */;
+			compatibilityVersion = "Xcode 9.3";
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+			);
+			mainGroup = 0F56DD3C24B3B9D900873573;
+			productRefGroup = 0F56DD4624B3B9D900873573 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				0F56DD4424B3B9D900873573 /* CoordinatorNet485 */,
+				0FFFB70924BF264B005F2DC5 /* Test_HardwareSerial */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		0FFFB70824BF264B005F2DC5 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		0F56DD4224B3B9D900873573 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				0F56DD6724B3BAD900873573 /* Net485WorkQueue.cpp in Sources */,
+				0F56DD6824B3BAD900873573 /* Net485Network.cpp in Sources */,
+				0F56DD6B24B3BAD900873573 /* Net485DataLink.cpp in Sources */,
+				0FFFB70524BF1BD1005F2DC5 /* HardwareSerial.cpp in Sources */,
+				0F56DD6A24B3BAD900873573 /* Net485Physical_HardwareSerial.cpp in Sources */,
+				0F56DD6324B3BAD900873573 /* Net485Subord_APP.cpp in Sources */,
+				0F56DD5F24B3BAD900873573 /* Net485Subord.cpp in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		0FFFB70624BF264B005F2DC5 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				0FFFB70D24BF264B005F2DC5 /* Test_HardwareSerial.mm in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		0FFFB71124BF264C005F2DC5 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 0F56DD4424B3B9D900873573 /* CoordinatorNet485 */;
+			targetProxy = 0FFFB71024BF264C005F2DC5 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
+/* Begin XCBuildConfiguration section */
+		0F56DD4724B3B9D900873573 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CODE_SIGN_IDENTITY = "Mac Developer";
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 10.13;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = macosx;
+			};
+			name = Debug;
+		};
+		0F56DD4824B3B9D900873573 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CODE_SIGN_IDENTITY = "Mac Developer";
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 10.13;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				SDKROOT = macosx;
+			};
+			name = Release;
+		};
+		0F56DD4A24B3B9D900873573 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = GYAG48J958;
+				EXECUTABLE_PREFIX = lib;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+			};
+			name = Debug;
+		};
+		0F56DD4B24B3B9D900873573 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = GYAG48J958;
+				EXECUTABLE_PREFIX = lib;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+			};
+			name = Release;
+		};
+		0FFFB71324BF264C005F2DC5 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				DEVELOPMENT_TEAM = GYAG48J958;
+				INFOPLIST_FILE = Test_HardwareSerial/Info.plist;
+				LD_GENERATE_MAP_FILE = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+					"@loader_path/../Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = "none.Test-HardwareSerial";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Debug;
+		};
+		0FFFB71424BF264C005F2DC5 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				DEVELOPMENT_TEAM = GYAG48J958;
+				INFOPLIST_FILE = Test_HardwareSerial/Info.plist;
+				LD_GENERATE_MAP_FILE = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+					"@loader_path/../Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = "none.Test-HardwareSerial";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		0F56DD4024B3B9D900873573 /* Build configuration list for PBXProject "CoordinatorNet485" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				0F56DD4724B3B9D900873573 /* Debug */,
+				0F56DD4824B3B9D900873573 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		0F56DD4924B3B9D900873573 /* Build configuration list for PBXNativeTarget "CoordinatorNet485" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				0F56DD4A24B3B9D900873573 /* Debug */,
+				0F56DD4B24B3B9D900873573 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		0FFFB71224BF264C005F2DC5 /* Build configuration list for PBXNativeTarget "Test_HardwareSerial" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				0FFFB71324BF264C005F2DC5 /* Debug */,
+				0FFFB71424BF264C005F2DC5 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = 0F56DD3D24B3B9D900873573 /* Project object */;
+}
