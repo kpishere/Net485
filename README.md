@@ -17,8 +17,10 @@ Layer 2:
 Layers 3-5:
 
 - The bulk of the work is here.  Version announcemnt, network coordination of who is master (coordinator), and automatic node assignment are working.  
-- Data packets infrastructure in place along with 4 types of packet routing. Next items are Token Offer Broadcast and correct handling of devices on coordinator side in case of device timeouts.
-- Getting very close to usefull, with the pending addition of MSGTYP_TOKEN usage, it will be time to 'switch gears' to adding a real virtual device.  All debugging messages from the network coordinator will have to be piped through a diagnostic message type of 15 characters (may use a "manufacturer's" specific message type here too as 15 characters is very tiny window for debugging info).
+- Data packets infrastructure in place along with 4 types of packet routing. 
+- Token Offer Broadcast and correct handling of devices on coordinator side in case of device timeouts.
+- Debugging messages from the network coordinator are now piped through a diagnostic message type of 15 characters (may use a "manufacturer's" specific message type here too as 15 characters is very tiny window for debugging info).
+- Devices have been tested on physical hardware and now have been ported to a Unix type environment (Macos primarily)
 
 Milestone 1 : 
 
@@ -26,11 +28,11 @@ A big change in project structure now.  Now, with the coordinator services runni
 
 Presently, one can use the net485Listener tool to see packets to the device.  I'll be making respective utilities to emulate some devices.  This may be close to being useful for those that wish to make HVAC devices communicate now.
 
-NOTE: Network shared data feature still is not implemented and remains to be done
+NOTE: Network shared data feature still is not implemented and remains to be done - this is to come soon once the devices can be virtualized and debuging/testing not so painfull.
 
 # Net485Listen
 
-Do check out the sub-project under 'diag' folder - a very handy snooper tool for existing networks.  You got one of the following brands?  They all use the same protocol (albeit with their own extensions).  If any of you all are interested, I'm down for logging network activity and reverse-engineering and documenting all of these extensions and ultimately adding support to this library.  You can help out by snooping your own network and submitting samples of what is logged.
+Do check out the sub-project under 'Applications' folder - a very handy snooper tool for existing networks.  You got one of the following brands?  They all use the same protocol (albeit with their own extensions).  If any of you all are interested, I'm down for logging network activity and reverse-engineering and documenting all of these extensions and ultimately adding support to this library.  You can help out by snooping your own network and submitting samples of what is logged.  Data submitted is avilable under `diag\logs` folder.
 
 - Carrier: Infinity (or Greenspeed)
 - Bryant: Evolution
