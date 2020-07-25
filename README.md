@@ -44,3 +44,7 @@ Do check out the sub-project under 'diag' folder - a very handy snooper tool for
 - York: Affinity
 - Luxaire: Acclimate
 - Coleman: Echelon
+
+# Focus shifted
+
+With the low level Coordinator functioning, there is a need for simulated networks in order to test device functionality.  A framwork dependancy has shifted from ORSSerialPort to [POSIXSerialPort](https://github.com/kpishere/POSIXSerialPort) as the latter supports physical and virtual devices equally well.  With everything virtuallized, development/test/debug cycles should be much quicker and progress is expected to accelerate.  As the workflow gets established, detail will be provided in how to construct it.  Initial testing with the use of [socat](https://medium.com/@copyconstruct/socat-29453e9fc8a6) to create virtual serial ports that connect to UDP endpoints has gone well and it works with [Node-Red](https://nodered.org) quite nicely.

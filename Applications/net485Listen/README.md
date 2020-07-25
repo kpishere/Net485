@@ -12,8 +12,12 @@ If you do get into this, you'll notice the 'Dataflow message types' vs. the 'App
 
 ## Working DEV notes 
 
-- Set up a psudo tty port that connects to two uni-directional UDP ports for interfacing with Node-Red
+The project is moving away from physical hardware devices for a while as development gets more complex with the need for simulated device networks.  In that vein, it was discovered that a new serial port framework was needed [POSIXSerialPort`](https://github.com/kpishere/POSIXSerialPort) as the old one does not connect to TTY virtual devices!  
 
+With the use of `socat` we can easily create virtual TTY(serial) devices, map them to UDP ports and connect those to Node-Red where the network is visually wired and scenarios can be simulated etc.  It should pick up the pace of the project. The early days of working with the hardware were slow but still usefull for a solid and well understood foundation.
+
+```
+# Set up a psudo tty port that connects to two uni-directional UDP ports for interfacing with Node-Red
 sudo socat -x -d -d -d -d UDP-RECV:2012\!\!UDP-SEND:localhost:2010 pty,raw,ispeed=115200,link=/dev/furnace
-
+```
 
