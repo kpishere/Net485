@@ -1,0 +1,6 @@
+framework module POSIXSerial {
+  umbrella header "POSIXSerial.h"
+
+  export *
+  module * { export * }
+}

@@ -42,7 +42,7 @@ func printUsage() {
 //
 // MAIN
 //
-let baudRate:Int = 9600
+let baudRate:Int32 = 9600
 let timeoutSerialSeconds:Double = 0.000200 // 200 micro-second minimum packet hold time
 let maxResponseLength:UInt = 252  // Maximum packet size with 2-byte checksum
 

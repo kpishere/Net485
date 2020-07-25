@@ -3,4 +3,6 @@ Doc/
 *.bin
 *.json
 .build
+Build/
+Index/
 xcuserdata/
