@@ -35,7 +35,6 @@
     #define sei()
     #define digitalWrite(x,y)
     #define pinMode(x,y)
-
 #elif __linux__
     // linux
 #elif __unix__ // all unices not caught above
@@ -43,7 +42,7 @@
 #elif defined(_POSIX_VERSION)
     // POSIX
 #else
-    #error "Unknown compiler"
+    #error "Unknown target"
 #endif
 
 #endif /* PhysicalDevice_hpp */

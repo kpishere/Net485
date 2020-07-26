@@ -166,6 +166,9 @@ void Net485Network::loopClient(unsigned long _thisTime) {
                         havePkt = false;
                         this->lasttimeOfMessage = millis();
                         while (MILLISECDIFF(millis(),this->lasttimeOfMessage) < this->slotTime && !havePkt) {
+#if __APPLE__
+        usleep( MICROSECONDS_IN_SECOND / LOOP_RATE_PER_SECOND);
+#endif
                             havePkt = net485dl->hasPacket();
                         }
                         if(!havePkt) { // If there was no packet heard on line, then we can respond
@@ -198,6 +201,9 @@ void Net485Network::loopClient(unsigned long _thisTime) {
                 havePkt = false;
                 this->lasttimeOfMessage = millis();
                 while (MILLISECDIFF(millis(),this->lasttimeOfMessage) < this->slotTime && !havePkt) {
+#if __APPLE__
+        usleep( MICROSECONDS_IN_SECOND / LOOP_RATE_PER_SECOND);
+#endif
                     havePkt = net485dl->hasPacket();
                 }
                 if(!havePkt) {
@@ -215,6 +221,9 @@ void Net485Network::loopClient(unsigned long _thisTime) {
                         while (MILLISECDIFF(millis(),this->lasttimeOfMessage)
                             < RESPONSE_TIMEOUT * 1.2 /* This factor is a divergance from specification which is 1.0 */
                                 && !havePkt) {
+#if __APPLE__
+        usleep( MICROSECONDS_IN_SECOND / LOOP_RATE_PER_SECOND);
+#endif
                             havePkt = net485dl->hasPacket(&(this->lasttimeOfMessage));
                             if(havePkt) {
                                 recvPtr = net485dl->getNextPacket();
@@ -371,6 +380,9 @@ bool Net485Network::reqRespSetAddress(uint8_t _node) {
     this->net485dl->send(this->setNodeAddress(&sendPkt,setNode,setSubnet,this->nodes[_node]));
     this->lasttimeOfMessage = millis();
     while(MILLISECDIFF(millis(),lasttimeOfMessage) < RESPONSE_TIMEOUT && !havePkt) {
+#if __APPLE__
+        usleep( MICROSECONDS_IN_SECOND / LOOP_RATE_PER_SECOND);
+#endif
         havePkt = net485dl->hasPacket(&(this->lasttimeOfMessage));
         if(havePkt) {
             pkt = net485dl->getNextPacket();
@@ -396,6 +408,9 @@ uint8_t Net485Network::reqRespNodeId(uint8_t _node, uint8_t _subnet) {
     this->net485dl->send(this->getNodeId(&sendPkt,_node,_subnet));
     this->lasttimeOfMessage = millis();
     while(MILLISECDIFF(millis(),lasttimeOfMessage) < RESPONSE_TIMEOUT && !havePkt) {
+#if __APPLE__
+        usleep( MICROSECONDS_IN_SECOND / LOOP_RATE_PER_SECOND);
+#endif
         havePkt = net485dl->hasPacket(&(this->lasttimeOfMessage));
         if(havePkt) {
             pkt = net485dl->getNextPacket();
@@ -417,6 +432,9 @@ uint8_t Net485Network::reqRespTOB(uint8_t _nodeTypeFilter, uint8_t _destNodeId, 
     this->net485dl->send(this->setTOB(&sendPkt,_nodeTypeFilter,_destNodeId,_subNet));
     this->lasttimeOfMessage = millis();
     while(MILLISECDIFF(millis(),lasttimeOfMessage) < RESPONSE_TIMEOUT && !havePkt) {
+#if __APPLE__
+        usleep( MICROSECONDS_IN_SECOND / LOOP_RATE_PER_SECOND);
+#endif
         havePkt = net485dl->hasPacket();
         if(havePkt) {
             pkt = net485dl->getNextPacket();
@@ -447,6 +465,9 @@ uint8_t Net485Network::reqRespNodeDiscover(uint8_t _nodeIdFilter) {
     this->lasttimeOfMessage = millis();
     this->lastNodeListPoll = millis();
     while(MILLISECDIFF(millis(),this->lasttimeOfMessage) < ANET_SLOTHI && !anyPkt) {
+#if __APPLE__
+        usleep( MICROSECONDS_IN_SECOND / LOOP_RATE_PER_SECOND);
+#endif
         anyPkt = net485dl->hasPacket();
     }
     if(anyPkt) {
@@ -534,6 +555,9 @@ bool Net485Network::sendMsgGetResponseInPlace(Net485Packet *_pkt) {
                 this->net485dl->send(_pkt);
                 this->lasttimeOfMessage = millis();
                 while (MILLISECDIFF(millis(),this->lasttimeOfMessage) < RESPONSE_TIMEOUT && !haveResponse) {
+#if __APPLE__
+        usleep( MICROSECONDS_IN_SECOND / LOOP_RATE_PER_SECOND);
+#endif
                     haveResponse = net485dl->hasPacket(&(this->lasttimeOfMessage));
                     if(haveResponse) {
                         recvPtr = net485dl->getNextPacket();

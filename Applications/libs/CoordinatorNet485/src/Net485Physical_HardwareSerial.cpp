@@ -12,6 +12,9 @@
     // Ticks per us for ESP8266
     #define IR_SEND_ADJ 5.008
 #elif __APPLE__
+    #include <dispatch/dispatch.h>
+
+    static dispatch_queue_t timeEvents;
 #elif __linux__
     // linux
 #elif __unix__ // all unices not caught above
@@ -27,6 +30,9 @@
 
 #define RINGBUFLOC(loc) (&ringbuf[((((uint32_t)loc) % ringbufSize) * sizeof(Net485Packet))])
 
+/*
+ * NOTE: Only one instance of this class supported on these devices !!
+ */
 #if defined(__AVR__)
 ISR(TIMER1_COMPA_vect){
     if(Net485Physical_HardwareSerial::lastInstance)
@@ -76,18 +82,27 @@ void Net485Physical_HardwareSerial::initTimer() {
     timer1_attachInterrupt(ISRHandlerTimer);
     // Set first comparitor value to trigger in short time & enable interrupt
     timer1_enable(TIM_DIV16, TIM_EDGE, TIM_SINGLE);
+#elif __APPLE__
+    static dispatch_once_t once;
+    dispatch_once(&once, ^{
+        timeEvents = dispatch_queue_create("Net485Physical_HardwareSerial", DISPATCH_QUEUE_CONCURRENT);
+    });
 #endif
 }
 void Net485Physical_HardwareSerial::setTimer(uint32_t usec, DriveState newState) {
     cli();//stop interrupts
+    driveState = newState;
 #if defined(__AVR__)
     // Set next timer value
     OCR1A =  (uint16_t)((uint16_t)(usec * IR_SEND_ADJ) + 0.5);
 #elif defined(ESP8266)
     // Set next timer value
     timer1_write((uint16_t)((uint16_t)(usec * IR_SEND_ADJ) + 0.5));
+#elif __APPLE__
+    dispatch_after( dispatch_time(DISPATCH_TIME_NOW, usec * NSEC_PER_USEC), timeEvents, ^(void){
+        this->packetSequencer();
+    });
 #endif
-    driveState = newState;
     sei();//allow interrupts
 }
 void Net485Physical_HardwareSerial::clearTimer() {

@@ -15,6 +15,8 @@
 		0F2CED9F24CB5F4200906ED2 /* CTCommand.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0FD44F422461BFA100E98DE7 /* CTCommand.swift */; };
 		0F2CEDA024CB5F4700906ED2 /* main.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0FD44F432461BFA100E98DE7 /* main.swift */; };
 		0F2CEDA124CB5F4A00906ED2 /* CTHVACFurnace.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0FE41E72246F10D8005B357E /* CTHVACFurnace.swift */; };
+		0F32B4C024CCB59800D89B13 /* libCoordinatorNet485.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 0F2CEDAB24CBDC4F00906ED2 /* libCoordinatorNet485.a */; };
+		0F32B4C124CCBBE200D89B13 /* main.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0F32B4B424CCA9A200D89B13 /* main.mm */; };
 		0F64690824CC6782008A4B6D /* Tests.m in Sources */ = {isa = PBXBuildFile; fileRef = 0F64690724CC6782008A4B6D /* Tests.m */; };
 		0F75465624CAE68500104AA4 /* CT485API.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0F75465224CAE68400104AA4 /* CT485API.swift */; };
 		0F75465824CAE68500104AA4 /* Global.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0F75465324CAE68400104AA4 /* Global.swift */; };
@@ -55,11 +57,25 @@
 		};
 /* End PBXContainerItemProxy section */
 
+/* Begin PBXCopyFilesBuildPhase section */
+		0F32B4B724CCA9E200D89B13 /* CopyFiles */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = /usr/share/man/man1/;
+			dstSubfolderSpec = 0;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 1;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
 /* Begin PBXFileReference section */
 		0F2CED9D24CB5F1E00906ED2 /* net485Furnace */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = net485Furnace; sourceTree = BUILT_PRODUCTS_DIR; };
 		0F2CEDA324CBD60800906ED2 /* README.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; name = README.md; path = ../README.md; sourceTree = "<group>"; };
 		0F2CEDA424CBD61B00906ED2 /* LICENSE */ = {isa = PBXFileReference; lastKnownFileType = text; name = LICENSE; path = ../LICENSE; sourceTree = "<group>"; };
 		0F2CEDA524CBDC4F00906ED2 /* CoordinatorNet485.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = CoordinatorNet485.xcodeproj; path = libs/CoordinatorNet485/CoordinatorNet485.xcodeproj; sourceTree = "<group>"; };
+		0F32B4B424CCA9A200D89B13 /* main.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = main.mm; sourceTree = "<group>"; };
+		0F32B4B924CCA9E200D89B13 /* net485Coordinator */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = net485Coordinator; sourceTree = BUILT_PRODUCTS_DIR; };
 		0F64690524CC6782008A4B6D /* Tests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = Tests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		0F64690724CC6782008A4B6D /* Tests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = Tests.m; sourceTree = "<group>"; };
 		0F64690924CC6782008A4B6D /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
@@ -84,6 +100,14 @@
 			buildActionMask = 2147483647;
 			files = (
 				0F2CED9724CB5F1E00906ED2 /* POSIXSerial.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		0F32B4B624CCA9E200D89B13 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				0F32B4C024CCB59800D89B13 /* libCoordinatorNet485.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -112,6 +136,22 @@
 				0F2CEDAD24CBDC4F00906ED2 /* Test_HardwareSerial.xctest */,
 			);
 			name = Products;
+			sourceTree = "<group>";
+		};
+		0F32B4B224CCA94E00D89B13 /* net485Coordinator */ = {
+			isa = PBXGroup;
+			children = (
+				0F32B4B324CCA94E00D89B13 /* Source */,
+			);
+			path = net485Coordinator;
+			sourceTree = "<group>";
+		};
+		0F32B4B324CCA94E00D89B13 /* Source */ = {
+			isa = PBXGroup;
+			children = (
+				0F32B4B424CCA9A200D89B13 /* main.mm */,
+			);
+			path = Source;
 			sourceTree = "<group>";
 		};
 		0F64690624CC6782008A4B6D /* Tests */ = {
@@ -187,6 +227,7 @@
 				0F2CEDA324CBD60800906ED2 /* README.md */,
 				0F75464A24C9B9EE00104AA4 /* Info.plist */,
 				0F2CEDA524CBDC4F00906ED2 /* CoordinatorNet485.xcodeproj */,
+				0F32B4B224CCA94E00D89B13 /* net485Coordinator */,
 				0FD44F402461BFA100E98DE7 /* net485Furnace */,
 				0FD44DFD24612EB400E98DE7 /* net485Listen */,
 				0F64690624CC6782008A4B6D /* Tests */,
@@ -201,6 +242,7 @@
 				0FEFFC5F2414A2A600E09C17 /* net485Listen */,
 				0F2CED9D24CB5F1E00906ED2 /* net485Furnace */,
 				0F64690524CC6782008A4B6D /* Tests.xctest */,
+				0F32B4B924CCA9E200D89B13 /* net485Coordinator */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -222,6 +264,23 @@
 			name = net485Furnace;
 			productName = net485Listen;
 			productReference = 0F2CED9D24CB5F1E00906ED2 /* net485Furnace */;
+			productType = "com.apple.product-type.tool";
+		};
+		0F32B4B824CCA9E200D89B13 /* net485Coordinator */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 0F32B4BD24CCA9E200D89B13 /* Build configuration list for PBXNativeTarget "net485Coordinator" */;
+			buildPhases = (
+				0F32B4B524CCA9E200D89B13 /* Sources */,
+				0F32B4B624CCA9E200D89B13 /* Frameworks */,
+				0F32B4B724CCA9E200D89B13 /* CopyFiles */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = net485Coordinator;
+			productName = net485Coordinator;
+			productReference = 0F32B4B924CCA9E200D89B13 /* net485Coordinator */;
 			productType = "com.apple.product-type.tool";
 		};
 		0F64690424CC6782008A4B6D /* Tests */ = {
@@ -267,6 +326,9 @@
 				LastUpgradeCheck = 1010;
 				ORGANIZATIONNAME = "Kevin Peck";
 				TargetAttributes = {
+					0F32B4B824CCA9E200D89B13 = {
+						CreatedOnToolsVersion = 10.1;
+					};
 					0F64690424CC6782008A4B6D = {
 						CreatedOnToolsVersion = 10.1;
 					};
@@ -298,8 +360,9 @@
 			);
 			projectRoot = "";
 			targets = (
-				0FEFFC5E2414A2A600E09C17 /* net485Listen */,
+				0F32B4B824CCA9E200D89B13 /* net485Coordinator */,
 				0F2CED8F24CB5F1E00906ED2 /* net485Furnace */,
+				0FEFFC5E2414A2A600E09C17 /* net485Listen */,
 				0F64690424CC6782008A4B6D /* Tests */,
 			);
 		};
@@ -358,6 +421,14 @@
 				0F2CED9324CB5F1E00906ED2 /* Package.swift in Sources */,
 				0F2CED9424CB5F1E00906ED2 /* Global.swift in Sources */,
 				0F2CED9524CB5F1E00906ED2 /* Net485.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		0F32B4B524CCA9E200D89B13 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				0F32B4C124CCBBE200D89B13 /* main.mm in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -441,6 +512,26 @@
 				SWIFT_OBJC_BRIDGING_HEADER = "net485Listen/Source/Swift-Bridging-Header.h";
 				SWIFT_PRECOMPILE_BRIDGING_HEADER = YES;
 				SWIFT_VERSION = 4.2;
+			};
+			name = Release;
+		};
+		0F32B4BE24CCA9E200D89B13 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = GYAG48J958;
+				HEADER_SEARCH_PATHS = "$(SRCROOT)/libs/**";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Debug;
+		};
+		0F32B4BF24CCA9E200D89B13 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = GYAG48J958;
+				HEADER_SEARCH_PATHS = "$(SRCROOT)/libs/**";
+				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
 			name = Release;
 		};
@@ -663,6 +754,15 @@
 			buildConfigurations = (
 				0F2CED9B24CB5F1E00906ED2 /* Debug */,
 				0F2CED9C24CB5F1E00906ED2 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		0F32B4BD24CCA9E200D89B13 /* Build configuration list for PBXNativeTarget "net485Coordinator" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				0F32B4BE24CCA9E200D89B13 /* Debug */,
+				0F32B4BF24CCA9E200D89B13 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;

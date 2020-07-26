@@ -46,9 +46,9 @@ private:
     static unsigned long loopCount;
     
     static void initTimer();
-    static void setTimer(uint32_t usec, DriveState newState);
     static void clearTimer();
-    
+    void setTimer(uint32_t usec, DriveState newState);
+
     static uint8_t *msgTypeFilterList;
 public:
     ////

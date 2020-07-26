@@ -11,6 +11,23 @@
 #include "Net485Subord.hpp"
 #include "Net485WorkQueue.hpp"
 
+#if defined(__AVR__)
+#elif defined(ESP8266)
+#elif __APPLE__
+    #include <unistd.h>
+    // Slow down blocking loops in multi-process environments
+    #define MICROSECONDS_IN_SECOND 1e6
+    #define LOOP_RATE_PER_SECOND 500
+#elif __linux__
+    // linux
+#elif __unix__ // all unices not caught above
+    // Unix
+#elif defined(_POSIX_VERSION)
+    // POSIX
+#else
+    #error "Unknown target"
+#endif
+
 #define NODELIST_REPOLLTIME 110000 /* milli-sconds  ?correct? */
 #define RESPONSE_TIMEOUT 3000 /* milli-sconds */
 #define PROLONGED_SILENCE 120000 /* milli-sconds */
