@@ -165,7 +165,6 @@ class PacketProcessor : NSObject, POSIXSerialPortDelegate {
     let maxPktSize : UInt = 252
     let pktHeaderSize : UInt = 10
     let pktCrcSize : UInt = 2
-    var accumlPacket : Data = Data()
     var dateTimePrior : Date = Date()
     
     convenience init(_ port: POSIXSerialPort) {
@@ -175,36 +174,32 @@ class PacketProcessor : NSObject, POSIXSerialPortDelegate {
     func serialPortWasRemovedFromSystem(_ serialPort: POSIXSerialPort) {
         exit(2)
     }
+    func serialPort(_ serialPort:POSIXSerialPort, nextDataSegmentValidIn: Data) -> DataSegment {
+        let ds = DataSegment(offset: 0, size: Int(self.isValid(data: nextDataSegmentValidIn)))
+        print("\nacum:\(nextDataSegmentValidIn.count) validLength:\(ds.size)");
+        return ds;
+    }
     
     func serialPort(_ serialPort: POSIXSerialPort, didReceive data: Data) {
-        if(data.count > 0) {
-            self.accumlPacket += data;
-        }
-        let pktLen = self.isValid(data: self.accumlPacket)
-        print("\nnew:\(data.count) acum:\(self.accumlPacket.count) crc:\(pktLen)");
-        if(pktLen>0) {
-            let currentDateTime = Date();
-            let validPktPart = Range(0...Int(pktLen-1))
-            let partialData = self.accumlPacket.subdata(in: validPktPart)
-            
-            // check packet is complete
-            let fmdTimediffSec = String(format: "%.3f", currentDateTime.timeIntervalSince(self.dateTimePrior))
-            print("\n\(currentDateTime) \(fmdTimediffSec) Bytes:\(pktLen) Pkt:\(partialData.asHexString)")
+        print("\nnew:\(data.count)");
 
-            let msg = net485MsgHeader.init(partialData)
-            print(msg.description)
-            let msgOfType = CT485MessageCreator.shared.create(msg)
-            msgOfType?.description()
-            
-            self.accumlPacket.removeSubrange(validPktPart)
+        let currentDateTime = Date();
+        
+        // check packet is complete
+        let fmdTimediffSec = String(format: "%.3f", currentDateTime.timeIntervalSince(self.dateTimePrior))
+        print("\n\(currentDateTime) \(fmdTimediffSec) Bytes:\(data.count) Pkt:\(data.asHexString)")
 
-            self.dateTimePrior = currentDateTime
-        }
+        let msg = net485MsgHeader.init(data)
+        print(msg.description)
+        let msgOfType = CT485MessageCreator.shared.create(msg)
+        msgOfType?.description()
+        
+        self.dateTimePrior = currentDateTime
+
         // Recover from an invalid packet -- note that with one invalid packet, others can be lost too
         // this isn't ideal
-        if(self.accumlPacket.count > maxPktSize) {
-            print("\n CRCERR Bytes:\(self.accumlPacket.count) Pkt:\(self.accumlPacket.asHexString)")
-            self.accumlPacket.removeAll()
+        if(data.count > maxPktSize) {
+            print("\n CRCERR Bytes:\(data.count) Pkt:\(data.asHexString)")
         }
     }
     

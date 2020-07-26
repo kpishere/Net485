@@ -57,18 +57,6 @@
 		};
 /* End PBXContainerItemProxy section */
 
-/* Begin PBXCopyFilesBuildPhase section */
-		0F32B4B724CCA9E200D89B13 /* CopyFiles */ = {
-			isa = PBXCopyFilesBuildPhase;
-			buildActionMask = 2147483647;
-			dstPath = /usr/share/man/man1/;
-			dstSubfolderSpec = 0;
-			files = (
-			);
-			runOnlyForDeploymentPostprocessing = 1;
-		};
-/* End PBXCopyFilesBuildPhase section */
-
 /* Begin PBXFileReference section */
 		0F2CED9D24CB5F1E00906ED2 /* net485Furnace */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = net485Furnace; sourceTree = BUILT_PRODUCTS_DIR; };
 		0F2CEDA324CBD60800906ED2 /* README.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; name = README.md; path = ../README.md; sourceTree = "<group>"; };
@@ -272,7 +260,6 @@
 			buildPhases = (
 				0F32B4B524CCA9E200D89B13 /* Sources */,
 				0F32B4B624CCA9E200D89B13 /* Frameworks */,
-				0F32B4B724CCA9E200D89B13 /* CopyFiles */,
 			);
 			buildRules = (
 			);

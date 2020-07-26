@@ -20,20 +20,6 @@
                ReferencedContainer = "container:Applications.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
-         <BuildActionEntry
-            buildForTesting = "YES"
-            buildForRunning = "YES"
-            buildForProfiling = "YES"
-            buildForArchiving = "YES"
-            buildForAnalyzing = "YES">
-            <BuildableReference
-               BuildableIdentifier = "primary"
-               BlueprintIdentifier = "0F2CED8F24CB5F1E00906ED2"
-               BuildableName = "net485Furnace"
-               BlueprintName = "net485Furnace"
-               ReferencedContainer = "container:Applications.xcodeproj">
-            </BuildableReference>
-         </BuildActionEntry>
       </BuildActionEntries>
    </BuildAction>
    <TestAction
@@ -65,7 +51,8 @@
       debugDocumentVersioning = "YES"
       debugServiceExtension = "internal"
       allowLocationSimulation = "YES">
-      <MacroExpansion>
+      <BuildableProductRunnable
+         runnableDebuggingMode = "0">
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "0FEFFC5E2414A2A600E09C17"
@@ -73,10 +60,10 @@
             BlueprintName = "net485Listen"
             ReferencedContainer = "container:Applications.xcodeproj">
          </BuildableReference>
-      </MacroExpansion>
+      </BuildableProductRunnable>
       <CommandLineArguments>
          <CommandLineArgument
-            argument = "/dev/ttys001"
+            argument = "/dev/ttys005"
             isEnabled = "YES">
          </CommandLineArgument>
       </CommandLineArguments>
