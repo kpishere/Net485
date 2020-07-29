@@ -9,5 +9,6 @@ As components are unit-tested to be functional, they are put into service with t
 ## Basic two-device network : Furnace and Thermostat
 
 `twoUnitNetwork.sh` - is a script to start up node-red and start the socat executables.
+
 `nodeRed_twoDevice_flow.json` - node-red flow to perform multi-plexing between ports 
  
