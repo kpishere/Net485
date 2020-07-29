@@ -22,6 +22,7 @@ const int secondsToRun = 60 * 60 * 24; // a day
 
 #define ARGV_NET485 1
 #define ARGV_APP 2
+#define ARGV_Net485API_NODETYPE 3
 
 NS_ASSUME_NONNULL_BEGIN
 
@@ -30,17 +31,18 @@ int main (int argc, const char * _Nonnull argv[]) {
     CFAbsoluteTime timeNext = CFAbsoluteTimeGetCurrent();
 
     @autoreleasepool {
-        if(argc >= 2) {
-            NSLog(@"Net %s app %s", argv[ARGV_NET485], argv[ARGV_APP]);
+        if(argc >= 3) {
+            NSLog(@"Net %s app %s nodeType %s", argv[ARGV_NET485], argv[ARGV_APP], argv[ARGV_Net485API_NODETYPE]);
             
             HardwareSerial *net = new HardwareSerial(argv[ARGV_NET485], baudRate);
             HardwareSerial *app = new HardwareSerial(argv[ARGV_APP], baudRate);
+            uint8_t nodeType = atoi( argv[ARGV_Net485API_NODETYPE] );
 
             // Cnxn to Application
             Net485Subord *devApp = new Net485Subord_APP(app);
             
             // Cnxn to network with identity of application type
-            Net485DataLink *device485 = new Net485DataLink(net, NTC_FURNGAS, 0, 0, baudRate );
+            Net485DataLink *device485 = new Net485DataLink(net, nodeType, 0, 0, baudRate );
             
             // Get and log the devices MAC address
             Net485MacAddress m = device485->getMacAddr();
@@ -55,7 +57,7 @@ int main (int argc, const char * _Nonnull argv[]) {
                 timeNext = CFAbsoluteTimeGetCurrent();
             }
         } else { // Argc < 2
-            NSLog(@"Usage of `%s <network serial port> <serial port to application>`", argv[0]);
+            NSLog(@"Usage of `%s <network serial port> <serial port to application> <node type code>`", argv[0]);
         }
     }
    return 0;

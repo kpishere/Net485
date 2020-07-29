@@ -64,6 +64,8 @@
 		0F2CEDA524CBDC4F00906ED2 /* CoordinatorNet485.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = CoordinatorNet485.xcodeproj; path = libs/CoordinatorNet485/CoordinatorNet485.xcodeproj; sourceTree = "<group>"; };
 		0F32B4B424CCA9A200D89B13 /* main.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = main.mm; sourceTree = "<group>"; };
 		0F32B4B924CCA9E200D89B13 /* net485Coordinator */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = net485Coordinator; sourceTree = BUILT_PRODUCTS_DIR; };
+		0F32B4C324CDF62D00D89B13 /* README.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = "<group>"; };
+		0F32B4C424CDF62D00D89B13 /* twoUnitNetwork.sh */ = {isa = PBXFileReference; lastKnownFileType = text.script.sh; path = twoUnitNetwork.sh; sourceTree = "<group>"; };
 		0F64690524CC6782008A4B6D /* Tests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = Tests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		0F64690724CC6782008A4B6D /* Tests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = Tests.m; sourceTree = "<group>"; };
 		0F64690924CC6782008A4B6D /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
@@ -71,6 +73,7 @@
 		0F75465224CAE68400104AA4 /* CT485API.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CT485API.swift; sourceTree = "<group>"; };
 		0F75465324CAE68400104AA4 /* Global.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Global.swift; sourceTree = "<group>"; };
 		0F75465424CAE68400104AA4 /* Net485.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Net485.swift; sourceTree = "<group>"; };
+		0FBB1A7A24D11E2300D71A84 /* nodeRed_twoDevice_flow.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = nodeRed_twoDevice_flow.json; sourceTree = "<group>"; };
 		0FBF730024CAEC7800B0182E /* Swift-Bridging-Header.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "Swift-Bridging-Header.h"; sourceTree = "<group>"; };
 		0FBF732224CB0D7D00B0182E /* POSIXSerial.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = POSIXSerial.xcodeproj; path = "libs/POSIXSerialPort/Framework Project/POSIXSerial.xcodeproj"; sourceTree = "<group>"; };
 		0FD44EB324612EB500E98DE7 /* Package.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Package.swift; sourceTree = "<group>"; };
@@ -140,6 +143,17 @@
 				0F32B4B424CCA9A200D89B13 /* main.mm */,
 			);
 			path = Source;
+			sourceTree = "<group>";
+		};
+		0F32B4C224CDF62D00D89B13 /* Simulation */ = {
+			isa = PBXGroup;
+			children = (
+				0FBB1A7A24D11E2300D71A84 /* nodeRed_twoDevice_flow.json */,
+				0F32B4C324CDF62D00D89B13 /* README.md */,
+				0F32B4C424CDF62D00D89B13 /* twoUnitNetwork.sh */,
+			);
+			name = Simulation;
+			path = ../Simulation;
 			sourceTree = "<group>";
 		};
 		0F64690624CC6782008A4B6D /* Tests */ = {
@@ -221,6 +235,7 @@
 				0F64690624CC6782008A4B6D /* Tests */,
 				0FEFFC602414A2A600E09C17 /* Products */,
 				0FD44F052461303D00E98DE7 /* Frameworks */,
+				0F32B4C224CDF62D00D89B13 /* Simulation */,
 			);
 			sourceTree = "<group>";
 		};

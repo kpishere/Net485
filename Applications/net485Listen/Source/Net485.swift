@@ -175,14 +175,21 @@ class PacketProcessor : NSObject, POSIXSerialPortDelegate {
         exit(2)
     }
     func serialPort(_ serialPort:POSIXSerialPort, nextDataSegmentValidIn: Data) -> DataSegment {
-        let ds = DataSegment(offset: 0, size: Int(self.isValid(data: nextDataSegmentValidIn)))
-        print("\nacum:\(nextDataSegmentValidIn.count) validLength:\(ds.size)");
+        var ds = DataSegment(offset: 0, size: Int(self.isValid(data: nextDataSegmentValidIn)))
+
+        print("\nlen \(nextDataSegmentValidIn.count) validLen \(ds.size) buffer \(nextDataSegmentValidIn.asHexString)")
+
+        // Recover from an invalid packet -- note that with one invalid packet, others can be lost too
+        if(nextDataSegmentValidIn.count > maxPktSize && ds.size == 0 /*last read not valid*/) {
+            ds.offset = Int(nextDataSegmentValidIn.count)
+            ds.size = 0;
+            print("\n CRCERR Bytes:\(nextDataSegmentValidIn.count) Pkt:\(nextDataSegmentValidIn.asHexString)")
+        }
+
         return ds;
     }
     
     func serialPort(_ serialPort: POSIXSerialPort, didReceive data: Data) {
-        print("\nnew:\(data.count)");
-
         let currentDateTime = Date();
         
         // check packet is complete
@@ -195,12 +202,6 @@ class PacketProcessor : NSObject, POSIXSerialPortDelegate {
         msgOfType?.description()
         
         self.dateTimePrior = currentDateTime
-
-        // Recover from an invalid packet -- note that with one invalid packet, others can be lost too
-        // this isn't ideal
-        if(data.count > maxPktSize) {
-            print("\n CRCERR Bytes:\(data.count) Pkt:\(data.asHexString)")
-        }
     }
     
     // Returns 0 if not valid, calculated length of valid data otherwise

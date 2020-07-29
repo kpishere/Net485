@@ -63,11 +63,15 @@
       </BuildableProductRunnable>
       <CommandLineArguments>
          <CommandLineArgument
-            argument = "/dev/ttys004"
+            argument = "/dev/ttys_d00"
             isEnabled = "YES">
          </CommandLineArgument>
          <CommandLineArgument
-            argument = "/dev/ttys010"
+            argument = "/dev/ttys_a00"
+            isEnabled = "YES">
+         </CommandLineArgument>
+         <CommandLineArgument
+            argument = "01"
             isEnabled = "YES">
          </CommandLineArgument>
       </CommandLineArguments>
