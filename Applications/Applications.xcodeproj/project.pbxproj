@@ -12,7 +12,7 @@
 		0F2CED9424CB5F1E00906ED2 /* Global.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0F75465324CAE68400104AA4 /* Global.swift */; };
 		0F2CED9524CB5F1E00906ED2 /* Net485.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0F75465424CAE68400104AA4 /* Net485.swift */; };
 		0F2CED9724CB5F1E00906ED2 /* POSIXSerial.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 0FBF732824CB0D7E00B0182E /* POSIXSerial.framework */; };
-		0F2CED9F24CB5F4200906ED2 /* CTCommand.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0FD44F422461BFA100E98DE7 /* CTCommand.swift */; };
+		0F2CED9F24CB5F4200906ED2 /* CTDevice.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0FD44F422461BFA100E98DE7 /* CTDevice.swift */; };
 		0F2CEDA024CB5F4700906ED2 /* main.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0FD44F432461BFA100E98DE7 /* main.swift */; };
 		0F2CEDA124CB5F4A00906ED2 /* CTHVACFurnace.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0FE41E72246F10D8005B357E /* CTHVACFurnace.swift */; };
 		0F32B4C024CCB59800D89B13 /* libCoordinatorNet485.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 0F2CEDAB24CBDC4F00906ED2 /* libCoordinatorNet485.a */; };
@@ -24,6 +24,13 @@
 		0FBF734F24CB126700B0182E /* POSIXSerial.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 0FBF732824CB0D7E00B0182E /* POSIXSerial.framework */; };
 		0FD44EF824612EB500E98DE7 /* Package.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0FD44EB324612EB500E98DE7 /* Package.swift */; };
 		0FD44EFA24612EB500E98DE7 /* main.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0FD44EB724612EB500E98DE7 /* main.swift */; };
+		0FFE1A5224D6FBAB00CBDDFE /* CT485API.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0F75465224CAE68400104AA4 /* CT485API.swift */; };
+		0FFE1A5324D6FBAB00CBDDFE /* Package.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0FD44EB324612EB500E98DE7 /* Package.swift */; };
+		0FFE1A5424D6FBAB00CBDDFE /* Global.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0F75465324CAE68400104AA4 /* Global.swift */; };
+		0FFE1A5524D6FBAB00CBDDFE /* Net485.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0F75465424CAE68400104AA4 /* Net485.swift */; };
+		0FFE1A5724D6FBAB00CBDDFE /* POSIXSerial.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 0FBF732824CB0D7E00B0182E /* POSIXSerial.framework */; };
+		0FFE1A5D24D6FBEB00CBDDFE /* main.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0FFE1A4E24D6FB8F00CBDDFE /* main.swift */; };
+		0FFE1A5E24D6FC1D00CBDDFE /* CTDevice.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0FD44F422461BFA100E98DE7 /* CTDevice.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -79,10 +86,13 @@
 		0FD44EB324612EB500E98DE7 /* Package.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Package.swift; sourceTree = "<group>"; };
 		0FD44EB424612EB500E98DE7 /* README.md */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = "<group>"; };
 		0FD44EB724612EB500E98DE7 /* main.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = main.swift; sourceTree = "<group>"; };
-		0FD44F422461BFA100E98DE7 /* CTCommand.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CTCommand.swift; sourceTree = "<group>"; };
+		0FD44F422461BFA100E98DE7 /* CTDevice.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CTDevice.swift; sourceTree = "<group>"; };
 		0FD44F432461BFA100E98DE7 /* main.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = main.swift; sourceTree = "<group>"; };
 		0FE41E72246F10D8005B357E /* CTHVACFurnace.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CTHVACFurnace.swift; sourceTree = "<group>"; };
 		0FEFFC5F2414A2A600E09C17 /* net485Listen */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = net485Listen; sourceTree = BUILT_PRODUCTS_DIR; };
+		0FFE1A4E24D6FB8F00CBDDFE /* main.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = main.swift; sourceTree = "<group>"; };
+		0FFE1A5B24D6FBAB00CBDDFE /* net485Thermostat */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = net485Thermostat; sourceTree = BUILT_PRODUCTS_DIR; };
+		0FFE1A5C24D6FBAC00CBDDFE /* net485Listen copy-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; name = "net485Listen copy-Info.plist"; path = "/Users/kevinpeck/Desktop/Net485/Applications/net485Listen copy-Info.plist"; sourceTree = "<absolute>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -114,6 +124,14 @@
 			buildActionMask = 2147483647;
 			files = (
 				0FBF734F24CB126700B0182E /* POSIXSerial.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		0FFE1A5624D6FBAB00CBDDFE /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				0FFE1A5724D6FBAB00CBDDFE /* POSIXSerial.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -215,7 +233,7 @@
 		0FD44F412461BFA100E98DE7 /* Source */ = {
 			isa = PBXGroup;
 			children = (
-				0FD44F422461BFA100E98DE7 /* CTCommand.swift */,
+				0FD44F422461BFA100E98DE7 /* CTDevice.swift */,
 				0FD44F432461BFA100E98DE7 /* main.swift */,
 				0FE41E72246F10D8005B357E /* CTHVACFurnace.swift */,
 			);
@@ -232,10 +250,12 @@
 				0F32B4B224CCA94E00D89B13 /* net485Coordinator */,
 				0FD44F402461BFA100E98DE7 /* net485Furnace */,
 				0FD44DFD24612EB400E98DE7 /* net485Listen */,
+				0FFE1A4C24D6FB2500CBDDFE /* net485Thermostat */,
 				0F64690624CC6782008A4B6D /* Tests */,
 				0FEFFC602414A2A600E09C17 /* Products */,
 				0FD44F052461303D00E98DE7 /* Frameworks */,
 				0F32B4C224CDF62D00D89B13 /* Simulation */,
+				0FFE1A5C24D6FBAC00CBDDFE /* net485Listen copy-Info.plist */,
 			);
 			sourceTree = "<group>";
 		};
@@ -246,8 +266,25 @@
 				0F2CED9D24CB5F1E00906ED2 /* net485Furnace */,
 				0F64690524CC6782008A4B6D /* Tests.xctest */,
 				0F32B4B924CCA9E200D89B13 /* net485Coordinator */,
+				0FFE1A5B24D6FBAB00CBDDFE /* net485Thermostat */,
 			);
 			name = Products;
+			sourceTree = "<group>";
+		};
+		0FFE1A4C24D6FB2500CBDDFE /* net485Thermostat */ = {
+			isa = PBXGroup;
+			children = (
+				0FFE1A4D24D6FB5000CBDDFE /* Source */,
+			);
+			path = net485Thermostat;
+			sourceTree = "<group>";
+		};
+		0FFE1A4D24D6FB5000CBDDFE /* Source */ = {
+			isa = PBXGroup;
+			children = (
+				0FFE1A4E24D6FB8F00CBDDFE /* main.swift */,
+			);
+			path = Source;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -318,6 +355,22 @@
 			productReference = 0FEFFC5F2414A2A600E09C17 /* net485Listen */;
 			productType = "com.apple.product-type.tool";
 		};
+		0FFE1A4F24D6FBAB00CBDDFE /* net485Thermostat */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 0FFE1A5824D6FBAB00CBDDFE /* Build configuration list for PBXNativeTarget "net485Thermostat" */;
+			buildPhases = (
+				0FFE1A5024D6FBAB00CBDDFE /* Sources */,
+				0FFE1A5624D6FBAB00CBDDFE /* Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = net485Thermostat;
+			productName = net485Listen;
+			productReference = 0FFE1A5B24D6FBAB00CBDDFE /* net485Thermostat */;
+			productType = "com.apple.product-type.tool";
+		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -365,6 +418,7 @@
 				0F32B4B824CCA9E200D89B13 /* net485Coordinator */,
 				0F2CED8F24CB5F1E00906ED2 /* net485Furnace */,
 				0FEFFC5E2414A2A600E09C17 /* net485Listen */,
+				0FFE1A4F24D6FBAB00CBDDFE /* net485Thermostat */,
 				0F64690424CC6782008A4B6D /* Tests */,
 			);
 		};
@@ -416,7 +470,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				0F2CED9F24CB5F4200906ED2 /* CTCommand.swift in Sources */,
+				0F2CED9F24CB5F4200906ED2 /* CTDevice.swift in Sources */,
 				0F2CEDA024CB5F4700906ED2 /* main.swift in Sources */,
 				0F2CEDA124CB5F4A00906ED2 /* CTHVACFurnace.swift in Sources */,
 				0F2CED9224CB5F1E00906ED2 /* CT485API.swift in Sources */,
@@ -451,6 +505,19 @@
 				0FD44EF824612EB500E98DE7 /* Package.swift in Sources */,
 				0F75465824CAE68500104AA4 /* Global.swift in Sources */,
 				0F75465A24CAE68500104AA4 /* Net485.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		0FFE1A5024D6FBAB00CBDDFE /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				0FFE1A5224D6FBAB00CBDDFE /* CT485API.swift in Sources */,
+				0FFE1A5D24D6FBEB00CBDDFE /* main.swift in Sources */,
+				0FFE1A5324D6FBAB00CBDDFE /* Package.swift in Sources */,
+				0FFE1A5424D6FBAB00CBDDFE /* Global.swift in Sources */,
+				0FFE1A5E24D6FC1D00CBDDFE /* CTDevice.swift in Sources */,
+				0FFE1A5524D6FBAB00CBDDFE /* Net485.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -748,6 +815,66 @@
 			};
 			name = Release;
 		};
+		0FFE1A5924D6FBAB00CBDDFE /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = YES;
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = GYAG48J958;
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(SRCROOT)/libs/**",
+					"$(inereted)",
+					"$(SRCROOT)/libs",
+				);
+				HEADER_SEARCH_PATHS = "$(SRCROOT)/libs/**";
+				INFOPLIST_FILE = Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					LD_RUNPATH_SEARCH_PATHS,
+					"=",
+					"$(TOOLCHAIN_DIR)/usr/lib/swift/macosx",
+					"@executable_path",
+				);
+				LIBRARY_SEARCH_PATHS = "";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_FORCE_DYNAMIC_LINK_STDLIB = YES;
+				SWIFT_FORCE_STATIC_LINK_STDLIB = NO;
+				SWIFT_INSTALL_OBJC_HEADER = YES;
+				SWIFT_OBJC_BRIDGING_HEADER = "net485Listen/Source/Swift-Bridging-Header.h";
+				SWIFT_PRECOMPILE_BRIDGING_HEADER = YES;
+				SWIFT_VERSION = 4.2;
+			};
+			name = Debug;
+		};
+		0FFE1A5A24D6FBAB00CBDDFE /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = YES;
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = GYAG48J958;
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(SRCROOT)/libs/**",
+					"$(inereted)",
+					"$(SRCROOT)/libs",
+				);
+				HEADER_SEARCH_PATHS = "$(SRCROOT)/libs/**";
+				INFOPLIST_FILE = Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					LD_RUNPATH_SEARCH_PATHS,
+					"=",
+					"$(TOOLCHAIN_DIR)/usr/lib/swift/macosx",
+					"@executable_path",
+				);
+				LIBRARY_SEARCH_PATHS = "";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_FORCE_DYNAMIC_LINK_STDLIB = YES;
+				SWIFT_FORCE_STATIC_LINK_STDLIB = NO;
+				SWIFT_INSTALL_OBJC_HEADER = YES;
+				SWIFT_OBJC_BRIDGING_HEADER = "net485Listen/Source/Swift-Bridging-Header.h";
+				SWIFT_PRECOMPILE_BRIDGING_HEADER = YES;
+				SWIFT_VERSION = 4.2;
+			};
+			name = Release;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -792,6 +919,15 @@
 			buildConfigurations = (
 				0FEFFC672414A2A600E09C17 /* Debug */,
 				0FEFFC682414A2A600E09C17 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		0FFE1A5824D6FBAB00CBDDFE /* Build configuration list for PBXNativeTarget "net485Thermostat" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				0FFE1A5924D6FBAB00CBDDFE /* Debug */,
+				0FFE1A5A24D6FBAB00CBDDFE /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;

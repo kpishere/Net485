@@ -159,16 +159,21 @@ struct net485MsgHeader {
     var description: String {
         return "Dest:\(self.addrDestination) Src:\(self.addrSource) Sub:\(self.subnet) \(self.route.description) :: \(self.packet.description)"
     }
+    func bytes() -> Data {
+        var dupe = self;
+        return Data(bytes: &dupe, count: MemoryLayout<net485MsgHeader>.size)
+    }
 }
-
 class PacketProcessor : NSObject, POSIXSerialPortDelegate {
     let maxPktSize : UInt = 252
     let pktHeaderSize : UInt = 10
     let pktCrcSize : UInt = 2
     var dateTimePrior : Date = Date()
+    var serialPort : POSIXSerialPort? = nil
     
-    convenience init(_ port: POSIXSerialPort) {
-        self.init()
+    init(_ port: POSIXSerialPort) {
+        super.init()
+        self.serialPort = port
         port.delegate = self
     }
     func serialPortWasRemovedFromSystem(_ serialPort: POSIXSerialPort) {
@@ -177,13 +182,16 @@ class PacketProcessor : NSObject, POSIXSerialPortDelegate {
     func serialPort(_ serialPort:POSIXSerialPort, nextDataSegmentValidIn: Data) -> DataSegment {
         var ds = DataSegment(offset: 0, size: Int(self.isValid(data: nextDataSegmentValidIn)))
 
-        print("\nlen \(nextDataSegmentValidIn.count) validLen \(ds.size) buffer \(nextDataSegmentValidIn.asHexString)")
+        if(ds.size == 0) {
+            // Show receipt of incomplete packets for debugging
+            print("\n\tlen \(nextDataSegmentValidIn.count) validLen \(ds.size) buffer \(nextDataSegmentValidIn.asHexString)")
+        }
 
         // Recover from an invalid packet -- note that with one invalid packet, others can be lost too
         if(nextDataSegmentValidIn.count > maxPktSize && ds.size == 0 /*last read not valid*/) {
             ds.offset = Int(nextDataSegmentValidIn.count)
             ds.size = 0;
-            print("\n CRCERR Bytes:\(nextDataSegmentValidIn.count) Pkt:\(nextDataSegmentValidIn.asHexString)")
+            print("\n\tCRCERR Bytes:\(nextDataSegmentValidIn.count) Pkt:\(nextDataSegmentValidIn.asHexString)")
         }
 
         return ds;

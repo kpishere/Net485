@@ -12,34 +12,6 @@ import POSIXSerial
 /*
 TODO:
 
-Command API :
-
-- Device side API to network
-
-Generic Device :
-
-An extensible base application framework class
-
-- Shared Data host/aquire
-- Net node list consume/respond and use to drive warm restart and self configuration to come online
-- Subsystem instalation tests (optional)
-- MDI Message Data Interface (important and primary service)
-- Error reporting and failover behaviours (important)
-- Menu features as subortinate (without interface) and as server (with interface)
-
-Specific Device (furnace) :
-
-A collection of configuration files and/or class extension to the generic device class.
-
-=========
-
-5.1 Cold Start Procedure
-
-1. Startupindefaultstate.
-2. Checkshareddataforvalidity.
-3. Wait to receive a network node list. On receiving the node list, do Warm Start
-Procedure
-
 5.2.1 Warm Start Procedure – All Subsystems Except Thermostat
 
 1. Gotoanidlestate.
@@ -106,33 +78,12 @@ if CommandLine.argc < 2 {
     exit(1);
 }
 
-let serialDevice = CommandLine.arguments[1]
+let serialDevice :String? = CommandLine.arguments[1]
 
-let port = POSIXSerialPort(path: serialDevice, baudRate: Int32(baudRate))
+let port = POSIXSerialPort(path: serialDevice, baudRate: Int32(baudRate), readChunk:Int(maxResponseLength), readBlockMs: Float(timeoutSerialSeconds * 1e6))
 
-var packet = PacketProcessor.init(port!);
-port?.open()
+var device = CTHVACFurnace.init(port!); // put device in cold start state
+
+port?.open() // enable hardware serial port to receive commands
 
 RunLoop.current.run() // loop
-
-/*
-    Stateful Diagram
-    ================
-
-0) off
-1) default offline
-2) online idle
-3) test mode
-4) run induce mode
-5) run high mode
-6) run low mode
-7) run air mode
-
-0->1 Cold start
-    - initialize devices
-
-1->2 Warm start
-    - configure device to idle state
-    - validate node list
-
-*/

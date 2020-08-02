@@ -422,7 +422,31 @@ enum CTCtlCmdCode : UInt8 {
     case SetBlowerCoeff_9 = 0x8D // 141 Set Blower Coefficient 9
     case SetBlowerCoeff_10 = 0x8E // 142 Set Blower Coefficient 10
 }
-class CTCommand {
+/*
+
+Generic CT Device :
+
+An extensible base application framework class
+
+- Shared Data host/aquire
+- Net node list consume/respond and use to drive warm restart and self configuration to come online
+- Subsystem instalation tests (optional)
+- MDI Message Data Interface (important and primary service)
+- Error reporting and failover behaviours (important)
+- Menu features as subortinate (without interface) and as server (with interface)
+
+ */
+class CTDevice {
+    var nodeList:CT485Message_NodeList? = nil
+    
+    init() {
+    /*
+        5.1 Cold Start Procedure
+        TODO: 1. Startupindefaultstate.
+        TODO: 2. Checkshareddataforvalidity.
+    */
+    }
+    
     // 5.1 Get Configuration
     func GetConfiguration( _ route: net485Routing,_ callback:(_ data: CT485Message) -> Void) -> Void {
     }
@@ -508,7 +532,12 @@ class CTCommand {
     func SetNetworkNodeList(_ route: net485Routing,_ callback:(_ data: CT485Message) -> Void, nodeList : CT485Message_NodeList) -> Void {
     }
     func ConfirmNetworkNodeList(_ callback:(_ data: CT485Message) -> Void) -> CT485Message_NodeList {
-        return CT485Message_NodeList.init(data: net485MsgHeader.init(Data.init()))
+        let toSendMsg = self.nodeList;
+        // Reply to sender with echoed packet
+        toSendMsg!.data?.addrDestination = self.nodeList!.data!.addrSource;
+        toSendMsg!.data?.addrSource = self.nodeList!.data!.addrDestination;
+        callback(toSendMsg!)
+        return toSendMsg!
     }
     // 5.15 Get Direct Memory Access (DMA) Read
     func GetDMARead(_ route: net485Routing,_ callback:(_ data: CT485Message) -> Void, dmaRequest : CT485Message_DMAReq)-> Void {
